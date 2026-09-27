@@ -7,11 +7,11 @@ export const CONFIG = {
   receiptHours: 24,
   pay: {
     note: "No payment is taken in the app. Send the exact order total, then attach the receipt on Active Orders.",
-    ownerName: "SET YOUR NAME",
-    venmo: "SET VENMO",
+    ownerName: "Brandon Melton",
+    venmo: "@B-Melt",
     zelle: "SET ZELLE",
-    cashApp: "SET CASH APP",
-    chime: "",
+    cashApp: "$Slycinder",
+    chime: "$Brandon-Melton-44",
     crypto: "USDT (TRC-20) or BTC — ask for the wallet on the order.",
   },
   shipping: [
