@@ -53,10 +53,10 @@ export default function App() {
     <div className="app">
       <header className="top">
         <div className="brand">
-          <span className="mark">V</span>
-          <div>
-            <div className="shop">{CONFIG.shopName}</div>
-            <div className="tiny">Live catalog</div>
+          <img className="crest" src="/art/crest.jpg" alt="" />
+          <div className="brand-copy">
+            <img className="sign" src="/art/sign.jpg" alt="The Deviant's Shelf" />
+            <div className="tiny">Members' shelf</div>
           </div>
         </div>
         <div className="top-actions">
@@ -66,6 +66,7 @@ export default function App() {
           <div className="acct">Account No. {session.account}</div>
         </div>
       </header>
+      <div className="filigree" aria-hidden="true" />
 
       <nav className="tabs">
         <button className={tab === "catalog" ? "on" : ""} onClick={() => setTab("catalog")}>Catalog</button>
@@ -163,8 +164,10 @@ function Gate({ onIn }) {
 
   return (
     <div className="gate">
+      <img className="crest gate-crest" src="/art/crest.jpg" alt="" />
+      <img className="sign" src="/art/sign.jpg" alt="The Deviant's Shelf" />
+      <div className="filigree" aria-hidden="true" />
       <p className="eyebrow">Members only</p>
-      <h1>{CONFIG.shopName}</h1>
       <p className="lede">{CONFIG.tagline}</p>
       <p className="muted">Invitation-only catalog. Sign in with the name on your card and the PIN your rep set.</p>
       <form className="panel" onSubmit={enter}>
