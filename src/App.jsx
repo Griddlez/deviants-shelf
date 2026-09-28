@@ -53,11 +53,7 @@ export default function App() {
     <div className="app">
       <header className="top">
         <div className="brand">
-          <img className="crest" src="/art/crest.jpg" alt="" />
-          <div className="brand-copy">
-            <img className="sign" src="/art/sign.jpg" alt="The Deviant's Shelf" />
-            <div className="tiny">Members' shelf</div>
-          </div>
+          <img className="logo" src="/art/logo.jpg" alt="The Deviant's Shelf" />
         </div>
         <div className="top-actions">
           <button className="btn gold" onClick={() => { setTab("order"); setFlow({ step: "ship" }); }}>
@@ -164,8 +160,7 @@ function Gate({ onIn }) {
 
   return (
     <div className="gate">
-      <img className="crest gate-crest" src="/art/crest.jpg" alt="" />
-      <img className="sign" src="/art/sign.jpg" alt="The Deviant's Shelf" />
+      <img className="logo gate-logo" src="/art/logo.jpg" alt="The Deviant's Shelf" />
       <div className="filigree" aria-hidden="true" />
       <p className="eyebrow">Members only</p>
       <p className="lede">{CONFIG.tagline}</p>
