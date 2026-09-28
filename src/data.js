@@ -2,16 +2,16 @@ export const CONFIG = {
   shopName: "The Deviant's Shelf",
   tagline: "A small apothecary for people who already know where to look.",
   // Change these before you send the link to anyone.
-  memberPin: "8008",
-  adminPin: "8335",
+  memberPin: "2614",
+  adminPin: "6149",
   receiptHours: 24,
   pay: {
     note: "No payment is taken in the app. Send the exact order total, then attach the receipt on Active Orders.",
-    ownerName: "Brandon Melton",
-    venmo: "@B-Melt",
+    ownerName: "SET YOUR NAME",
+    venmo: "SET VENMO",
     zelle: "SET ZELLE",
-    cashApp: "$Slycinder",
-    chime: "$Brandon-Melton-44",
+    cashApp: "SET CASH APP",
+    chime: "",
     crypto: "USDT (TRC-20) or BTC — ask for the wallet on the order.",
   },
   shipping: [
@@ -22,6 +22,13 @@ export const CONFIG = {
 };
 
 export const PRODUCTS = [
+  {
+    id: "kit",
+    code: "KIT",
+    name: "Beginner alchemy kit",
+    blurb: "Bac water · 10 syringes · 20 wipes.",
+    sizes: [{ sku: "KIT-1", mg: "kit", vial: 20 }],
+  },
   {
     id: "r3",
     code: "R3",
@@ -142,12 +149,5 @@ export const PRODUCTS = [
     name: "Bacteriostatic water",
     blurb: "Null Spring — reconstitution water.",
     sizes: [{ sku: "BAC-10", mg: "10 ml", vial: 10 }],
-  },
-  {
-    id: "kit",
-    code: "KIT",
-    name: "Beginner alchemy kit",
-    blurb: "Bac water · 10 syringes · 20 wipes.",
-    sizes: [{ sku: "KIT-1", mg: "kit", vial: 20 }],
   },
 ];

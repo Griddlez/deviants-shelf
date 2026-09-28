@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CONFIG, PRODUCTS } from "./data.js";
 import * as store from "./store.js";
 
@@ -53,7 +53,9 @@ export default function App() {
     <div className="app">
       <header className="top">
         <div className="brand">
-          <img className="logo" src="/art/logo.jpg" alt="The Deviant's Shelf" />
+          <div className="logo-frame">
+            <img className="logo" src="/art/logo.jpg" alt="The Deviant's Shelf" />
+          </div>
         </div>
         <div className="top-actions">
           <button className="btn gold" onClick={() => { setTab("order"); setFlow({ step: "ship" }); }}>
@@ -62,7 +64,6 @@ export default function App() {
           <div className="acct">Account No. {session.account}</div>
         </div>
       </header>
-      <div className="filigree" aria-hidden="true" />
 
       <nav className="tabs">
         <button className={tab === "catalog" ? "on" : ""} onClick={() => setTab("catalog")}>Catalog</button>
@@ -137,41 +138,53 @@ export default function App() {
 }
 
 function Gate({ onIn }) {
+  const [door, setDoor] = useState("member");
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
   const [err, setErr] = useState("");
 
   function enter(e) {
     e.preventDefault();
-    const p = pin.trim();
-    const admin = p === CONFIG.adminPin;
-    if (p !== CONFIG.memberPin && !admin) {
-      setErr("That PIN is not on this shelf.");
-      return;
-    }
+    const p = pin.replace(/\s/g, "");
     const account = String(1000 + Math.floor(Math.random() * 9000));
-    store.setSession({
-      name: name.trim().slice(0, 20) || "Member",
-      account,
-      admin,
-    });
+    if (door === "desk") {
+      if (p !== CONFIG.adminPin) {
+        setErr(p === CONFIG.memberPin ? "That's the member PIN. Use the member door." : "That desk PIN is not right.");
+        return;
+      }
+      store.setSession({ name: name.trim().slice(0, 20) || "Keeper", account, admin: true });
+    } else if (p !== CONFIG.memberPin) {
+      setErr(p === CONFIG.adminPin ? "That's the desk PIN. Open the shop desk door." : "That PIN is not on this shelf.");
+      return;
+    } else {
+      store.setSession({ name: name.trim().slice(0, 20) || "Member", account, admin: false });
+    }
     onIn();
   }
 
   return (
     <div className="gate">
-      <img className="logo gate-logo" src="/art/logo.jpg" alt="The Deviant's Shelf" />
-      <div className="filigree" aria-hidden="true" />
-      <p className="eyebrow">Members only</p>
+      <div className="logo-frame">
+        <img className="logo" src="/art/logo.jpg" alt="The Deviant's Shelf" />
+      </div>
+      <div className="rule" aria-hidden="true" />
+      <p className="eyebrow">{door === "desk" ? "Shop desk" : "Members only"}</p>
       <p className="lede">{CONFIG.tagline}</p>
-      <p className="muted">Invitation-only catalog. Sign in with the name on your card and the PIN your rep set.</p>
+      <div className="doors">
+        <button type="button" className={door === "member" ? "on" : ""} onClick={() => { setDoor("member"); setErr(""); setPin(""); }}>
+          Member
+        </button>
+        <button type="button" className={door === "desk" ? "on" : ""} onClick={() => { setDoor("desk"); setErr(""); setPin(""); }}>
+          Shop desk
+        </button>
+      </div>
       <form className="panel" onSubmit={enter}>
-        <label>Name on card</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={20} placeholder="Your name" />
-        <label>PIN</label>
-        <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" placeholder="••••" />
+        <label>{door === "desk" ? "Keeper name" : "Name on card"}</label>
+        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={20} placeholder={door === "desk" ? "Your name" : "Your name"} />
+        <label>{door === "desk" ? "Desk PIN" : "Member PIN"}</label>
+        <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" placeholder="••••" autoComplete="off" />
         {err && <p className="err">{err}</p>}
-        <button className="btn gold wide" type="submit">Enter</button>
+        <button className="btn gold wide" type="submit">{door === "desk" ? "Open the desk" : "Enter"}</button>
       </form>
     </div>
   );
@@ -210,12 +223,14 @@ function Catalog({ openId, setOpenId, cart, onAdd }) {
                   </div>
                   <div className="row-r">
                     <span>{money(s.vial)}</span>
-                    <button
-                      className="btn slim coa"
-                      onClick={() => setCoa({ ...s, name: p.name })}
-                    >
-                      COA
-                    </button>
+                    {s.coa?.file && (
+                      <button
+                        className="btn slim coa"
+                        onClick={() => setCoa({ ...s, name: p.name })}
+                      >
+                        COA
+                      </button>
+                    )}
                     <button
                       className="btn slim"
                       onClick={() =>
@@ -228,7 +243,7 @@ function Catalog({ openId, setOpenId, cart, onAdd }) {
                         })
                       }
                     >
-                      ADD Vial
+                      {p.id === "kit" ? "Add kit" : "Add potion"}
                     </button>
                   </div>
                 </div>
@@ -275,6 +290,62 @@ function CoaModal({ item, onClose }) {
         )}
         <p className="tiny">Third-party analytical report. Research use only. Not a guarantee of fitness for any use.</p>
         <button className="btn gold wide" onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+}
+
+function SlideConfirm({ done, onDone }) {
+  const track = useRef(null);
+  const drag = useRef(null);
+  const pos = useRef(0);
+  const [x, setX] = useState(0);
+
+  function limit() {
+    const el = track.current;
+    return el ? Math.max(0, el.clientWidth - 56) : 0;
+  }
+
+  function down(e) {
+    if (done) return;
+    drag.current = { start: e.clientX, base: pos.current };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function move(e) {
+    if (!drag.current || done) return;
+    const next = Math.min(limit(), Math.max(0, drag.current.base + (e.clientX - drag.current.start)));
+    pos.current = next;
+    setX(next);
+  }
+
+  function up() {
+    if (!drag.current || done) return;
+    drag.current = null;
+    const end = limit();
+    if (pos.current >= end - 8 && end > 0) {
+      pos.current = end;
+      setX(end);
+      onDone();
+    } else {
+      pos.current = 0;
+      setX(0);
+    }
+  }
+
+  return (
+    <div className={"slider" + (done ? " done" : "")} ref={track}>
+      <div className="slider-fill" style={{ width: done ? "100%" : x + 48 }} />
+      <span className="slider-label">{done ? "Confirmed" : "Slide to confirm"}</span>
+      <div
+        className="slider-knob"
+        style={done ? { left: "auto", right: 4 } : { transform: `translateX(${x}px)` }}
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={up}
+        onPointerCancel={up}
+      >
+        {done ? "✓" : "→"}
       </div>
     </div>
   );
@@ -349,7 +420,7 @@ function PlaceOrder({ cart, setCart, onClose, onPlaced }) {
           <h3>Review order</h3>
           {cart.map((l, i) => (
             <div className="line" key={i}>
-              <span>{l.name} · {l.sku} · {l.mg} · vial ×{l.qty}</span>
+              <span>{l.name} · {l.sku} · {l.mg} ×{l.qty}</span>
               <b>{money(l.price * l.qty)}</b>
             </div>
           ))}
@@ -406,9 +477,7 @@ function PlaceOrder({ cart, setCart, onClose, onPlaced }) {
           <p>
             I understand that my order will NOT be processed until I post an image of a receipt showing that I paid.
           </p>
-          <button className={slid ? "slide on" : "slide"} type="button" onClick={() => setSlid(true)}>
-            {slid ? "Confirmed" : "Slide right to confirm →"}
-          </button>
+          <SlideConfirm done={slid} onDone={() => setSlid(true)} />
           <button className="btn gold wide" disabled={!ruo || !slid} onClick={place}>
             Place order
           </button>
@@ -419,7 +488,7 @@ function PlaceOrder({ cart, setCart, onClose, onPlaced }) {
 }
 
 function CartBox({ cart, setCart }) {
-  if (!cart.length) return <p className="muted">0 items — add vials from the catalog first, then come back.</p>;
+  if (!cart.length) return <p className="muted">0 items — add from the catalog first, then come back.</p>;
   return (
     <div className="cart">
       {cart.map((l, i) => (
@@ -515,7 +584,7 @@ function OrderCard({ order, onChange, tick }) {
       )}
       {order.items.map((l, i) => (
         <div className="line" key={i}>
-          <span>{l.name} · {l.sku} · {l.mg} · vial ×{l.qty}</span>
+          <span>{l.name} · {l.sku} · {l.mg} ×{l.qty}</span>
           <b>{money(l.price * l.qty)}</b>
         </div>
       ))}
