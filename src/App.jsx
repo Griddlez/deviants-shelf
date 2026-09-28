@@ -47,8 +47,11 @@ export default function App() {
     return <Gate onIn={refresh} />;
   }
 
-  const live = orders.filter((o) => o.status !== "history" && o.status !== "expired");
-  const past = orders.filter((o) => o.status === "history" || o.status === "expired");
+  const visible = session.admin
+    ? orders
+    : orders.filter((o) => String(o.account) === String(session.account));
+  const live = visible.filter((o) => o.status !== "history" && o.status !== "expired");
+  const past = visible.filter((o) => o.status === "history" || o.status === "expired");
 
   return (
     <div className="app">
@@ -62,7 +65,7 @@ export default function App() {
           <button className="btn gold" onClick={() => { setTab("order"); setFlow({ step: "ship" }); }}>
             Place Order
           </button>
-          <div className="acct">Account No. {session.account}</div>
+          <div className="acct">Account No. {session.account} · {session.name}</div>
         </div>
       </header>
 
@@ -116,6 +119,7 @@ export default function App() {
 
       {(tab === "order" || flow) && tab === "order" && (
         <PlaceOrder
+          session={session}
           cart={cart}
           setCart={(c) => { store.setCart(c); setCart(c); }}
           onClose={() => { setFlow(null); setTab("catalog"); }}
@@ -147,19 +151,24 @@ function Gate({ onIn }) {
   function enter(e) {
     e.preventDefault();
     const p = pin.replace(/\s/g, "");
-    const account = String(1000 + Math.floor(Math.random() * 9000));
-    if (door === "desk") {
+    const desk = door === "desk";
+    if (desk) {
       if (p !== CONFIG.adminPin) {
         setErr(p === CONFIG.memberPin ? "That's the member PIN. Use the member door." : "That desk PIN is not right.");
         return;
       }
-      store.setSession({ name: name.trim().slice(0, 20) || "Keeper", account, admin: true });
     } else if (p !== CONFIG.memberPin) {
       setErr(p === CONFIG.adminPin ? "That's the desk PIN. Open the shop desk door." : "That PIN is not on this shelf.");
       return;
-    } else {
-      store.setSession({ name: name.trim().slice(0, 20) || "Member", account, admin: false });
     }
+    let claimed;
+    try {
+      claimed = store.claimAccount({ name, desk });
+    } catch (err) {
+      setErr(err.message || "Type a name.");
+      return;
+    }
+    store.setSession({ name: claimed.name, account: claimed.account, admin: desk });
     onIn();
   }
 
@@ -181,7 +190,7 @@ function Gate({ onIn }) {
       </div>
       <form className="panel" onSubmit={enter}>
         <label>{door === "desk" ? "Keeper name" : "Name on card"}</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={20} placeholder={door === "desk" ? "Your name" : "Your name"} />
+        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={20} placeholder="The name this number sticks to" required />
         <label>{door === "desk" ? "Desk PIN" : "Member PIN"}</label>
         <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" placeholder="••••" autoComplete="off" />
         {err && <p className="err">{err}</p>}
@@ -373,7 +382,7 @@ function SlideConfirm({ done, onDone }) {
   );
 }
 
-function PlaceOrder({ cart, setCart, onClose, onPlaced }) {
+function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
   const [step, setStep] = useState("ship");
   const [shipId, setShipId] = useState("usps");
   const [contact, setContact] = useState({
@@ -396,6 +405,8 @@ function PlaceOrder({ cart, setCart, onClose, onPlaced }) {
     if (!ruo || !slid || !cart.length) return;
     const order = store.addOrder({
       status: "unpaid",
+      account: session.account,
+      accountName: session.name,
       items: cart,
       shipping: ship,
       contact,
@@ -644,12 +655,12 @@ function AdminDesk({ orders, onChange }) {
     <section className="wrap">
       <h2>Desk</h2>
       <p className="muted">
-        This desk only sees tickets placed in this browser. For the 15-person shelf, open Desk on the same device you will check, or we wire a shared inbox next.
+        Account 0 is this desk. Each new name gets the next number. A number that has been used is not given out again. Tickets here are the ones placed on this phone.
       </p>
       {orders.map((o) => (
         <article className="ticket" key={o.id}>
           <div className="ticket-h">
-            <span>#{o.id} · {o.contact?.fullName}</span>
+            <span>#{o.id} · No. {o.account ?? "—"} · {o.accountName || o.contact?.fullName}</span>
             <span className={`badge ${o.status}`}>{labelStatus(o.status)}</span>
           </div>
           <p className="tiny">
