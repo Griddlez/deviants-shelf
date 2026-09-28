@@ -2,7 +2,7 @@ export const CONFIG = {
   shopName: "The Deviant's Shelf",
   tagline: "A small apothecary for people who already know where to look.",
   // Change these before you send the link to anyone.
-  memberPin: "8335",
+  memberPin: "8135",
   adminPin: "8008",
   receiptHours: 24,
   pay: {
