@@ -115,7 +115,7 @@ export default function App() {
         />
       )}
 
-      {tab === "admin" && session.admin && <AdminDesk orders={orders} onChange={refresh} />}
+      {tab === "admin" && session.admin && <AdminDesk session={session} orders={orders} onChange={refresh} />}
 
       {(tab === "order" || flow) && tab === "order" && (
         <PlaceOrder
@@ -157,10 +157,10 @@ function Gate({ onIn }) {
   const [pin, setPin] = useState(invite?.pin || "");
   const [err, setErr] = useState("");
 
-  function signIn(e) {
+  async function signIn(e) {
     e.preventDefault();
     try {
-      const claimed = store.signInCard({ name, pin });
+      const claimed = await store.signInCard({ name, pin });
       store.setSession({ name: claimed.name, account: claimed.account, admin: false });
       onIn();
     } catch (error) {
@@ -179,14 +179,14 @@ function Gate({ onIn }) {
       setErr("Type your name.");
       return;
     }
-    store.setSession({ name: display, account: "0", admin: true });
+    store.setSession({ name: display, account: "0", admin: true, deskPin: pin.replace(/\s/g, "") });
     onIn();
   }
 
-  function claim(e) {
+  async function claim(e) {
     e.preventDefault();
     try {
-      const claimed = store.claimCard({ account: invite.account, pin, name });
+      const claimed = await store.claimCard({ account: invite.account, pin, name });
       store.setSession({ name: claimed.name, account: claimed.account, admin: false });
       window.history.replaceState({}, "", window.location.pathname);
       onIn();
@@ -720,16 +720,30 @@ function labelStatus(s) {
   }[s] || s;
 }
 
-function AdminDesk({ orders, onChange }) {
-  const [cards, setCards] = useState(() => store.listInvites());
+function AdminDesk({ session, orders, onChange }) {
+  const [cards, setCards] = useState([]);
   const [fresh, setFresh] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [err, setErr] = useState("");
 
-  function cut() {
-    const card = store.cutCard();
-    setFresh(card);
-    setCards(store.listInvites());
-    setCopied(false);
+  useEffect(() => {
+    if (!session?.deskPin) {
+      setErr("Sign out, then open the shop desk again.");
+      return;
+    }
+    store.listInvites(session.deskPin).then(setCards).catch((e) => setErr(e.message));
+  }, [session]);
+
+  async function cut() {
+    try {
+      const card = await store.cutCard(session.deskPin);
+      setFresh(card);
+      setCards(await store.listInvites(session.deskPin));
+      setCopied(false);
+      setErr("");
+    } catch (e) {
+      setErr(e.message);
+    }
   }
 
   async function copy(url) {
@@ -744,7 +758,8 @@ function AdminDesk({ orders, onChange }) {
   return (
     <section className="wrap">
       <h2>Desk</h2>
-      <p className="muted">Account 0 is this door. Cut a card to give the next number. That number is not used again.</p>
+      <p className="muted">Account 0 is this door. Cut a card to give the next number. The book is shared, so every phone sees the same cards, and a used number is not given out again.</p>
+      {err && <p className="err">{err}</p>}
       <button className="btn gold" type="button" onClick={cut}>Cut a card</button>
       {fresh && (
         <div className="panel">
@@ -756,7 +771,7 @@ function AdminDesk({ orders, onChange }) {
       )}
       {cards.length > 0 && (
         <div className="panel">
-          <h3>Cards cut on this phone</h3>
+          <h3>Cards cut</h3>
           {cards.map((c) => (
             <p key={c.account} className="tiny">No. {c.account} · PIN {c.pin}</p>
           ))}
@@ -779,17 +794,4 @@ function AdminDesk({ orders, onChange }) {
           ))}
           <p>Total {money(o.total)}</p>
           <div className="row-btns">
-            {["review", "processing", "shipped", "history"].map((st) => (
-              <button key={st} className="btn slim" onClick={() => { store.updateOrder(o.id, { status: st }); onChange(); }}>
-                {labelStatus(st)}
-              </button>
-            ))}
-          </div>
-          {(o.receipts || []).map((r, i) => (
-            <img key={i} src={r.data} alt={r.name} className="rcpt" />
-          ))}
-        </article>
-      ))}
-    </section>
-  );
-}
+            {["review", "processing
