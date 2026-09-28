@@ -21,4 +21,4 @@ npm run dev
 
 Orders live in the browser that placed them. The Desk sees the same tickets only on that device until a shared inbox is wired.
 
-Research use only. Not a drug, supplement, or treatment.
+Research use only.
