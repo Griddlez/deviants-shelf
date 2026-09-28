@@ -11,7 +11,7 @@ export const CONFIG = {
     venmo: "@B-Melt",
     zelle: "SET ZELLE",
     cashApp: "$Slycinder",
-    chime: "$Brandon-Melton_44",
+    chime: "$Brandon-Melton-44",
     crypto: "USDT (TRC-20) or BTC — ask for the wallet on the order.",
   },
   shipping: [
