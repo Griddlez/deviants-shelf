@@ -181,6 +181,7 @@ function Gate({ onIn }) {
 
 function Catalog({ openId, setOpenId, cart, onAdd }) {
   const [q, setQ] = useState("");
+  const [coa, setCoa] = useState(null);
   const list = PRODUCTS.filter((p) => {
     const hay = `${p.code} ${p.name} ${p.sizes.map((s) => s.sku).join(" ")}`.toLowerCase();
     return hay.includes(q.trim().toLowerCase());
@@ -190,7 +191,7 @@ function Catalog({ openId, setOpenId, cart, onAdd }) {
   return (
     <section className="wrap">
       <h2>Catalog</h2>
-      <p className="muted">Current availability and pricing. Vial = 1 vial.</p>
+      <p className="muted">Current availability and pricing. Vial = 1 vial. COA is the lab report for that lot.</p>
       <div className="tools">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products" />
         <span className="muted">{count} in order</span>
@@ -212,6 +213,12 @@ function Catalog({ openId, setOpenId, cart, onAdd }) {
                   <div className="row-r">
                     <span>{money(s.vial)}</span>
                     <button
+                      className="btn slim coa"
+                      onClick={() => setCoa({ ...s, name: p.name })}
+                    >
+                      COA
+                    </button>
+                    <button
                       className="btn slim"
                       onClick={() =>
                         onAdd({
@@ -232,7 +239,46 @@ function Catalog({ openId, setOpenId, cart, onAdd }) {
           )}
         </article>
       ))}
+      {coa && <CoaModal item={coa} onClose={() => setCoa(null)} />}
     </section>
+  );
+}
+
+function CoaModal({ item, onClose }) {
+  const c = item.coa;
+  const file = c?.file || "";
+  const image = /\.(png|jpe?g|webp)$/i.test(file);
+  const local = file.startsWith("/");
+
+  return (
+    <div className="modal" onClick={onClose}>
+      <div className="panel modal-card coa-card" onClick={(e) => e.stopPropagation()}>
+        <p className="eyebrow">Certificate of analysis</p>
+        <h3>{item.name}</h3>
+        <p className="muted">{item.sku} · {item.mg}</p>
+        {c && (c.file || c.lab || c.batch || c.tested || c.purity) ? (
+          <>
+            <ul className="coa-meta">
+              {c.lab && <li>Lab · {c.lab}</li>}
+              {c.batch && <li>Batch · {c.batch}</li>}
+              {c.tested && <li>Tested · {c.tested}</li>}
+              {c.purity && <li>Purity · {c.purity}</li>}
+            </ul>
+            {file && local && image && <img className="coa-img" src={file} alt={`COA ${item.sku}`} />}
+            {file && local && !image && (
+              <iframe className="coa-frame" title={`COA ${item.sku}`} src={file} />
+            )}
+            {file && (
+              <a className="btn" href={file} target="_blank" rel="noreferrer">Open certificate</a>
+            )}
+          </>
+        ) : (
+          <p>No certificate is posted for this lot yet.</p>
+        )}
+        <p className="tiny">Third-party analytical report. Research use only. Not a guarantee of fitness for any use.</p>
+        <button className="btn gold wide" onClick={onClose}>Close</button>
+      </div>
+    </div>
   );
 }
 

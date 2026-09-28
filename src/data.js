@@ -2,16 +2,16 @@ export const CONFIG = {
   shopName: "The Deviant's Shelf",
   tagline: "A small apothecary for people who already know where to look.",
   // Change these before you send the link to anyone.
-  memberPin: "8008",
-  adminPin: "8335",
+  memberPin: "2614",
+  adminPin: "6149",
   receiptHours: 24,
   pay: {
     note: "No payment is taken in the app. Send the exact order total, then attach the receipt on Active Orders.",
-    ownerName: "Brandon Melton",
-    venmo: "@B-Melt",
+    ownerName: "SET YOUR NAME",
+    venmo: "SET VENMO",
     zelle: "SET ZELLE",
-    cashApp: "$Slycinder",
-    chime: "$Brandon-Melton-44",
+    cashApp: "SET CASH APP",
+    chime: "",
     crypto: "USDT (TRC-20) or BTC — ask for the wallet on the order.",
   },
   shipping: [
@@ -29,7 +29,7 @@ export const PRODUCTS = [
     blurb: "Triple agonist research analog.",
     sizes: [
       { sku: "R3-5", mg: "5 mg", vial: 45 },
-      { sku: "R3-20", mg: "20 mg", vial: 100 },
+      { sku: "R3-20", mg: "20 mg", vial: 100, coa: { lab: "Krause Analytical", batch: "212022", tested: "Sep 1, 2026", purity: ">99.9%", file: "/coa/R3-20.pdf" } },
     ],
   },
   {
@@ -37,7 +37,7 @@ export const PRODUCTS = [
     code: "AMQ",
     name: "5-Amino-1MQ",
     blurb: "NNMT research compound.",
-    sizes: [{ sku: "AMQ-50", mg: "50 mg", vial: 65 }],
+    sizes: [{ sku: "AMQ-50", mg: "50 mg", vial: 65, coa: { lab: "Krause Analytical", batch: "212014", tested: "Sep 1, 2026", purity: "99.9%", file: "/coa/AMQ-50.pdf" } }],
   },
   {
     id: "bpc",
@@ -46,7 +46,7 @@ export const PRODUCTS = [
     blurb: "Pentadecapeptide research standard.",
     sizes: [
       { sku: "BPC-5", mg: "5 mg", vial: 25 },
-      { sku: "BPC-10", mg: "10 mg", vial: 40 },
+      { sku: "BPC-10", mg: "10 mg", vial: 40, coa: { lab: "Krause Analytical", batch: "212028", tested: "Sep 1, 2026", purity: "99.4%", file: "/coa/BPC-10.pdf" } },
     ],
   },
   {
@@ -68,28 +68,28 @@ export const PRODUCTS = [
     code: "KPV",
     name: "KPV",
     blurb: "α-MSH fragment.",
-    sizes: [{ sku: "KPV-10", mg: "10 mg", vial: 35 }],
+    sizes: [{ sku: "KPV-10", mg: "10 mg", vial: 35, coa: { lab: "BTL Testing", batch: "KPV010-012604A", tested: "Apr 28, 2026", purity: "99.8%", file: "/coa/KPV-10.pdf" } }],
   },
   {
     id: "ara",
     code: "ARA",
     name: "ARA-290",
     blurb: "Cibinetide analog.",
-    sizes: [{ sku: "ARA-10", mg: "10 mg", vial: 55 }],
+    sizes: [{ sku: "ARA-10", mg: "10 mg", vial: 55, coa: { lab: "Krause Analytical", batch: "212008", tested: "Sep 1, 2026", purity: "98.4%", file: "/coa/ARA-10.pdf" } }],
   },
   {
     id: "cjc",
     code: "CJC",
     name: "CJC-1295 + Ipamorelin",
     blurb: "GHRH fragment + ghrelin analog.",
-    sizes: [{ sku: "CJC-5-5", mg: "5 mg + 5 mg", vial: 70 }],
+    sizes: [{ sku: "CJC-5-5", mg: "5 mg + 5 mg", vial: 70, coa: { lab: "Krause Analytical", batch: "212026", tested: "Sep 4, 2026", purity: "99.2%", file: "/coa/CJC-5-5.pdf" } }],
   },
   {
     id: "pin",
     code: "PIN",
     name: "Pinealon",
     blurb: "Tripeptide bioregulator.",
-    sizes: [{ sku: "PIN-10", mg: "10 mg", vial: 45 }],
+    sizes: [{ sku: "PIN-10", mg: "10 mg", vial: 45, coa: { lab: "Krause Analytical", batch: "203757", tested: "Apr 22, 2026", purity: "99.6%", file: "/coa/PIN-10.pdf" } }],
   },
   {
     id: "epi",
@@ -110,7 +110,7 @@ export const PRODUCTS = [
     code: "SEM",
     name: "Semax",
     blurb: "ACTH fragment analog.",
-    sizes: [{ sku: "SEM-10", mg: "10 mg", vial: 45 }],
+    sizes: [{ sku: "SEM-10", mg: "10 mg", vial: 45, coa: { lab: "BTL Testing", batch: "SMX010-012604A", tested: "Apr 28, 2026", purity: "99.8%", file: "/coa/SEM-10.pdf" } }],
   },
   {
     id: "nad",
@@ -119,7 +119,7 @@ export const PRODUCTS = [
     blurb: "Nicotinamide adenine dinucleotide.",
     sizes: [
       { sku: "NAD-100", mg: "100 mg", vial: 30 },
-      { sku: "NAD-500", mg: "500 mg", vial: 50 },
+      { sku: "NAD-500", mg: "500 mg", vial: 50, coa: { lab: "Krause Analytical", batch: "201770", tested: "Mar 9, 2026", purity: "99.89%", file: "/coa/NAD-500.pdf" } },
     ],
   },
   {
@@ -127,14 +127,14 @@ export const PRODUCTS = [
     code: "PT",
     name: "PT-141",
     blurb: "Bremelanotide analog.",
-    sizes: [{ sku: "PT-10", mg: "10 mg", vial: 35 }],
+    sizes: [{ sku: "PT-10", mg: "10 mg", vial: 35, coa: { lab: "BTL Testing", batch: "PT1010-012604A", tested: "Apr 28, 2026", purity: "99.9%", file: "/coa/PT-10.pdf" } }],
   },
   {
     id: "ghk",
     code: "GHK",
     name: "GHK-Cu",
     blurb: "Copper tripeptide.",
-    sizes: [{ sku: "GHK-100", mg: "100 mg", vial: 25 }],
+    sizes: [{ sku: "GHK-100", mg: "100 mg", vial: 25, coa: { lab: "Krause Analytical", batch: "203764", tested: "Apr 22, 2026", purity: ">99.9%", file: "/coa/GHK-100.pdf" } }],
   },
   {
     id: "bac",
