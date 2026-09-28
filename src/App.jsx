@@ -142,60 +142,130 @@ export default function App() {
   );
 }
 
+function inviteFromUrl() {
+  const raw = new URLSearchParams(window.location.search).get("card") || "";
+  const match = raw.match(/^(\d+)\.(\d{4,8})$/);
+  if (!match) return null;
+  return { account: match[1], pin: match[2] };
+}
+
 function Gate({ onIn }) {
-  const [door, setDoor] = useState("member");
+  const invite = inviteFromUrl();
+  const [view, setView] = useState(invite ? "claim" : "welcome");
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [pin, setPin] = useState("");
+  const [pin, setPin] = useState(invite?.pin || "");
   const [err, setErr] = useState("");
 
-  function enter(e) {
+  function signIn(e) {
     e.preventDefault();
-    const p = pin.replace(/\s/g, "");
-    const desk = door === "desk";
-    if (desk) {
-      if (p !== CONFIG.adminPin) {
-        setErr(p === CONFIG.memberPin ? "That's the member PIN. Use the member door." : "That desk PIN is not right.");
-        return;
-      }
-    } else if (p !== CONFIG.memberPin) {
-      setErr(p === CONFIG.adminPin ? "That's the desk PIN. Open the shop desk door." : "That PIN is not on this shelf.");
-      return;
-    }
-    let claimed;
     try {
-      claimed = store.claimAccount({ name, desk });
-    } catch (err) {
-      setErr(err.message || "Type a name.");
+      const claimed = store.signInCard({ name, pin });
+      store.setSession({ name: claimed.name, account: claimed.account, admin: false });
+      onIn();
+    } catch (error) {
+      setErr(error.message);
+    }
+  }
+
+  function openDesk(e) {
+    e.preventDefault();
+    if (pin.replace(/\s/g, "") !== CONFIG.adminPin) {
+      setErr("That desk PIN is not right.");
       return;
     }
-    store.setSession({ name: claimed.name, account: claimed.account, admin: desk });
+    const display = name.trim().slice(0, 24);
+    if (!display) {
+      setErr("Type your name.");
+      return;
+    }
+    store.setSession({ name: display, account: "0", admin: true });
     onIn();
+  }
+
+  function claim(e) {
+    e.preventDefault();
+    try {
+      const claimed = store.claimCard({ account: invite.account, pin, name });
+      store.setSession({ name: claimed.name, account: claimed.account, admin: false });
+      window.history.replaceState({}, "", window.location.pathname);
+      onIn();
+    } catch (error) {
+      setErr(error.message);
+    }
   }
 
   return (
     <div className="gate">
-      <div className="logo-frame">
-        <img className="logo" src="/art/logo.jpg" alt="The Deviant's Shelf" />
-      </div>
-      <div className="rule" aria-hidden="true" />
-      <p className="eyebrow">{door === "desk" ? "Shop desk" : "Members only"}</p>
-      <p className="lede">{CONFIG.tagline}</p>
-      <div className="doors">
-        <button type="button" className={door === "member" ? "on" : ""} onClick={() => { setDoor("member"); setErr(""); setPin(""); }}>
-          Member
-        </button>
-        <button type="button" className={door === "desk" ? "on" : ""} onClick={() => { setDoor("desk"); setErr(""); setPin(""); }}>
-          Shop desk
-        </button>
-      </div>
-      <form className="panel" onSubmit={enter}>
-        <label>{door === "desk" ? "Keeper name" : "Name on card"}</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={20} placeholder="The name this number sticks to" required />
-        <label>{door === "desk" ? "Desk PIN" : "Member PIN"}</label>
-        <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" placeholder="••••" autoComplete="off" />
-        {err && <p className="err">{err}</p>}
-        <button className="btn gold wide" type="submit">{door === "desk" ? "Open the desk" : "Enter"}</button>
-      </form>
+      {view === "claim" && invite && (
+        <>
+          <p className="eyebrow">You have been invited by</p>
+          <p className="lede">{CONFIG.shopName}</p>
+          {!open ? (
+            <button className="pass pass-closed" type="button" onClick={() => setOpen(true)}>
+              <img className="pass-art" src="/art/logo.jpg" alt="The Deviant's Shelf" />
+              <span>Tap to open</span>
+            </button>
+          ) : (
+            <form className="pass" onSubmit={claim}>
+              <div className="pass-top">
+                <img className="pass-mark tiny-mark" src="/art/crest.jpg" alt="" />
+                <span className="pass-pill">Member</span>
+              </div>
+              <img className="pass-word" src="/art/logo.jpg" alt="The Deviant's Shelf" />
+              <p className="pass-label">Member no.</p>
+              <p className="pass-no">{invite.account}</p>
+              <label>Name on card</label>
+              <input value={name} onChange={(e) => setName(e.target.value)} maxLength={24} placeholder="Your name" required />
+              <label>PIN</label>
+              <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" autoComplete="off" />
+              {err && <p className="err">{err}</p>}
+              <button className="btn gold wide" type="submit">Claim your card</button>
+              <p className="tiny">Your name is saved exactly as you type it. Sign in the same way later. You can keep this PIN or change it before you claim.</p>
+            </form>
+          )}
+          <p className="tiny">A card has been prepared for you.</p>
+        </>
+      )}
+
+      {view === "welcome" && (
+        <>
+          <button className="pass pass-closed" type="button" onClick={() => { setView("signin"); setErr(""); }}>
+            <img className="pass-art" src="/art/logo.jpg" alt="The Deviant's Shelf" />
+          </button>
+          <p className="lede">Have you been invited?</p>
+          <p className="muted">This shelf is invitation-only. If a card link was sent to you, open it to claim your name and PIN. Already have a card? Sign in with that name and PIN.</p>
+          <button className="btn gold wide" type="button" onClick={() => { setView("signin"); setErr(""); }}>Sign in</button>
+          <button className="tinybtn" type="button" onClick={() => { setView("desk"); setErr(""); setPin(""); }}>Shop desk</button>
+        </>
+      )}
+
+      {view === "signin" && (
+        <form className="panel" onSubmit={signIn}>
+          <p className="eyebrow">Sign in</p>
+          <label>Name on card</label>
+          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={24} placeholder="Your name" required />
+          <label>PIN</label>
+          <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" placeholder="••••••" autoComplete="off" />
+          {err && <p className="err">{err}</p>}
+          <button className="btn gold wide" type="submit">Sign in</button>
+          <button className="tinybtn" type="button" onClick={() => { setView("welcome"); setErr(""); }}>Back</button>
+        </form>
+      )}
+
+      {view === "desk" && (
+        <form className="panel" onSubmit={openDesk}>
+          <p className="eyebrow">Shop desk</p>
+          <p className="muted">Account no. 0. This door is only yours.</p>
+          <label>Name</label>
+          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={24} placeholder="Your name" required />
+          <label>Desk PIN</label>
+          <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" placeholder="••••" autoComplete="off" />
+          {err && <p className="err">{err}</p>}
+          <button className="btn gold wide" type="submit">Open the desk</button>
+          <button className="tinybtn" type="button" onClick={() => { setView("welcome"); setErr(""); }}>Back</button>
+        </form>
+      )}
     </div>
   );
 }
@@ -651,12 +721,47 @@ function labelStatus(s) {
 }
 
 function AdminDesk({ orders, onChange }) {
+  const [cards, setCards] = useState(() => store.listInvites());
+  const [fresh, setFresh] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  function cut() {
+    const card = store.cutCard();
+    setFresh(card);
+    setCards(store.listInvites());
+    setCopied(false);
+  }
+
+  async function copy(url) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   return (
     <section className="wrap">
       <h2>Desk</h2>
-      <p className="muted">
-        Account 0 is this desk. Each new name gets the next number. A number that has been used is not given out again. Tickets here are the ones placed on this phone.
-      </p>
+      <p className="muted">Account 0 is this door. Cut a card to give the next number. That number is not used again.</p>
+      <button className="btn gold" type="button" onClick={cut}>Cut a card</button>
+      {fresh && (
+        <div className="panel">
+          <p>Member no. {fresh.account}</p>
+          <p>PIN {fresh.pin}</p>
+          <p className="tiny">{fresh.url}</p>
+          <button className="btn" type="button" onClick={() => copy(fresh.url)}>{copied ? "Copied" : "Copy card link"}</button>
+        </div>
+      )}
+      {cards.length > 0 && (
+        <div className="panel">
+          <h3>Cards cut on this phone</h3>
+          {cards.map((c) => (
+            <p key={c.account} className="tiny">No. {c.account} · PIN {c.pin}</p>
+          ))}
+        </div>
+      )}
       {orders.map((o) => (
         <article className="ticket" key={o.id}>
           <div className="ticket-h">
