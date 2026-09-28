@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CONFIG, PRODUCTS } from "./data.js";
 import { FLAVOR, ROW_ORDER } from "./flavor.js";
 import * as store from "./store.js";
+import { notify } from "./mail.js";
 
 function money(n) {
   return `$${Number(n).toFixed(0)}`;
@@ -485,6 +486,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
       receipts: [],
     });
     onPlaced(order);
+    notify("received", order);
   }
 
   return (
@@ -670,6 +672,7 @@ function OrderCard({ order, onChange, tick }) {
         status: "review",
         receipts: [...(order.receipts || []), { name: file.name, data: reader.result, at: Date.now() }],
       });
+      notify("receipt", order);
       onChange();
     };
     reader.readAsDataURL(file);
@@ -713,8 +716,8 @@ function labelStatus(s) {
   return {
     unpaid: "Unpaid",
     review: "Payment under review",
-    processing: "Processing",
-    shipped: "Shipped",
+    processing: "Payment confirmed",
+    shipped: "Being prepared",
     expired: "Expired",
     history: "Closed",
   }[s] || s;
@@ -795,7 +798,12 @@ function AdminDesk({ session, orders, onChange }) {
           <p>Total {money(o.total)}</p>
           <div className="row-btns">
             {["review", "processing", "shipped", "history"].map((st) => (
-              <button key={st} className="btn slim" onClick={() => { store.updateOrder(o.id, { status: st }); onChange(); }}>
+              <button key={st} className="btn slim" onClick={() => {
+                store.updateOrder(o.id, { status: st });
+                if (st === "processing") notify("confirmed", o);
+                if (st === "shipped") notify("prepared", o);
+                onChange();
+              }}>
                 {labelStatus(st)}
               </button>
             ))}
