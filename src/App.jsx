@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CONFIG, PRODUCTS } from "./data.js";
+import { FLAVOR, ROW_ORDER } from "./flavor.js";
 import * as store from "./store.js";
 
 function money(n) {
@@ -196,7 +197,20 @@ function Catalog({ openId, setOpenId, cart, onAdd }) {
   const list = PRODUCTS.filter((p) => {
     const hay = `${p.code} ${p.name} ${p.sizes.map((s) => s.sku).join(" ")}`.toLowerCase();
     return hay.includes(q.trim().toLowerCase());
+  }).map((p) => {
+    const f = FLAVOR[p.id] || { row: "The shelf", note: "", line: p.blurb };
+    return { ...p, row: f.row, note: f.note, line: f.line || p.blurb };
   });
+  const groups = [];
+  for (const p of list) {
+    let g = groups.find((x) => x.row === p.row);
+    if (!g) {
+      g = { row: p.row, note: p.note, items: [] };
+      groups.push(g);
+    }
+    g.items.push(p);
+  }
+  groups.sort((a, b) => ROW_ORDER.indexOf(a.row) - ROW_ORDER.indexOf(b.row));
   const count = cart.reduce((n, l) => n + l.qty, 0);
 
   return (
@@ -207,7 +221,13 @@ function Catalog({ openId, setOpenId, cart, onAdd }) {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products" />
         <span className="muted">{count} in order</span>
       </div>
-      {list.map((p) => (
+      {groups.map((g) => (
+        <div key={g.row}>
+          <header className="shelf-row">
+            <h3>{g.row}</h3>
+            {g.note && <p>{g.note}</p>}
+          </header>
+          {g.items.map((p) => (
         <article key={p.id} className="acc">
           <button className="acc-h" onClick={() => setOpenId(openId === p.id ? "" : p.id)}>
             <span>{openId === p.id ? "▼" : "▶"} {p.name}</span>
@@ -215,7 +235,7 @@ function Catalog({ openId, setOpenId, cart, onAdd }) {
           </button>
           {openId === p.id && (
             <div className="acc-b">
-              <p className="blurb">{p.blurb}</p>
+              <p className="blurb">{p.line}</p>
               {p.sizes.map((s) => (
                 <div className="row" key={s.sku}>
                   <div>
@@ -251,6 +271,8 @@ function Catalog({ openId, setOpenId, cart, onAdd }) {
             </div>
           )}
         </article>
+          ))}
+        </div>
       ))}
       {coa && <CoaModal item={coa} onClose={() => setCoa(null)} />}
     </section>

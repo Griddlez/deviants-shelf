@@ -103,7 +103,14 @@ button, input { font: inherit; }
 }
 .acc-h em { color: var(--gold); font-style: normal; font-size: 12px; letter-spacing: 0.12em; }
 .acc-b { padding: 0 16px 14px; background: rgba(12, 7, 4, 0.55); }
-.blurb { color: var(--muted); margin: 0 0 10px; font-size: 14px; }
+.shelf-row { margin: 20px 0 8px; }
+.shelf-row h3 {
+  margin: 0; font-family: Cinzel, serif; color: var(--gold);
+  letter-spacing: 0.14em; text-transform: uppercase; font-size: 14px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+.shelf-row p { margin: 3px 0 0; color: var(--muted); font-style: italic; }
+.blurb { color: #f4ead6; margin: 0 0 10px; font-size: 15px; font-style: italic; }
 .row, .line { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(228, 194, 122, 0.22); }
 .row-r { display: flex; gap: 10px; align-items: center; }
 .sku { color: var(--gold); font-family: Cinzel, serif; }
