@@ -794,4 +794,17 @@ function AdminDesk({ session, orders, onChange }) {
           ))}
           <p>Total {money(o.total)}</p>
           <div className="row-btns">
-            {["review", "processing
+            {["review", "processing", "shipped", "history"].map((st) => (
+              <button key={st} className="btn slim" onClick={() => { store.updateOrder(o.id, { status: st }); onChange(); }}>
+                {labelStatus(st)}
+              </button>
+            ))}
+          </div>
+          {(o.receipts || []).map((r, i) => (
+            <img key={i} src={r.data} alt={r.name} className="rcpt" />
+          ))}
+        </article>
+      ))}
+    </section>
+  );
+}
