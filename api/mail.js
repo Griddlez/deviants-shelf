@@ -57,6 +57,7 @@ function itemsTable(order) {
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 16px;">${rows}
       <tr><td style="padding-top:10px;color:#d7fff8;">Subtotal</td><td></td><td style="padding-top:10px;text-align:right;color:#d7fff8;">${money(order.sub)}</td></tr>
+      ${order.discount > 0 ? `<tr><td style="color:#d7fff8;">Discount<div style="color:#9d8fb4;font-size:13px;">${esc((order.codes || []).join(" · "))}</div></td><td></td><td style="text-align:right;color:#d7fff8;">−${money(order.discount)}</td></tr>` : ""}
       <tr><td style="color:#d7fff8;">Shipping<div style="color:#9d8fb4;font-size:13px;">${esc(ship.label)}${ship.detail ? ` (${esc(ship.detail)})` : ""}</div></td><td></td><td style="text-align:right;color:#d7fff8;">${money(ship.price)}</td></tr>
       <tr><td style="padding-top:8px;color:#f6ecff;font-size:18px;">Total</td><td></td><td style="padding-top:8px;text-align:right;color:#2ec9b0;font-size:18px;">${money(order.total)}</td></tr>
     </table>`;

@@ -1,4 +1,5 @@
 import { get, put } from "@vercel/blob";
+import { CONFIG, quoteOrder } from "../src/data.js";
 
 const EMPTY = { next: 2, used: [0, 1], people: {}, invites: [] };
 
@@ -194,11 +195,11 @@ export default async function handler(req, res) {
     if (body.action === "join") {
       const display = String(body.name || "").trim().slice(0, 24);
       const pinClean = cleanPin(body.pin);
-      if (!display) throw new Error("Type the name for this card.");
-      if (!/^\d{4,8}$/.test(pinClean)) throw new Error("Use a PIN of 4 to 8 digits.");
+      if (!display) throw new Error("Type the name on the invitation.");
+      if (!/^\d{4,8}$/.test(pinClean)) throw new Error("Use a gate code of 4 to 8 digits.");
       const book = await readBook();
       if (!book.door || book.door !== String(body.token || "")) throw new Error("This invite is not valid.");
-      if (book.people[display]) throw new Error("That name is already on a card. Sign in, or use a different name.");
+      if (book.people[display]) throw new Error("That name is already on an invitation. Sign in, or use a different name.");
       const n = nextNumber(book);
       book.used.push(n);
       book.next = n + 1;
@@ -212,13 +213,13 @@ export default async function handler(req, res) {
       const display = String(body.name || "").trim().slice(0, 24);
       const pinClean = cleanPin(body.pin);
       const n = Number(body.account);
-      if (!display) throw new Error("Type the name for this card.");
-      if (!/^\d{4,8}$/.test(pinClean)) throw new Error("Use a PIN of 4 to 8 digits.");
+      if (!display) throw new Error("Type the name on the invitation.");
+      if (!/^\d{4,8}$/.test(pinClean)) throw new Error("Use a gate code of 4 to 8 digits.");
       const book = await readBook();
       const invite = book.invites.find((c) => c.account === n);
-      if (!invite) throw new Error("This card is not in the book.");
-      if (invite.name && invite.name !== display) throw new Error("This card was already claimed under a different name.");
-      if (book.people[display] && book.people[display].account !== n) throw new Error("That name is already on another card.");
+      if (!invite) throw new Error("This invitation is not in the book.");
+      if (invite.name && invite.name !== display) throw new Error("This invitation was already claimed under a different name.");
+      if (book.people[display] && book.people[display].account !== n) throw new Error("That name is already on another invitation.");
       invite.name = display;
       invite.pin = pinClean;
       if (!book.used.includes(n)) book.used.push(n);
@@ -232,7 +233,7 @@ export default async function handler(req, res) {
       const book = await readBook();
       const person = book.people[display];
       if (!person || person.pin !== cleanPin(body.pin)) {
-        res.status(401).json({ error: "That name and PIN do not match a card. Type the name exactly as it was claimed." });
+        res.status(401).json({ error: "That name and gate code do not match an invitation. Type the name exactly as it was claimed." });
         return;
       }
       res.status(200).json({
@@ -250,14 +251,14 @@ export default async function handler(req, res) {
       const book = await readBook();
       const person = book.people[display];
       if (!person || person.pin !== cleanPin(body.pin)) {
-        res.status(401).json({ error: "That PIN does not match this card." });
+        res.status(401).json({ error: "That gate code does not match this invitation." });
         return;
       }
       const email = String(body.email || "").trim().slice(0, 80);
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("That email does not look right.");
       const next = cleanPin(body.nextPin);
       if (next) {
-        if (!/^\d{4,8}$/.test(next)) throw new Error("Use a PIN of 4 to 8 digits.");
+        if (!/^\d{4,8}$/.test(next)) throw new Error("Use a gate code of 4 to 8 digits.");
         person.pin = next;
         const card = book.invites.find((c) => c.account === person.account);
         if (card) card.pin = next;
@@ -305,19 +306,31 @@ export default async function handler(req, res) {
       const id = book.nextOrder;
       book.nextOrder = id + 1;
       const contact = incoming.contact || {};
+      const fullItems = items.map((line) => ({
+        sku: String(line.sku || "").slice(0, 40),
+        name: String(line.name || "").slice(0, 80),
+        mg: String(line.mg || "").slice(0, 40),
+        price: Number(line.price) || 0,
+        qty: Math.max(1, Math.min(20, Number(line.qty) || 1)),
+      }));
+      const sub = fullItems.reduce((n, line) => n + line.price * line.qty, 0);
+      const quote = quoteOrder(sub, String(incoming.shipping?.id || ""), incoming.codes);
+      if (quote.error) throw new Error(quote.error);
+      const shipMeta = CONFIG.shipping.find((row) => row.id === incoming.shipping?.id);
       const full = {
         id,
         status: "unpaid",
         account: String(person.account),
         accountName: person.name,
-        items: items.map((line) => ({
-          sku: String(line.sku || "").slice(0, 40),
-          name: String(line.name || "").slice(0, 80),
-          mg: String(line.mg || "").slice(0, 40),
-          price: Number(line.price) || 0,
-          qty: Math.max(1, Math.min(20, Number(line.qty) || 1)),
-        })),
-        shipping: incoming.shipping || null,
+        items: fullItems,
+        shipping: {
+          id: shipMeta.id,
+          label: quote.hand ? "Hand delivery" : shipMeta.label,
+          detail: quote.hand ? "No shipping fee" : shipMeta.detail,
+          price: quote.shipPrice,
+        },
+        codes: quote.codes,
+        discount: quote.discount,
         contact: {
           fullName: String(contact.fullName || "").slice(0, 80),
           line1: String(contact.line1 || "").slice(0, 120),
@@ -327,8 +340,8 @@ export default async function handler(req, res) {
           zip: String(contact.zip || "").slice(0, 20),
           email: String(contact.email || person.email || "").slice(0, 80),
         },
-        sub: Number(incoming.sub) || 0,
-        total: Number(incoming.total) || 0,
+        sub,
+        total: quote.total,
         placedAt: Date.now(),
         receipts: [],
       };
@@ -387,7 +400,7 @@ export default async function handler(req, res) {
         return;
       }
       const order = book.orders.find((item) => item.id === Number(body.id));
-      if (!order || String(order.account) !== String(person.account)) throw new Error("That order is not on this card.");
+      if (!order || String(order.account) !== String(person.account)) throw new Error("That order is not on this invitation.");
       if (order.status !== "unpaid" && order.status !== "review") throw new Error("This order is not waiting on a receipt.");
       const data = String(body.data || "");
       if (!data.startsWith("data:image/") || data.length > 1800000) throw new Error("Use a smaller photo of the receipt.");
@@ -414,7 +427,7 @@ export default async function handler(req, res) {
       if (!deskOk(body.deskPin)) {
         const person = memberOk(book, body.name, body.pin);
         if (!person || String(order.account) !== String(person.account)) {
-          res.status(401).json({ error: "That receipt is not on this card." });
+          res.status(401).json({ error: "That receipt is not on this invitation." });
           return;
         }
       }
