@@ -513,6 +513,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
     email: session.email || "",
   });
   const [ruo, setRuo] = useState(false);
+  const [adult, setAdult] = useState(false);
   const [slid, setSlid] = useState(false);
 
   const ship = CONFIG.shipping.find((s) => s.id === shipId);
