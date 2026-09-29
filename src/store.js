@@ -76,6 +76,11 @@ export function placeOrder({ name, pin, order }) {
   return postBook({ action: "place", name, pin, order });
 }
 
+export function ping(session) {
+  if (session?.admin) return postBook({ action: "ping", deskPin: session.deskPin });
+  return postBook({ action: "ping", name: session?.name, pin: session?.pin });
+}
+
 export function listOrders(session) {
   if (session?.admin) return postBook({ action: "orders", deskPin: session.deskPin });
   return postBook({ action: "orders", name: session?.name, pin: session?.pin });

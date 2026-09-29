@@ -44,10 +44,16 @@ export default function App() {
   useEffect(() => {
     if (!session) return undefined;
     let stop = false;
-    async function pull() {
+    let seen = null;
+    async function pull(force) {
       const current = store.getState().session;
       if (!current || stop) return;
       try {
+        const ping = await store.ping(current);
+        const rev = Number(ping.rev) || 0;
+        if (Date.now() < hold.current) return;
+        if (!force && seen === rev) return;
+        seen = rev;
         const data = await store.listOrders(current);
         const next = data.orders || [];
         setOrders((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
@@ -55,9 +61,10 @@ export default function App() {
         /* keep the list already on screen */
       }
     }
-    const timer = setInterval(pull, 4000);
+    pull(true);
+    const timer = setInterval(() => pull(false), 1000);
     const onShow = () => {
-      if (document.visibilityState === "visible") pull();
+      if (document.visibilityState === "visible") pull(true);
     };
     document.addEventListener("visibilitychange", onShow);
     return () => {
@@ -66,6 +73,13 @@ export default function App() {
       document.removeEventListener("visibilitychange", onShow);
     };
   }, [session]);
+
+  const hold = useRef(0);
+
+  function patchOrder(id, patch) {
+    hold.current = Date.now() + 2500;
+    setOrders((prev) => prev.map((order) => (order.id === id ? { ...order, ...patch } : order)));
+  }
 
   async function refresh() {
     const s = store.getState();
@@ -147,6 +161,7 @@ export default function App() {
           orders={live}
           session={session}
           onChange={refresh}
+          patchOrder={patchOrder}
           setFlash={setFlash}
         />
       )}
@@ -159,6 +174,7 @@ export default function App() {
           orders={past}
           session={session}
           onChange={refresh}
+          patchOrder={patchOrder}
           setFlash={setFlash}
         />
       )}
@@ -735,7 +751,7 @@ function PlacedModal({ order, onClose }) {
   );
 }
 
-function OrderList({ title, subtitle, orders, onChange, tick, session }) {
+function OrderList({ title, subtitle, orders, onChange, tick, session, patchOrder }) {
   return (
     <section className="wrap">
       <h2>{title}</h2>
@@ -743,14 +759,14 @@ function OrderList({ title, subtitle, orders, onChange, tick, session }) {
       {!orders.length && <p className="muted">Nothing here yet.</p>}
       {orders.map((o) => (
         session?.admin
-          ? <DeskTicket key={o.id} order={o} session={session} onChange={onChange} />
-          : <OrderCard key={o.id} order={o} tick={tick} onChange={onChange} session={session} />
+          ? <DeskTicket key={o.id} order={o} session={session} onChange={onChange} patchOrder={patchOrder} />
+          : <OrderCard key={o.id} order={o} tick={tick} onChange={onChange} session={session} patchOrder={patchOrder} />
       ))}
     </section>
   );
 }
 
-function OrderCard({ order, onChange, tick, session }) {
+function OrderCard({ order, onChange, tick, session, patchOrder }) {
   const left = remainingMs(order);
   const expired = order.status === "unpaid" && left <= 0;
   const noted = useRef(false);
@@ -767,6 +783,7 @@ function OrderCard({ order, onChange, tick, session }) {
     if (!file) return;
     try {
       const data = await shrinkImage(file);
+      patchOrder?.(order.id, { status: "review" });
       const saved = await store.addReceipt({
         name: session.name,
         pin: session.pin,
@@ -778,6 +795,7 @@ function OrderCard({ order, onChange, tick, session }) {
       onChange();
     } catch (error) {
       window.alert(error.message);
+      onChange();
     }
   }
 
@@ -910,7 +928,7 @@ function AccountCard({ session, onSaved }) {
   );
 }
 
-function DeskTicket({ order, session, onChange }) {
+function DeskTicket({ order, session, onChange, patchOrder }) {
   const left = remainingMs(order);
   const [pick, setPick] = useState("");
   const [busy, setBusy] = useState(false);
@@ -919,17 +937,19 @@ function DeskTicket({ order, session, onChange }) {
 
   async function confirm() {
     if (!chosen || busy) return;
+    const next = pick;
+    patchOrder?.(order.id, { status: next });
+    setPick("");
     setBusy(true);
-    setNote("");
+    setNote(`Updated to ${labelStatus(next)}.`);
     try {
-      await store.setOrderStatus({ deskPin: session.deskPin, id: order.id, status: pick });
-      if (pick === "processing") notify("confirmed", order);
-      if (pick === "shipped") notify("prepared", order);
-      setNote(`Updated to ${labelStatus(pick)}.`);
-      setPick("");
+      await store.setOrderStatus({ deskPin: session.deskPin, id: order.id, status: next });
+      if (next === "processing") notify("confirmed", order);
+      if (next === "shipped") notify("prepared", order);
       onChange();
     } catch (error) {
       setNote(error.message);
+      onChange();
     } finally {
       setBusy(false);
     }
