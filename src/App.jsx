@@ -66,7 +66,9 @@ export default function App() {
           <button className="btn gold" onClick={() => { setTab("order"); setFlow({ step: "ship" }); }}>
             Place Order
           </button>
-          <div className="acct">Account No. {session.account} · {session.name}</div>
+          <button className="acct" type="button" onClick={() => setTab("account")}>
+            Account No. {session.account} · {session.name}
+          </button>
         </div>
       </header>
 
@@ -76,9 +78,7 @@ export default function App() {
           Active Orders{live.length ? ` (${live.length})` : ""}
         </button>
         <button className={tab === "history" ? "on" : ""} onClick={() => setTab("history")}>History</button>
-        {!session.admin && (
-          <button className={tab === "account" ? "on" : ""} onClick={() => setTab("account")}>Card</button>
-        )}
+        <button className={tab === "account" ? "on" : ""} onClick={() => setTab("account")}>Card</button>
         {session.admin && (
           <button className={tab === "admin" ? "on" : ""} onClick={() => setTab("admin")}>Desk</button>
         )}
@@ -118,6 +118,8 @@ export default function App() {
           setFlash={setFlash}
         />
       )}
+
+      {tab === "account" && <AccountCard session={session} onSaved={refresh} />}
 
       {tab === "admin" && session.admin && <AdminDesk session={session} orders={orders} onChange={refresh} />}
 
@@ -328,7 +330,7 @@ function Catalog({ openId, setOpenId, cart, onAdd }) {
             {g.note && <p>{g.note}</p>}
           </header>
           {g.items.map((p) => (
-        <article key={p.id} className="acc">
+        <article key={p.id} className={openId === p.id ? "acc open" : "acc"}>
           <button className="acc-h" onClick={() => setOpenId(openId === p.id ? "" : p.id)}>
             <span>{openId === p.id ? "▼" : "▶"} {p.name}</span>
             <em>{p.code}</em>
