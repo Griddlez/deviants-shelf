@@ -11,6 +11,8 @@ async function readBook() {
   if (!Array.isArray(data.used)) data.used = [0, 1];
   if (!data.people) data.people = {};
   if (!Array.isArray(data.invites)) data.invites = [];
+  if (!Array.isArray(data.orders)) data.orders = [];
+  if (!data.nextOrder || data.nextOrder < 1001) data.nextOrder = 1001;
   if (!data.next || data.next < 1) data.next = 2;
   return data;
 }
@@ -44,6 +46,33 @@ function nextNumber(book) {
 function deskOk(pin) {
   const expected = process.env.DESK_PIN || "";
   return expected && cleanPin(pin) === expected;
+}
+
+function memberOk(book, name, pin) {
+  const person = book.people[String(name || "").trim()];
+  if (!person || person.pin !== cleanPin(pin)) return null;
+  return person;
+}
+
+function sweep(book) {
+  if (!Array.isArray(book.orders)) book.orders = [];
+  if (!book.nextOrder || book.nextOrder < 1001) book.nextOrder = 1001;
+  const limit = 24 * 3600 * 1000;
+  let dirty = false;
+  for (const order of book.orders) {
+    if (order.status === "unpaid" && Date.now() > order.placedAt + limit) {
+      order.status = "expired";
+      dirty = true;
+    }
+  }
+  return dirty;
+}
+
+function publicOrder(order) {
+  return {
+    ...order,
+    receipts: (order.receipts || []).map(({ name, at, path }) => ({ name, at, path })),
+  };
 }
 
 export default async function handler(req, res) {
@@ -163,6 +192,128 @@ export default async function handler(req, res) {
       book.people[display] = person;
       await writeBook(book);
       res.status(200).json({ account: String(person.account), name: person.name, email, pin: person.pin });
+      return;
+    }
+    if (body.action === "place") {
+      const book = await readBook();
+      const person = memberOk(book, body.name, body.pin);
+      if (!person) {
+        res.status(401).json({ error: "Sign in again before placing an order." });
+        return;
+      }
+      const incoming = body.order || {};
+      const items = Array.isArray(incoming.items) ? incoming.items.slice(0, 40) : [];
+      if (!items.length) throw new Error("The basket is empty.");
+      sweep(book);
+      const id = book.nextOrder;
+      book.nextOrder = id + 1;
+      const contact = incoming.contact || {};
+      const full = {
+        id,
+        status: "unpaid",
+        account: String(person.account),
+        accountName: person.name,
+        items: items.map((line) => ({
+          sku: String(line.sku || "").slice(0, 40),
+          name: String(line.name || "").slice(0, 80),
+          mg: String(line.mg || "").slice(0, 40),
+          price: Number(line.price) || 0,
+          qty: Math.max(1, Math.min(20, Number(line.qty) || 1)),
+        })),
+        shipping: incoming.shipping || null,
+        contact: {
+          fullName: String(contact.fullName || "").slice(0, 80),
+          line1: String(contact.line1 || "").slice(0, 120),
+          line2: String(contact.line2 || "").slice(0, 120),
+          city: String(contact.city || "").slice(0, 80),
+          state: String(contact.state || "").slice(0, 40),
+          zip: String(contact.zip || "").slice(0, 20),
+          email: String(contact.email || person.email || "").slice(0, 80),
+        },
+        sub: Number(incoming.sub) || 0,
+        total: Number(incoming.total) || 0,
+        placedAt: Date.now(),
+        receipts: [],
+      };
+      book.orders.unshift(full);
+      await writeBook(book);
+      res.status(200).json(publicOrder(full));
+      return;
+    }
+    if (body.action === "orders") {
+      const book = await readBook();
+      const dirty = sweep(book);
+      if (dirty) await writeBook(book);
+      let list = book.orders;
+      if (!deskOk(body.deskPin)) {
+        const person = memberOk(book, body.name, body.pin);
+        if (!person) {
+          res.status(401).json({ error: "Sign in again to see orders." });
+          return;
+        }
+        list = list.filter((order) => String(order.account) === String(person.account));
+      }
+      res.status(200).json({ orders: list.map(publicOrder) });
+      return;
+    }
+    if (body.action === "status") {
+      if (!deskOk(body.deskPin)) {
+        res.status(401).json({ error: "That desk PIN is not right." });
+        return;
+      }
+      const book = await readBook();
+      const order = book.orders.find((item) => item.id === Number(body.id));
+      if (!order) throw new Error("That order is not in the book.");
+      const allowed = ["review", "processing", "shipped", "history", "expired", "unpaid"];
+      if (!allowed.includes(body.status)) throw new Error("That status is not used.");
+      order.status = body.status;
+      await writeBook(book);
+      res.status(200).json(publicOrder(order));
+      return;
+    }
+    if (body.action === "receipt") {
+      const book = await readBook();
+      const person = memberOk(book, body.name, body.pin);
+      if (!person) {
+        res.status(401).json({ error: "Sign in again before attaching a receipt." });
+        return;
+      }
+      const order = book.orders.find((item) => item.id === Number(body.id));
+      if (!order || String(order.account) !== String(person.account)) throw new Error("That order is not on this card.");
+      if (order.status !== "unpaid" && order.status !== "review") throw new Error("This order is not waiting on a receipt.");
+      const data = String(body.data || "");
+      if (!data.startsWith("data:image/") || data.length > 1800000) throw new Error("Use a smaller photo of the receipt.");
+      const path = `receipts/${order.id}-${Date.now()}.jpg`;
+      const raw = data.split(",")[1] || "";
+      await put(path, Buffer.from(raw, "base64"), {
+        access: "private",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        contentType: "image/jpeg",
+      });
+      order.receipts.push({ name: String(body.fileName || "receipt").slice(0, 80), at: Date.now(), path });
+      order.status = "review";
+      await writeBook(book);
+      res.status(200).json(publicOrder(order));
+      return;
+    }
+    if (body.action === "picture") {
+      const path = String(body.path || "");
+      if (!/^receipts\/[\w.-]+$/.test(path)) throw new Error("That receipt is not in the book.");
+      const book = await readBook();
+      const order = book.orders.find((item) => (item.receipts || []).some((receipt) => receipt.path === path));
+      if (!order) throw new Error("That receipt is not in the book.");
+      if (!deskOk(body.deskPin)) {
+        const person = memberOk(book, body.name, body.pin);
+        if (!person || String(order.account) !== String(person.account)) {
+          res.status(401).json({ error: "That receipt is not on this card." });
+          return;
+        }
+      }
+      const result = await get(path, { access: "private" });
+      if (!result) throw new Error("That receipt could not be opened.");
+      const bytes = Buffer.from(await new Response(result.stream).arrayBuffer());
+      res.status(200).json({ data: `data:image/jpeg;base64,${bytes.toString("base64")}` });
       return;
     }
     res.status(400).json({ error: "Unknown request." });
