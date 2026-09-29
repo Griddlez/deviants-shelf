@@ -8,6 +8,18 @@ function money(n) {
   return `$${Number(n).toFixed(0)}`;
 }
 
+function trackHref(order) {
+  const n = encodeURIComponent(String(order.tracking || "").trim());
+  const id = order.shipping?.id || "";
+  if (id === "fedex2" || id === "overnight") return `https://www.fedex.com/fedextrack/?trknbr=${n}`;
+  return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}`;
+}
+
+function when(at) {
+  if (!at) return "";
+  return new Date(at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
 function remainingMs(order) {
   const end = order.placedAt + CONFIG.receiptHours * 3600 * 1000;
   return end - Date.now();
@@ -826,10 +838,53 @@ function OrderCard({ order, onChange, tick, session, patchOrder }) {
       {order.status === "review" && <p>Payment under review — a receipt is waiting to be verified.</p>}
       {order.status === "processing" && <p>Paid. Ticket is in processing.</p>}
       {order.status === "shipped" && <p>Being prepared.</p>}
-      {(order.receipts || []).map((r, i) => (
-        <ReceiptPic key={r.path || i} session={session} path={r.path} name={r.name} />
-      ))}
+      {order.status === "sent" && order.tracking && (
+        <p>Shipped. Track it: <a href={trackHref(order)} target="_blank" rel="noreferrer">{order.tracking}</a></p>
+      )}
+      {!!(order.receipts || []).length && (
+        <div className="receipt-box">
+          <h4>Payment receipt</h4>
+          {(order.receipts || []).map((r, i) => (
+            <ReceiptView key={r.path || i} session={session} path={r.path} name={r.name} at={r.at} />
+          ))}
+        </div>
+      )}
     </article>
+  );
+}
+
+function ReceiptView({ session, path, name, at }) {
+  const [open, setOpen] = useState(false);
+  const [src, setSrc] = useState("");
+  const [err, setErr] = useState("");
+
+  async function show() {
+    try {
+      if (!src) {
+        const result = await store.receiptImage(session, path);
+        setSrc(result.data);
+      }
+      setOpen(true);
+    } catch (error) {
+      setErr(error.message);
+    }
+  }
+
+  return (
+    <div>
+      <button className="btn wide receipt-btn" type="button" onClick={show}>View receipt</button>
+      {at && <p className="tiny">Added {when(at)}</p>}
+      {err && <p className="err">{err}</p>}
+      {open && src && (
+        <div className="modal" onClick={() => setOpen(false)}>
+          <div className="panel modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Payment receipt</h3>
+            <img className="rcpt" src={src} alt={name || "Receipt"} />
+            <button className="btn gold wide" type="button" onClick={() => setOpen(false)}>Close</button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -933,19 +988,25 @@ function DeskTicket({ order, session, onChange, patchOrder }) {
   const [pick, setPick] = useState("");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
-  const chosen = pick && pick !== order.status;
+  const [track, setTrack] = useState(order.tracking || "");
+  const needsTrack = pick === "sent";
+  const changed = Boolean(pick) && (pick !== order.status || (needsTrack && track.trim() && track.trim() !== (order.tracking || "")));
+  const chosen = changed && (!needsTrack || track.trim());
 
   async function confirm() {
     if (!chosen || busy) return;
     const next = pick;
-    patchOrder?.(order.id, { status: next });
+    const tracking = next === "sent" ? track.trim() : order.tracking;
+    patchOrder?.(order.id, { status: next, tracking });
     setPick("");
     setBusy(true);
     setNote(`Updated to ${labelStatus(next)}.`);
+    const posted = { ...order, status: next, tracking };
     try {
-      await store.setOrderStatus({ deskPin: session.deskPin, id: order.id, status: next });
-      if (next === "processing") notify("confirmed", order);
-      if (next === "shipped") notify("prepared", order);
+      await store.setOrderStatus({ deskPin: session.deskPin, id: order.id, status: next, tracking });
+      if (next === "processing") notify("confirmed", posted);
+      if (next === "shipped") notify("prepared", posted);
+      if (next === "sent") notify("tracking", posted);
       onChange();
     } catch (error) {
       setNote(error.message);
@@ -972,9 +1033,12 @@ function DeskTicket({ order, session, onChange, patchOrder }) {
           <b>{money(l.price * l.qty)}</b>
         </div>
       ))}
+      {order.status === "sent" && order.tracking && (
+        <p>Tracking: <a href={trackHref(order)} target="_blank" rel="noreferrer">{order.tracking}</a></p>
+      )}
       <p>Total {money(order.total)}</p>
       <div className="row-btns">
-        {["review", "processing", "shipped", "history"].map((st) => (
+        {["review", "processing", "shipped", "sent", "history"].map((st) => (
           <button
             key={st}
             type="button"
@@ -986,6 +1050,12 @@ function DeskTicket({ order, session, onChange, patchOrder }) {
         ))}
       </div>
       {chosen && <p className="tiny">Selected: {labelStatus(pick)}. Nothing is sent until you confirm.</p>}
+      {needsTrack && (
+        <label>
+          Tracking number
+          <input value={track} onChange={(e) => setTrack(e.target.value)} placeholder="Paste the tracking number" />
+        </label>
+      )}
       <button className="btn gold" type="button" disabled={!chosen || busy} onClick={confirm}>
         {busy ? "Updating…" : "Confirm order update"}
       </button>
@@ -1003,6 +1073,7 @@ function labelStatus(s) {
     review: "Payment under review",
     processing: "Payment confirmed",
     shipped: "Being prepared",
+    sent: "Shipped",
     expired: "Expired",
     history: "Closed",
   }[s] || s;

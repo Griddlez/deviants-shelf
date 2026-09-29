@@ -227,8 +227,12 @@ button.acct:hover, button.acct:active {
 .badge.review { background: #3a2a55; color: #d7c4ff; }
 .badge.processing { background: #16331f; color: #9de0b0; }
 .badge.shipped { background: #132a44; color: #9cc4ef; }
+.badge.sent { background: #1a3a32; color: #9de0c8; }
 .badge.expired { background: #3a1515; color: #f0a0a0; }
 .timer { background: #8a5a22; color: #fff; text-align: center; padding: 8px; margin: 8px 0; }
+.receipt-box { border: 1px solid var(--line); margin-top: 12px; padding: 10px; }
+.receipt-box h4 { margin: 0 0 8px; letter-spacing: 0.14em; font-size: 12px; color: var(--gold); text-transform: uppercase; }
+.receipt-btn { display: block; text-align: center; }
 .rcpt { max-width: 100%; margin-top: 8px; border: 1px solid var(--line); }
 .foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 28px; color: var(--muted); font-size: 13px; }
 .pass {
