@@ -140,8 +140,8 @@ function deskLetter(kind, order) {
 
 function trackHref(order) {
   const n = encodeURIComponent(String(order.tracking || "").trim());
-  const id = order.shipping?.id || "";
-  if (id === "fedex2" || id === "overnight") return `https://www.fedex.com/fedextrack/?trknbr=${n}`;
+  const fedex = order.carrier === "fedex" || (!order.carrier && (order.shipping?.id === "fedex2" || order.shipping?.id === "overnight"));
+  if (fedex) return `https://www.fedex.com/fedextrack/?trknbr=${n}`;
   return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}`;
 }
 
@@ -191,13 +191,13 @@ function letter(kind, order) {
   }
   if (kind === "tracking") {
     const href = trackHref(order);
-    const carrier = esc(order.shipping?.label || "the carrier");
+    const carrierName = order.carrier === "fedex" ? "FedEx" : order.carrier === "usps" ? "USPS" : (order.shipping?.label || "the carrier");
     return {
       subject: `The Deviant's Shelf — Order #${order.id} — shipped`,
       html: shell({
         kicker: "The Deviant's Shelf",
         title: `Order #${id} has shipped`,
-        body: `<p>Hi ${name},</p><p>Your order is on the way with ${carrier}.</p><p>Tracking number: <a href="${href}" style="color:#2ec9b0;">${esc(order.tracking || "")}</a></p><p>That number opens the ${carrier} tracking page.</p>`,
+        body: `<p>Hi ${name},</p><p>Your order is on the way with ${esc(carrierName)}.</p><p>Tracking number: <a href="${href}" style="color:#2ec9b0;">${esc(order.tracking || "")}</a></p><p>That number opens the ${esc(carrierName)} tracking page.</p>`,
       }),
     };
   }
