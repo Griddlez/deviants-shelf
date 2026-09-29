@@ -13,6 +13,8 @@ async function readBook() {
   if (!Array.isArray(data.invites)) data.invites = [];
   if (!Array.isArray(data.orders)) data.orders = [];
   if (!data.nextOrder || data.nextOrder < 1001) data.nextOrder = 1001;
+  if (!data.stock || typeof data.stock !== "object") data.stock = {};
+  if (!data.pay || typeof data.pay !== "object") data.pay = {};
   if (!data.next || data.next < 1) data.next = 2;
   return data;
 }
@@ -69,6 +71,36 @@ function sweep(book) {
   return dirty;
 }
 
+function publicPay(pay) {
+  const out = {};
+  for (const key of ["ownerName", "venmo", "zelle", "cashApp", "chime", "crypto"]) {
+    const value = String(pay?.[key] || "").trim();
+    if (value && !/^SET\b/i.test(value)) out[key] = value;
+  }
+  return out;
+}
+
+function cleanLine(line) {
+  return {
+    sku: String(line?.sku || "").slice(0, 40),
+    name: String(line?.name || "").slice(0, 80),
+    mg: String(line?.mg || "").slice(0, 40),
+    price: Number(line?.price) || 0,
+    qty: Math.max(1, Math.min(20, Number(line?.qty) || 1)),
+  };
+}
+
+function cleanAddress(address) {
+  const row = address || {};
+  return {
+    fullName: String(row.fullName || "").slice(0, 80),
+    line1: String(row.line1 || "").slice(0, 120),
+    line2: String(row.line2 || "").slice(0, 120),
+    city: String(row.city || "").slice(0, 80),
+    state: String(row.state || "").slice(0, 40),
+    zip: String(row.zip || "").slice(0, 20),
+  };
+}
 function publicOrder(order) {
   return {
     ...order,
@@ -169,7 +201,14 @@ export default async function handler(req, res) {
         res.status(401).json({ error: "That name and PIN do not match a card. Type the name exactly as it was claimed." });
         return;
       }
-      res.status(200).json({ account: String(person.account), name: person.name, email: person.email || "" });
+      res.status(200).json({
+        account: String(person.account),
+        name: person.name,
+        email: person.email || "",
+        cart: person.cart || [],
+        address: person.address || null,
+        templates: person.templates || [],
+      });
       return;
     }
     if (body.action === "save") {
@@ -189,10 +228,11 @@ export default async function handler(req, res) {
         const card = book.invites.find((c) => c.account === person.account);
         if (card) card.pin = next;
       }
+      if (body.address) person.address = cleanAddress(body.address);
       person.email = email;
       book.people[display] = person;
       await writeBook(book);
-      res.status(200).json({ account: String(person.account), name: person.name, email, pin: person.pin });
+      res.status(200).json({ account: String(person.account), name: person.name, email, pin: person.pin, address: person.address || null });
       return;
     }
     if (body.action === "ping") {
@@ -214,6 +254,19 @@ export default async function handler(req, res) {
       const incoming = body.order || {};
       const items = Array.isArray(incoming.items) ? incoming.items.slice(0, 40) : [];
       if (!items.length) throw new Error("The basket is empty.");
+      if (!book.stock || typeof book.stock !== "object") book.stock = {};
+      const need = {};
+      for (const line of items) {
+        const sku = String(line.sku || "");
+        const qty = Math.max(1, Math.min(20, Number(line.qty) || 1));
+        if (!sku) continue;
+        need[sku] = (need[sku] || 0) + qty;
+      }
+      for (const [sku, qty] of Object.entries(need)) {
+        if (typeof book.stock[sku] === "number" && book.stock[sku] < qty) {
+          throw new Error(`${sku} only has ${book.stock[sku]} left.`);
+        }
+      }
       sweep(book);
       const id = book.nextOrder;
       book.nextOrder = id + 1;
@@ -246,6 +299,10 @@ export default async function handler(req, res) {
         receipts: [],
       };
       book.orders.unshift(full);
+      for (const [sku, qty] of Object.entries(need)) {
+        if (typeof book.stock[sku] === "number") book.stock[sku] -= qty;
+      }
+      person.cart = [];
       await writeBook(book);
       res.status(200).json(publicOrder(full));
       return;
@@ -263,7 +320,7 @@ export default async function handler(req, res) {
         }
         list = list.filter((order) => String(order.account) === String(person.account));
       }
-      res.status(200).json({ orders: list.map(publicOrder) });
+      res.status(200).json({ orders: list.map(publicOrder), stock: book.stock || {}, pay: publicPay(book.pay) });
       return;
     }
     if (body.action === "status") {
@@ -331,6 +388,79 @@ export default async function handler(req, res) {
       if (!result) throw new Error("That receipt could not be opened.");
       const bytes = Buffer.from(await new Response(result.stream).arrayBuffer());
       res.status(200).json({ data: `data:image/jpeg;base64,${bytes.toString("base64")}` });
+      return;
+    }
+    if (body.action === "door") {
+      if (!deskOk(body.deskPin)) {
+        res.status(401).json({ error: "That desk PIN is not right." });
+        return;
+      }
+      res.status(200).json({ ok: true });
+      return;
+    }
+    if (body.action === "cart") {
+      const book = await readBook();
+      const person = memberOk(book, body.name, body.pin);
+      if (!person) {
+        res.status(401).json({ error: "Sign in again." });
+        return;
+      }
+      person.cart = (Array.isArray(body.cart) ? body.cart : []).slice(0, 40).map(cleanLine).filter((line) => line.sku);
+      book.people[person.name] = person;
+      await writeBook(book);
+      res.status(200).json({ cart: person.cart });
+      return;
+    }
+    if (body.action === "stock") {
+      if (!deskOk(body.deskPin)) {
+        res.status(401).json({ error: "That desk PIN is not right." });
+        return;
+      }
+      const book = await readBook();
+      if (!book.stock) book.stock = {};
+      const sku = String(body.sku || "").slice(0, 40);
+      if (!sku) throw new Error("Pick a product.");
+      if (body.qty === "" || body.qty === null || body.qty === undefined) delete book.stock[sku];
+      else book.stock[sku] = Math.max(0, Math.min(999, Number(body.qty) || 0));
+      await writeBook(book);
+      res.status(200).json({ stock: book.stock });
+      return;
+    }
+    if (body.action === "pay") {
+      if (!deskOk(body.deskPin)) {
+        res.status(401).json({ error: "That desk PIN is not right." });
+        return;
+      }
+      const book = await readBook();
+      const pay = {};
+      for (const key of ["ownerName", "venmo", "zelle", "cashApp", "chime", "crypto"]) {
+        pay[key] = String(body.pay?.[key] || "").trim().slice(0, 80);
+      }
+      book.pay = pay;
+      await writeBook(book);
+      res.status(200).json({ pay: publicPay(pay) });
+      return;
+    }
+    if (body.action === "template") {
+      const book = await readBook();
+      const person = memberOk(book, body.name, body.pin);
+      if (!person) {
+        res.status(401).json({ error: "Sign in again." });
+        return;
+      }
+      if (!Array.isArray(person.templates)) person.templates = [];
+      if (body.op === "drop") {
+        person.templates = person.templates.filter((item) => item.id !== String(body.id || ""));
+      } else {
+        const label = String(body.label || "").trim().slice(0, 40);
+        if (!label) throw new Error("Name the template.");
+        const items = (Array.isArray(body.items) ? body.items : []).slice(0, 40).map(cleanLine).filter((line) => line.sku);
+        if (!items.length) throw new Error("The basket is empty.");
+        person.templates = [{ id: String(Date.now()), label, items }, ...person.templates].slice(0, 8);
+      }
+      book.people[person.name] = person;
+      await writeBook(book);
+      res.status(200).json({ templates: person.templates });
       return;
     }
     res.status(400).json({ error: "Unknown request." });

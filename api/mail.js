@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { get } from "@vercel/blob";
 import { CONFIG } from "../src/data.js";
 
 const FROM = process.env.MAIL_FROM || "orders@thedeviantsshelf.com";
@@ -15,8 +16,8 @@ function money(n) {
   return `$${Number(n || 0).toFixed(0)}`;
 }
 
-function payRows() {
-  const pay = CONFIG.pay || {};
+function payRows(pay) {
+  pay = pay || CONFIG.pay || {};
   return [
     ["Venmo", pay.venmo],
     ["Zelle", pay.zelle],
@@ -69,11 +70,11 @@ function shipTo(contact) {
     <p style="margin:0;color:#f6ecff;">${esc(contact.fullName)}<br>${esc(contact.line1)}${contact.line2 ? `<br>${esc(contact.line2)}` : ""}<br>${esc(city)}</p>`;
 }
 
-function paymentBlock() {
-  const rows = payRows();
+function paymentBlock(pay) {
+  const rows = payRows(pay);
   if (!rows.length) return "";
   const lines = rows.map(([label, value]) => `<div style="padding:4px 0;"><span style="color:#9d8fb4;">${esc(label)}</span> <span style="color:#f6ecff;">${esc(value)}</span></div>`).join("");
-  const who = CONFIG.pay?.ownerName && !/^SET\b/i.test(CONFIG.pay.ownerName) ? `<div style="padding-bottom:6px;color:#f6ecff;">${esc(CONFIG.pay.ownerName)}</div>` : "";
+  const who = pay?.ownerName && !/^SET\b/i.test(pay.ownerName) ? `<div style="padding-bottom:6px;color:#f6ecff;">${esc(pay.ownerName)}</div>` : "";
   return `<p style="margin:16px 0 8px;color:#2ec9b0;">Send the exact total</p>${who}${lines}
     <p style="color:#d7fff8;">Payment is handled off the shelf. After you pay, open the order and attach a photo of the receipt.</p>`;
 }
@@ -155,7 +156,7 @@ function letter(kind, order) {
       html: shell({
         kicker: "The Deviant's Shelf",
         title: `Order #${id} — next step: payment`,
-        body: `<p>Hi ${name},</p><p>We've received order #${id}. Here is what you ordered.</p>${itemsTable(order)}${shipTo(order.contact)}${paymentBlock()}`,
+        body: `<p>Hi ${name},</p><p>We've received order #${id}. Here is what you ordered.</p>${itemsTable(order)}${shipTo(order.contact)}${paymentBlock(order.pay)}`,
       }),
     };
   }
@@ -204,6 +205,17 @@ function letter(kind, order) {
   return null;
 }
 
+async function bookPay() {
+  try {
+    const result = await get("ledger.json", { access: "private" });
+    if (!result) return null;
+    const data = JSON.parse(await new Response(result.stream).text());
+    return data.pay || null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Use POST." });
@@ -214,7 +226,8 @@ export default async function handler(req, res) {
     return;
   }
   const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
-  const order = body.order || {};
+  const order = { ...(body.order || {}) };
+  if (!order.pay) order.pay = await bookPay();
   const to = String(order.contact?.email || "").trim();
   const shop = String(process.env.MAIL_USER || "").trim();
   const note = letter(body.kind, order);
