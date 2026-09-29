@@ -1,17 +1,14 @@
 export const CONFIG = {
   shopName: "The Deviant's Shelf",
   tagline: "A small apothecary for people who already know where to look.",
-  // Change these before you send the link to anyone.
-  memberPin: "8135",
-  adminPin: "8008",
   receiptHours: 24,
   pay: {
     note: "No payment is taken in the app. Send the exact order total, then attach the receipt on Active Orders.",
-    ownerName: "Brandon Melton",
-    venmo: "@B-Melt",
+    ownerName: "SET YOUR NAME",
+    venmo: "SET VENMO",
     zelle: "SET ZELLE",
-    cashApp: "$Slycinder",
-    chime: "$Brandon-Melton-44",
+    cashApp: "SET CASH APP",
+    chime: "",
     crypto: "USDT (TRC-20) or BTC — ask for the wallet on the order.",
   },
   shipping: [

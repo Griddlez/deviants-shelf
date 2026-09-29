@@ -68,8 +68,28 @@ export function signInCard({ name, pin }) {
   return postBook({ action: "sign", name, pin });
 }
 
-export function saveCard({ name, pin, email, nextPin }) {
-  return postBook({ action: "save", name, pin, email, nextPin });
+export function saveCard({ name, pin, email, nextPin, address }) {
+  return postBook({ action: "save", name, pin, email, nextPin, address });
+}
+
+export function deskDoor(deskPin) {
+  return postBook({ action: "door", deskPin });
+}
+
+export function saveCart(session, cart) {
+  return postBook({ action: "cart", name: session?.name, pin: session?.pin, cart });
+}
+
+export function setStock({ deskPin, sku, qty }) {
+  return postBook({ action: "stock", deskPin, sku, qty });
+}
+
+export function savePay({ deskPin, pay }) {
+  return postBook({ action: "pay", deskPin, pay });
+}
+
+export function saveTemplate({ name, pin, label, items, op, id }) {
+  return postBook({ action: "template", name, pin, label, items, op, id });
 }
 
 export function placeOrder({ name, pin, order }) {

@@ -15,7 +15,9 @@ export function notify(kind, order) {
         qty: l.qty,
         price: l.price,
       })),
-      shipping: order.shipping ? { label: order.shipping.label, detail: order.shipping.detail, price: order.shipping.price } : null,
+      shipping: order.shipping ? { id: order.shipping.id, label: order.shipping.label, detail: order.shipping.detail, price: order.shipping.price } : null,
+      tracking: order.tracking || "",
+      carrier: order.carrier || "",
       contact: {
         fullName: order.contact?.fullName || "",
         line1: order.contact?.line1 || "",

@@ -46,6 +46,8 @@ export default function App() {
   const [openId, setOpenId] = useState("");
   const [cart, setCart] = useState(() => store.getState().cart);
   const [orders, setOrders] = useState([]);
+  const [stock, setStock] = useState({});
+  const [pay, setPay] = useState({});
   const [flow, setFlow] = useState(null);
   const [flash, setFlash] = useState(null);
 
@@ -74,6 +76,8 @@ export default function App() {
         const data = await store.listOrders(current);
         const next = data.orders || [];
         setOrders((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+        setStock(data.stock || {});
+        setPay(data.pay || {});
       } catch {
         /* keep the list already on screen */
       }
@@ -93,6 +97,13 @@ export default function App() {
 
   const hold = useRef(0);
 
+  function commitCart(next) {
+    store.setCart(next);
+    setCart(next);
+    const current = store.getState().session;
+    if (current && !current.admin) store.saveCart(current, next).catch(() => {});
+  }
+
   function patchOrder(id, patch) {
     hold.current = Date.now() + 2500;
     setOrders((prev) => prev.map((order) => (order.id === id ? { ...order, ...patch } : order)));
@@ -109,6 +120,8 @@ export default function App() {
     try {
       const data = await store.listOrders(s.session);
       setOrders(data.orders || []);
+      setStock(data.stock || {});
+      setPay(data.pay || {});
     } catch {
       setOrders([]);
     }
@@ -159,13 +172,16 @@ export default function App() {
           openId={openId}
           setOpenId={setOpenId}
           cart={cart}
+          stock={stock}
           onBasket={() => { setTab("order"); setFlow({ step: "ship" }); }}
           onAdd={(line) => {
+            const left = stock[line.sku];
+            const have = cart.find((item) => item.sku === line.sku)?.qty || 0;
+            if (typeof left === "number" && have + 1 > left) return;
             const next = cart.some((item) => item.sku === line.sku)
               ? cart.map((item) => (item.sku === line.sku ? { ...item, qty: item.qty + 1 } : item))
               : [...cart, line];
-            store.setCart(next);
-            setCart(next);
+            commitCart(next);
           }}
         />
       )}
@@ -198,13 +214,15 @@ export default function App() {
 
       {tab === "account" && <AccountCard session={session} onSaved={refresh} />}
 
-      {tab === "admin" && session.admin && <AdminDesk session={session} orders={orders} onChange={refresh} />}
+      {tab === "admin" && session.admin && (
+          <AdminDesk session={session} stock={stock} pay={pay} onStock={setStock} onPay={setPay} />
+        )}
 
       {(tab === "order" || flow) && tab === "order" && (
         <PlaceOrder
           session={session}
           cart={cart}
-          setCart={(c) => { store.setCart(c); setCart(c); }}
+          setCart={commitCart}
           onClose={() => { setFlow(null); setTab("catalog"); }}
           onPlaced={(order) => {
             refresh();
@@ -215,7 +233,7 @@ export default function App() {
         />
       )}
 
-      {flash && <PlacedModal order={flash} onClose={() => setFlash(null)} />}
+      {flash && <PlacedModal order={flash} pay={pay} onClose={() => setFlash(null)} />}
 
       <footer className="foot">
         <button className="ghost" onClick={() => { store.clearSession(); refresh(); }}>Sign out</button>
@@ -256,26 +274,36 @@ function Gate({ onIn }) {
     e.preventDefault();
     try {
       const claimed = await store.signInCard({ name, pin });
-      store.setSession({ name: claimed.name, account: claimed.account, admin: false, pin: pin.replace(/\s/g, ""), email: claimed.email || "" });
+      store.setSession({
+        name: claimed.name,
+        account: claimed.account,
+        admin: false,
+        pin: pin.replace(/\s/g, ""),
+        email: claimed.email || "",
+        address: claimed.address || null,
+        templates: claimed.templates || [],
+      });
+      if (Array.isArray(claimed.cart)) store.setCart(claimed.cart);
       onIn();
     } catch (error) {
       setErr(error.message);
     }
   }
 
-  function openDesk(e) {
+  async function openDesk(e) {
     e.preventDefault();
-    if (pin.replace(/\s/g, "") !== CONFIG.adminPin) {
-      setErr("That desk PIN is not right.");
-      return;
-    }
     const display = name.trim().slice(0, 24);
     if (!display) {
       setErr("Type your name.");
       return;
     }
-    store.setSession({ name: display, account: "0", admin: true, deskPin: pin.replace(/\s/g, "") });
-    onIn();
+    try {
+      await store.deskDoor(pin.replace(/\s/g, ""));
+      store.setSession({ name: display, account: "0", admin: true, deskPin: pin.replace(/\s/g, "") });
+      onIn();
+    } catch (error) {
+      setErr(error.message);
+    }
   }
 
   async function claim(e) {
@@ -288,7 +316,16 @@ function Gate({ onIn }) {
       const claimed = door
         ? await store.joinCard({ token: door, pin, name })
         : await store.claimCard({ account: invite.account, pin, name });
-      store.setSession({ name: claimed.name, account: claimed.account, admin: false, pin: pin.replace(/\s/g, ""), email: claimed.email || "" });
+      store.setSession({
+        name: claimed.name,
+        account: claimed.account,
+        admin: false,
+        pin: pin.replace(/\s/g, ""),
+        email: claimed.email || "",
+        address: claimed.address || null,
+        templates: claimed.templates || [],
+      });
+      if (Array.isArray(claimed.cart)) store.setCart(claimed.cart);
       window.history.replaceState({}, "", "/");
       onIn();
     } catch (error) {
@@ -379,7 +416,7 @@ function Gate({ onIn }) {
   );
 }
 
-function Catalog({ openId, setOpenId, cart, onAdd, onBasket }) {
+function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock }) {
   const [q, setQ] = useState("");
   const [coa, setCoa] = useState(null);
   const list = PRODUCTS.filter((p) => {
@@ -438,6 +475,7 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket }) {
                   </div>
                   <div className="row-r">
                     <span>{money(s.vial)}</span>
+                    {typeof stock?.[s.sku] === "number" && <span className="tiny">{stock[s.sku]} left</span>}
                     {s.coa?.file && (
                       <button
                         className="btn slim coa"
@@ -448,6 +486,7 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket }) {
                     )}
                     <button
                       className="btn slim"
+                      disabled={typeof stock?.[s.sku] === "number" && stock[s.sku] < 1}
                       onClick={() =>
                         onAdd({
                           sku: s.sku,
@@ -571,15 +610,18 @@ function SlideConfirm({ done, onDone }) {
 function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
   const [step, setStep] = useState("ship");
   const [shipId, setShipId] = useState("usps");
+  const savedAddress = session.address || {};
   const [contact, setContact] = useState({
-    fullName: "",
-    line1: "",
-    line2: "",
-    city: "",
-    state: "",
-    zip: "",
+    fullName: savedAddress.fullName || "",
+    line1: savedAddress.line1 || "",
+    line2: savedAddress.line2 || "",
+    city: savedAddress.city || "",
+    state: savedAddress.state || "",
+    zip: savedAddress.zip || "",
     email: session.email || "",
   });
+  const [keepAddress, setKeepAddress] = useState(true);
+  const [templates, setTemplates] = useState(session.templates || []);
   const [ruo, setRuo] = useState(false);
   const [slid, setSlid] = useState(false);
 
@@ -604,6 +646,17 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
         },
       });
       setCart([]);
+      if (keepAddress && !session.admin) {
+        store.saveCard({
+          name: session.name,
+          pin: session.pin,
+          email: contact.email || session.email || "",
+          address: contact,
+        }).then((saved) => {
+          const current = store.getState().session;
+          if (current) store.setSession({ ...current, email: saved.email || current.email, address: saved.address || contact });
+        }).catch(() => {});
+      }
       notify("received", order);
       onPlaced(order);
     } catch (error) {
@@ -634,7 +687,14 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
               </button>
             ))}
           </div>
-          <CartBox cart={cart} setCart={setCart} />
+          {!!templates.length && (
+            <div className="row-btns">
+              {templates.map((item) => (
+                <button key={item.id} className="btn slim" type="button" onClick={() => setCart(item.items || [])}>{item.label}</button>
+              ))}
+            </div>
+          )}
+          <CartBox cart={cart} setCart={setCart} session={session} onTemplates={setTemplates} />
           <p className="muted">Order total (before shipping) {money(sub)}</p>
           <button className="btn gold wide" disabled={!cart.length} onClick={() => setStep("review")}>
             Review Order
@@ -685,6 +745,10 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
           <input required value={contact.state} onChange={(e) => setContact({ ...contact, state: e.target.value })} />
           <label>ZIP</label>
           <input required value={contact.zip} onChange={(e) => setContact({ ...contact, zip: e.target.value })} />
+          <label className="check">
+            <input type="checkbox" checked={keepAddress} onChange={(e) => setKeepAddress(e.target.checked)} />
+            Save this address on the card for next time.
+          </label>
           <label>Email for status (optional)</label>
           <input type="email" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} />
           <div className="row-btns">
@@ -715,8 +779,25 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
   );
 }
 
-function CartBox({ cart, setCart }) {
-  if (!cart.length) return <p className="muted">0 items — add from the catalog first, then come back.</p>;
+function CartBox({ cart, setCart, session, onTemplates }) {
+  const [label, setLabel] = useState("");
+  const [note, setNote] = useState("");
+  function qty(index, delta) {
+    const next = cart.map((line, i) => (i === index ? { ...line, qty: line.qty + delta } : line)).filter((line) => line.qty > 0);
+    setCart(next);
+  }
+  async function saveTemplate() {
+    try {
+      const saved = await store.saveTemplate({ name: session.name, pin: session.pin, label, items: cart });
+      store.setSession({ ...session, templates: saved.templates || [] });
+      onTemplates?.(saved.templates || []);
+      setLabel("");
+      setNote("Template saved on this card.");
+    } catch (error) {
+      setNote(error.message);
+    }
+  }
+  if (!cart.length) return <p className="muted">The basket is empty. Add from the catalog, or load a template below.</p>;
   return (
     <div className="cart">
       {cart.map((l, i) => (
@@ -724,16 +805,24 @@ function CartBox({ cart, setCart }) {
           <span>{l.sku} ×{l.qty}</span>
           <span>
             {money(l.price * l.qty)}{" "}
-            <button className="tinybtn" onClick={() => setCart(cart.filter((_, j) => j !== i))}>×</button>
+            <button className="tinybtn" type="button" onClick={() => qty(i, -1)}>−</button>
+            <button className="tinybtn" type="button" onClick={() => qty(i, 1)}>+</button>
+            <button className="tinybtn" type="button" onClick={() => setCart(cart.filter((_, j) => j !== i))}>×</button>
           </span>
         </div>
       ))}
       <button className="btn slim" type="button" onClick={() => setCart([])}>Empty basket</button>
+      <label>Save this basket as a template</label>
+      <div className="row-btns">
+        <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Usual order" />
+        <button className="btn slim" type="button" onClick={saveTemplate}>Save</button>
+      </div>
+      {note && <p className="tiny">{note}</p>}
     </div>
   );
 }
 
-function PlacedModal({ order, onClose }) {
+function PlacedModal({ order, pay, onClose }) {
   return (
     <div className="modal">
       <div className="panel modal-card">
@@ -749,16 +838,16 @@ function PlacedModal({ order, onClose }) {
           <p>{CONFIG.pay.note}</p>
           <ul>
             {[
-              ["Venmo", CONFIG.pay.venmo],
-              ["Zelle", CONFIG.pay.zelle],
-              ["Cash App", CONFIG.pay.cashApp],
-              ["Chime", CONFIG.pay.chime],
+              ["Venmo", pay?.venmo],
+              ["Zelle", pay?.zelle],
+              ["Cash App", pay?.cashApp],
+              ["Chime", pay?.chime],
             ].filter(([, value]) => value && !/^SET\b/i.test(value)).map(([label, value]) => (
               <li key={label}>{label} · {value}</li>
             ))}
-            {CONFIG.pay.crypto && <li>Crypto · {CONFIG.pay.crypto}</li>}
+            {pay?.crypto && <li>Crypto · {pay.crypto}</li>}
           </ul>
-          <p>All accounts are under the name {CONFIG.pay.ownerName}.</p>
+          {pay?.ownerName && <p>All accounts are under the name {pay.ownerName}.</p>}
           <p><b>No payment is taken in the app.</b></p>
         </div>
         <p>Ticket #{order.id} · {money(order.total)}</p>
@@ -787,6 +876,7 @@ function OrderList({ title, subtitle, orders, onChange, tick, session, patchOrde
               <b>#{o.id}</b>
               <span>No. {o.account ?? "—"} · {o.accountName || o.contact?.fullName || "Member"}</span>
               <span className={`badge ${o.status}`}>{labelStatus(o.status)}</span>
+              {o.status === "review" && <span className="tiny">Receipt waiting</span>}
               <span>{money(o.total)}</span>
             </button>
             {openId === o.id && (
@@ -944,6 +1034,8 @@ function ReceiptPic({ session, path, name }) {
 
 function AccountCard({ session, onSaved }) {
   const [email, setEmail] = useState(session.email || "");
+  const [address, setAddress] = useState(session.address || { fullName: "", line1: "", line2: "", city: "", state: "", zip: "" });
+  const [templates, setTemplates] = useState(session.templates || []);
   const [nextPin, setNextPin] = useState("");
   const [pin, setPin] = useState("");
   const [msg, setMsg] = useState("");
@@ -966,8 +1058,9 @@ function AccountCard({ session, onSaved }) {
         pin: pin || session.pin,
         email,
         nextPin,
+        address,
       });
-      store.setSession({ ...session, email: saved.email, pin: saved.pin });
+      store.setSession({ ...session, email: saved.email, pin: saved.pin, address: saved.address || address });
       setNextPin("");
       setPin("");
       setMsg("Saved.");
@@ -986,6 +1079,14 @@ function AccountCard({ session, onSaved }) {
       <form className="panel" onSubmit={save}>
         <label>Email for order notes</label>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+        <label>Saved ship-to name</label>
+        <input value={address.fullName || ""} onChange={(e) => setAddress({ ...address, fullName: e.target.value })} />
+        <label>Address</label>
+        <input value={address.line1 || ""} onChange={(e) => setAddress({ ...address, line1: e.target.value })} />
+        <input value={address.line2 || ""} onChange={(e) => setAddress({ ...address, line2: e.target.value })} placeholder="Line 2" />
+        <input value={address.city || ""} onChange={(e) => setAddress({ ...address, city: e.target.value })} placeholder="City" />
+        <input value={address.state || ""} onChange={(e) => setAddress({ ...address, state: e.target.value })} placeholder="State" />
+        <input value={address.zip || ""} onChange={(e) => setAddress({ ...address, zip: e.target.value })} placeholder="ZIP" />
         <label>New PIN</label>
         <p className="tiny">Leave this blank to keep your PIN. Or type your own, or take a random one.</p>
         <div className="row-btns">
@@ -1002,6 +1103,21 @@ function AccountCard({ session, onSaved }) {
         {msg && <p className="muted">{msg}</p>}
         <button className="btn gold" type="submit">Save</button>
       </form>
+      {!!templates.length && (
+        <div className="panel">
+          <h3>Order templates</h3>
+          {templates.map((item) => (
+            <p key={item.id} className="tiny">
+              {item.label}{" "}
+              <button className="tinybtn" type="button" onClick={async () => {
+                const saved = await store.saveTemplate({ name: session.name, pin: session.pin, op: "drop", id: item.id });
+                setTemplates(saved.templates || []);
+                store.setSession({ ...session, templates: saved.templates || [] });
+              }}>Remove</button>
+            </p>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -1029,9 +1145,9 @@ function DeskTicket({ order, session, onChange, patchOrder }) {
     const posted = { ...order, status: next, tracking, carrier: postedCarrier };
     try {
       await store.setOrderStatus({ deskPin: session.deskPin, id: order.id, status: next, tracking, carrier: postedCarrier });
-      if (next === "processing") notify("confirmed", posted);
-      if (next === "shipped") notify("prepared", posted);
-      if (next === "sent") notify("tracking", posted);
+      if (next === "processing" && order.status !== "processing") notify("confirmed", posted);
+      if (next === "shipped" && order.status !== "shipped") notify("prepared", posted);
+      if (next === "sent" && (order.status !== "sent" || tracking !== (order.tracking || "") || postedCarrier !== guessCarrier(order))) notify("tracking", posted);
       onChange();
     } catch (error) {
       setNote(error.message);
@@ -1099,6 +1215,73 @@ function DeskTicket({ order, session, onChange, patchOrder }) {
   );
 }
 
+function ShelfPay({ session, pay, onPay }) {
+  const [form, setForm] = useState({
+    ownerName: pay?.ownerName || "",
+    venmo: pay?.venmo || "",
+    zelle: pay?.zelle || "",
+    cashApp: pay?.cashApp || "",
+    chime: pay?.chime || "",
+    crypto: pay?.crypto || "",
+  });
+  const [note, setNote] = useState("");
+  async function save(e) {
+    e.preventDefault();
+    try {
+      const saved = await store.savePay({ deskPin: session.deskPin, pay: form });
+      onPay(saved.pay || {});
+      setNote("Payment lines saved. They show on the next order email.");
+    } catch (error) {
+      setNote(error.message);
+    }
+  }
+  return (
+    <form className="panel" onSubmit={save}>
+      <h3>How members pay</h3>
+      <p className="tiny">Leave a line blank to hide it. These are not stored in the website file.</p>
+      {[["ownerName", "Name on the accounts"], ["venmo", "Venmo"], ["zelle", "Zelle"], ["cashApp", "Cash App"], ["chime", "Chime"], ["crypto", "Crypto"]].map(([key, label]) => (
+        <label key={key}>{label}
+          <input value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+        </label>
+      ))}
+      <button className="btn gold" type="submit">Save payment lines</button>
+      {note && <p className="tiny">{note}</p>}
+    </form>
+  );
+}
+
+function ShelfStock({ session, stock, onStock }) {
+  const rows = PRODUCTS.flatMap((product) => product.sizes.map((size) => ({ ...size, name: product.name })));
+  const [draft, setDraft] = useState(() => Object.fromEntries(rows.map((row) => [row.sku, stock?.[row.sku] ?? ""])));
+  const [note, setNote] = useState("");
+  async function save(sku) {
+    try {
+      const raw = draft[sku];
+      const saved = await store.setStock({ deskPin: session.deskPin, sku, qty: raw === "" ? "" : Number(raw) });
+      onStock(saved.stock || {});
+      setNote(`${sku} updated.`);
+    } catch (error) {
+      setNote(error.message);
+    }
+  }
+  return (
+    <div className="panel">
+      <h3>On the shelf</h3>
+      <p className="tiny">Leave a line blank and save it to stop counting that one. A number is how many are left. At 0 it cannot be added.</p>
+      {rows.map((row) => (
+        <div className="line" key={row.sku}>
+          <span>{row.name} · {row.sku}</span>
+          <span>
+            <input style={{ width: 70 }} value={draft[row.sku]} onChange={(e) => setDraft({ ...draft, [row.sku]: e.target.value })} />
+            <button className="btn slim" type="button" onClick={() => save(row.sku)}>Save</button>
+          </span>
+        </div>
+      ))}
+      {note && <p className="tiny">{note}</p>}
+    </div>
+  );
+}
+
 function labelStatus(s) {
   return {
     unpaid: "Unpaid",
@@ -1111,7 +1294,7 @@ function labelStatus(s) {
   }[s] || s;
 }
 
-function AdminDesk({ session, orders, onChange }) {
+function AdminDesk({ session, stock, pay, onStock, onPay }) {
   const [members, setMembers] = useState([]);
   const [link, setLink] = useState("");
   const [copied, setCopied] = useState(false);
@@ -1157,6 +1340,8 @@ function AdminDesk({ session, orders, onChange }) {
         </div>
       )}
       <p className="muted">Open tickets are on Active Orders. They update on their own.</p>
+      <ShelfPay session={session} pay={pay} onPay={onPay} />
+      <ShelfStock session={session} stock={stock} onStock={onStock} />
     </section>
   );
 }
