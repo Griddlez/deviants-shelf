@@ -41,6 +41,32 @@ export default function App() {
     refresh();
   }, []);
 
+  useEffect(() => {
+    if (!session) return undefined;
+    let stop = false;
+    async function pull() {
+      const current = store.getState().session;
+      if (!current || stop) return;
+      try {
+        const data = await store.listOrders(current);
+        const next = data.orders || [];
+        setOrders((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+      } catch {
+        /* keep the list already on screen */
+      }
+    }
+    const timer = setInterval(pull, 4000);
+    const onShow = () => {
+      if (document.visibilityState === "visible") pull();
+    };
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      stop = true;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onShow);
+    };
+  }, [session]);
+
   async function refresh() {
     const s = store.getState();
     setSession(s.session);
@@ -117,7 +143,7 @@ export default function App() {
         <OrderList
           tick={tick}
           title="Active Orders"
-          subtitle="Orders in the queue or on the way."
+          subtitle={session.admin ? "Every open ticket. Change the status here. This list updates on its own." : "Orders in the queue or on the way."}
           orders={live}
           session={session}
           onChange={refresh}
@@ -129,7 +155,7 @@ export default function App() {
         <OrderList
           tick={tick}
           title="History"
-          subtitle="Closed and expired tickets."
+          subtitle={session.admin ? "Closed and expired tickets." : "Closed and expired tickets."}
           orders={past}
           session={session}
           onChange={refresh}
@@ -716,7 +742,9 @@ function OrderList({ title, subtitle, orders, onChange, tick, session }) {
       <p className="muted">{subtitle}</p>
       {!orders.length && <p className="muted">Nothing here yet.</p>}
       {orders.map((o) => (
-        <OrderCard key={o.id} order={o} tick={tick} onChange={onChange} session={session} />
+        session?.admin
+          ? <DeskTicket key={o.id} order={o} session={session} onChange={onChange} />
+          : <OrderCard key={o.id} order={o} tick={tick} onChange={onChange} session={session} />
       ))}
     </section>
   );
@@ -882,6 +910,45 @@ function AccountCard({ session, onSaved }) {
   );
 }
 
+function DeskTicket({ order, session, onChange }) {
+  const left = remainingMs(order);
+  return (
+    <article className="ticket">
+      <div className="ticket-h">
+        <span>#{order.id} · No. {order.account ?? "—"} · {order.accountName || order.contact?.fullName}</span>
+        <span className={`badge ${order.status}`}>{labelStatus(order.status)}</span>
+      </div>
+      <p className="tiny">
+        {order.contact?.email ? `${order.contact.email} · ` : ""}
+        {order.contact?.line1}, {order.contact?.city} {order.contact?.state} {order.contact?.zip}
+      </p>
+      {order.status === "unpaid" && <p className="timer">Waiting on their receipt · {fmtRemain(left)}</p>}
+      {order.items.map((l, i) => (
+        <div className="line" key={i}>
+          <span>{l.name} · {l.sku} ×{l.qty}</span>
+          <b>{money(l.price * l.qty)}</b>
+        </div>
+      ))}
+      <p>Total {money(order.total)}</p>
+      <div className="row-btns">
+        {["review", "processing", "shipped", "history"].map((st) => (
+          <button key={st} className="btn slim" onClick={async () => {
+            await store.setOrderStatus({ deskPin: session.deskPin, id: order.id, status: st });
+            if (st === "processing") notify("confirmed", order);
+            if (st === "shipped") notify("prepared", order);
+            onChange();
+          }}>
+            {labelStatus(st)}
+          </button>
+        ))}
+      </div>
+      {(order.receipts || []).map((r, i) => (
+        <ReceiptPic key={r.path || i} session={session} path={r.path} name={r.name} />
+      ))}
+    </article>
+  );
+}
+
 function labelStatus(s) {
   return {
     unpaid: "Unpaid",
@@ -938,39 +1005,7 @@ function AdminDesk({ session, orders, onChange }) {
           ))}
         </div>
       )}
-      {orders.map((o) => (
-        <article className="ticket" key={o.id}>
-          <div className="ticket-h">
-            <span>#{o.id} · No. {o.account ?? "—"} · {o.accountName || o.contact?.fullName}</span>
-            <span className={`badge ${o.status}`}>{labelStatus(o.status)}</span>
-          </div>
-          <p className="tiny">
-            {o.contact?.line1}, {o.contact?.city} {o.contact?.state} {o.contact?.zip}
-          </p>
-          {o.items.map((l, i) => (
-            <div className="line" key={i}>
-              <span>{l.sku} ×{l.qty}</span>
-              <b>{money(l.price * l.qty)}</b>
-            </div>
-          ))}
-          <p>Total {money(o.total)}</p>
-          <div className="row-btns">
-            {["review", "processing", "shipped", "history"].map((st) => (
-              <button key={st} className="btn slim" onClick={async () => {
-                await store.setOrderStatus({ deskPin: session.deskPin, id: o.id, status: st });
-                if (st === "processing") notify("confirmed", o);
-                if (st === "shipped") notify("prepared", o);
-                onChange();
-              }}>
-                {labelStatus(st)}
-              </button>
-            ))}
-          </div>
-          {(o.receipts || []).map((r, i) => (
-            <ReceiptPic key={r.path || i} session={session} path={r.path} name={r.name} />
-          ))}
-        </article>
-      ))}
+      <p className="muted">Open tickets are on Active Orders. They update on their own.</p>
     </section>
   );
 }
