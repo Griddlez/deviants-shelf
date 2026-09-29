@@ -86,8 +86,8 @@ export function listOrders(session) {
   return postBook({ action: "orders", name: session?.name, pin: session?.pin });
 }
 
-export function setOrderStatus({ deskPin, id, status, tracking }) {
-  return postBook({ action: "status", deskPin, id, status, tracking });
+export function setOrderStatus({ deskPin, id, status, tracking, carrier }) {
+  return postBook({ action: "status", deskPin, id, status, tracking, carrier });
 }
 
 export function addReceipt({ name, pin, id, data, fileName }) {
