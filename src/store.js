@@ -63,6 +63,28 @@ export function saveCard({ name, pin, email, nextPin }) {
   return postBook({ action: "save", name, pin, email, nextPin });
 }
 
+export function placeOrder({ name, pin, order }) {
+  return postBook({ action: "place", name, pin, order });
+}
+
+export function listOrders(session) {
+  if (session?.admin) return postBook({ action: "orders", deskPin: session.deskPin });
+  return postBook({ action: "orders", name: session?.name, pin: session?.pin });
+}
+
+export function setOrderStatus({ deskPin, id, status }) {
+  return postBook({ action: "status", deskPin, id, status });
+}
+
+export function addReceipt({ name, pin, id, data, fileName }) {
+  return postBook({ action: "receipt", name, pin, id, data, fileName });
+}
+
+export function receiptImage(session, path) {
+  if (session?.admin) return postBook({ action: "picture", deskPin: session.deskPin, path });
+  return postBook({ action: "picture", name: session?.name, pin: session?.pin, path });
+}
+
 export function getState() {
   const s = load();
   return {

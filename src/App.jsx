@@ -28,7 +28,7 @@ export default function App() {
   const [tab, setTab] = useState("catalog");
   const [openId, setOpenId] = useState("");
   const [cart, setCart] = useState(() => store.getState().cart);
-  const [orders, setOrders] = useState(() => store.getState().orders);
+  const [orders, setOrders] = useState([]);
   const [flow, setFlow] = useState(null);
   const [flash, setFlash] = useState(null);
 
@@ -37,11 +37,24 @@ export default function App() {
     return () => clearInterval(t);
   }, []);
 
-  function refresh() {
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  async function refresh() {
     const s = store.getState();
     setSession(s.session);
     setCart(s.cart);
-    setOrders(s.orders);
+    if (!s.session) {
+      setOrders([]);
+      return;
+    }
+    try {
+      const data = await store.listOrders(s.session);
+      setOrders(data.orders || []);
+    } catch {
+      setOrders([]);
+    }
   }
 
   if (!session) {
@@ -91,7 +104,9 @@ export default function App() {
           cart={cart}
           onBasket={() => { setTab("order"); setFlow({ step: "ship" }); }}
           onAdd={(line) => {
-            const next = [...cart, line];
+            const next = cart.some((item) => item.sku === line.sku)
+              ? cart.map((item) => (item.sku === line.sku ? { ...item, qty: item.qty + 1 } : item))
+              : [...cart, line];
             store.setCart(next);
             setCart(next);
           }}
@@ -104,6 +119,7 @@ export default function App() {
           title="Active Orders"
           subtitle="Orders in the queue or on the way."
           orders={live}
+          session={session}
           onChange={refresh}
           setFlash={setFlash}
         />
@@ -115,6 +131,7 @@ export default function App() {
           title="History"
           subtitle="Closed and expired tickets."
           orders={past}
+          session={session}
           onChange={refresh}
           setFlash={setFlash}
         />
@@ -319,7 +336,7 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket }) {
   return (
     <section className="wrap">
       <h2>Catalog</h2>
-      <p className="muted">Current availability and pricing. Vial = 1 vial. COA is the lab report for that lot.</p>
+      <p className="muted">Current availability and pricing. The kit is one kit. Everything else is one vial.</p>
       <div className="tools">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products" />
         <button className="btn slim basket" type="button" onClick={() => count && onBasket()}>
@@ -502,21 +519,28 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
   const sub = cart.reduce((n, l) => n + l.price * l.qty, 0);
   const total = sub + (ship?.price || 0);
 
-  function place() {
+  const [err, setErr] = useState("");
+
+  async function place() {
     if (!ruo || !slid || !cart.length) return;
-    const order = store.addOrder({
-      status: "unpaid",
-      account: session.account,
-      accountName: session.name,
-      items: cart,
-      shipping: ship,
-      contact,
-      sub,
-      total,
-      receipts: [],
-    });
-    onPlaced(order);
-    notify("received", order);
+    try {
+      const order = await store.placeOrder({
+        name: session.name,
+        pin: session.pin,
+        order: {
+          items: cart,
+          shipping: ship,
+          contact,
+          sub,
+          total,
+        },
+      });
+      setCart([]);
+      notify("received", order);
+      onPlaced(order);
+    } catch (error) {
+      setErr(error.message);
+    }
   }
 
   return (
@@ -613,6 +637,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
             I understand that my order will NOT be processed until I post an image of a receipt showing that I paid.
           </p>
           <SlideConfirm done={slid} onDone={() => setSlid(true)} />
+          {err && <p className="err">{err}</p>}
           <button className="btn gold wide" disabled={!ruo || !slid} onClick={place}>
             Place order
           </button>
@@ -654,11 +679,15 @@ function PlacedModal({ order, onClose }) {
           <h4>Payment</h4>
           <p>{CONFIG.pay.note}</p>
           <ul>
-            {CONFIG.pay.venmo && <li>Venmo · {CONFIG.pay.venmo}</li>}
-            {CONFIG.pay.zelle && <li>Zelle · {CONFIG.pay.zelle}</li>}
-            {CONFIG.pay.cashApp && <li>Cash App · {CONFIG.pay.cashApp}</li>}
-            {CONFIG.pay.chime && <li>Chime · {CONFIG.pay.chime}</li>}
-            <li>Crypto · {CONFIG.pay.crypto}</li>
+            {[
+              ["Venmo", CONFIG.pay.venmo],
+              ["Zelle", CONFIG.pay.zelle],
+              ["Cash App", CONFIG.pay.cashApp],
+              ["Chime", CONFIG.pay.chime],
+            ].filter(([, value]) => value && !/^SET\b/i.test(value)).map(([label, value]) => (
+              <li key={label}>{label} · {value}</li>
+            ))}
+            {CONFIG.pay.crypto && <li>Crypto · {CONFIG.pay.crypto}</li>}
           </ul>
           <p>All accounts are under the name {CONFIG.pay.ownerName}.</p>
           <p><b>No payment is taken in the app.</b></p>
@@ -670,42 +699,48 @@ function PlacedModal({ order, onClose }) {
   );
 }
 
-function OrderList({ title, subtitle, orders, onChange, tick, setFlash }) {
+function OrderList({ title, subtitle, orders, onChange, tick, session }) {
   return (
     <section className="wrap">
       <h2>{title}</h2>
       <p className="muted">{subtitle}</p>
       {!orders.length && <p className="muted">Nothing here yet.</p>}
       {orders.map((o) => (
-        <OrderCard key={o.id} order={o} tick={tick} onChange={onChange} />
+        <OrderCard key={o.id} order={o} tick={tick} onChange={onChange} session={session} />
       ))}
     </section>
   );
 }
 
-function OrderCard({ order, onChange, tick }) {
+function OrderCard({ order, onChange, tick, session }) {
   const left = remainingMs(order);
   const expired = order.status === "unpaid" && left <= 0;
+  const noted = useRef(false);
+
   useEffect(() => {
-    if (expired && order.status === "unpaid") {
-      store.updateOrder(order.id, { status: "expired" });
+    if (expired && !noted.current) {
+      noted.current = true;
       onChange();
     }
-  }, [expired, order.id, order.status, onChange]);
+  }, [expired, onChange]);
 
-  function onFile(e) {
+  async function onFile(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      store.updateOrder(order.id, {
-        status: "review",
-        receipts: [...(order.receipts || []), { name: file.name, data: reader.result, at: Date.now() }],
+    try {
+      const data = await shrinkImage(file);
+      const saved = await store.addReceipt({
+        name: session.name,
+        pin: session.pin,
+        id: order.id,
+        data,
+        fileName: file.name,
       });
-      notify("receipt", order);
+      notify("receipt", saved);
       onChange();
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      window.alert(error.message);
+    }
   }
 
   return (
@@ -734,12 +769,43 @@ function OrderCard({ order, onChange, tick }) {
       )}
       {order.status === "review" && <p>Payment under review — a receipt is waiting to be verified.</p>}
       {order.status === "processing" && <p>Paid. Ticket is in processing.</p>}
-      {order.status === "shipped" && <p>Shipped.</p>}
+      {order.status === "shipped" && <p>Being prepared.</p>}
       {(order.receipts || []).map((r, i) => (
-        <p key={i} className="tiny">Receipt {i + 1}: {r.name}</p>
+        <ReceiptPic key={r.path || i} session={session} path={r.path} name={r.name} />
       ))}
     </article>
   );
+}
+
+function shrinkImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("That photo could not be read."));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("That photo could not be read."));
+      img.onload = () => {
+        const scale = Math.min(1, 1400 / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.72));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function ReceiptPic({ session, path, name }) {
+  const [src, setSrc] = useState("");
+  useEffect(() => {
+    if (!path) return;
+    store.receiptImage(session, path).then((result) => setSrc(result.data)).catch(() => {});
+  }, [path, session]);
+  if (!src) return <p className="tiny">{name || "Receipt"}</p>;
+  return <img className="rcpt" src={src} alt={name || "Receipt"} />;
 }
 
 function AccountCard({ session, onSaved }) {
@@ -748,6 +814,15 @@ function AccountCard({ session, onSaved }) {
   const [pin, setPin] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+
+  if (session.admin) {
+    return (
+      <section className="wrap">
+        <h2>Your card</h2>
+        <p className="muted">Account 0 is the desk. Member email and PIN are saved on a member card, not this door.</p>
+      </section>
+    );
+  }
 
   async function save(e) {
     e.preventDefault();
@@ -871,8 +946,8 @@ function AdminDesk({ session, orders, onChange }) {
           <p>Total {money(o.total)}</p>
           <div className="row-btns">
             {["review", "processing", "shipped", "history"].map((st) => (
-              <button key={st} className="btn slim" onClick={() => {
-                store.updateOrder(o.id, { status: st });
+              <button key={st} className="btn slim" onClick={async () => {
+                await store.setOrderStatus({ deskPin: session.deskPin, id: o.id, status: st });
                 if (st === "processing") notify("confirmed", o);
                 if (st === "shipped") notify("prepared", o);
                 onChange();
@@ -882,7 +957,7 @@ function AdminDesk({ session, orders, onChange }) {
             ))}
           </div>
           {(o.receipts || []).map((r, i) => (
-            <img key={i} src={r.data} alt={r.name} className="rcpt" />
+            <ReceiptPic key={r.path || i} session={session} path={r.path} name={r.name} />
           ))}
         </article>
       ))}
