@@ -845,7 +845,7 @@ function PlacedModal({ order, pay, onClose }) {
               <li key={label}>{label} · {value}</li>
             ))}
           </ul>
-          {pay?.ownerName && <p>All accounts are under the name {pay.ownerName}.</p>}
+          {(pay?.ownerName || CONFIG.pay.ownerName) && <p>All accounts are under the name {pay?.ownerName || CONFIG.pay.ownerName}.</p>}
           <p><b>No payment is taken in the app.</b></p>
         </div>
         <p>Ticket #{order.id} · {money(order.total)}</p>
@@ -1215,7 +1215,7 @@ function DeskTicket({ order, session, onChange, patchOrder }) {
 
 function ShelfPay({ session, pay, onPay }) {
   const [form, setForm] = useState({
-    ownerName: pay?.ownerName || "",
+    ownerName: pay?.ownerName || CONFIG.pay.ownerName,
     venmo: pay?.venmo || CONFIG.pay.venmo,
     cashApp: pay?.cashApp || CONFIG.pay.cashApp,
     chime: pay?.chime || CONFIG.pay.chime,
