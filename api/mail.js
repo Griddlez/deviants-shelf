@@ -120,11 +120,29 @@ function deskLetter(kind, order) {
       html: shell({
         kicker: "Desk",
         title: `Order #${id} is being prepared`,
-        body: `${head}<p>You marked this order as being prepared. The member got a different note saying it is in final prep.</p>`,
+        body: `${head}<p>You marked this order as being prepared. The member was told it is not shipped yet.</p>`,
+      }),
+    };
+  }
+  if (kind === "tracking") {
+    const href = trackHref(order);
+    return {
+      subject: `Desk — order #${order.id} shipped`,
+      html: shell({
+        kicker: "Desk",
+        title: `Order #${id} was marked shipped`,
+        body: `${head}<p>Tracking ${esc(order.tracking || "")}. The member got a different note with this link.</p><p><a href="${href}">${esc(order.tracking || "")}</a></p>`,
       }),
     };
   }
   return null;
+}
+
+function trackHref(order) {
+  const n = encodeURIComponent(String(order.tracking || "").trim());
+  const id = order.shipping?.id || "";
+  if (id === "fedex2" || id === "overnight") return `https://www.fedex.com/fedextrack/?trknbr=${n}`;
+  return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}`;
 }
 
 function letter(kind, order) {
@@ -167,7 +185,19 @@ function letter(kind, order) {
       html: shell({
         kicker: "The Deviant's Shelf",
         title: `Order #${id} — being prepared`,
-        body: `<p>Hi ${name},</p><p>Your order is being prepared for shipping. This is the last step before it goes out.</p><p>Order total: <span style="color:#2ec9b0;">${total}</span></p>`,
+        body: `<p>Hi ${name},</p><p>Your order is being prepared. Tracking will be sent when it ships.</p><p>Order total: <span style="color:#2ec9b0;">${total}</span></p>`,
+      }),
+    };
+  }
+  if (kind === "tracking") {
+    const href = trackHref(order);
+    const carrier = esc(order.shipping?.label || "the carrier");
+    return {
+      subject: `The Deviant's Shelf — Order #${order.id} — shipped`,
+      html: shell({
+        kicker: "The Deviant's Shelf",
+        title: `Order #${id} has shipped`,
+        body: `<p>Hi ${name},</p><p>Your order is on the way with ${carrier}.</p><p>Tracking number: <a href="${href}" style="color:#2ec9b0;">${esc(order.tracking || "")}</a></p><p>That number opens the ${carrier} tracking page.</p>`,
       }),
     };
   }

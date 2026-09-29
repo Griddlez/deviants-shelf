@@ -274,8 +274,13 @@ export default async function handler(req, res) {
       const book = await readBook();
       const order = book.orders.find((item) => item.id === Number(body.id));
       if (!order) throw new Error("That order is not in the book.");
-      const allowed = ["review", "processing", "shipped", "history", "expired", "unpaid"];
+      const allowed = ["review", "processing", "shipped", "sent", "history", "expired", "unpaid"];
       if (!allowed.includes(body.status)) throw new Error("That status is not used.");
+      if (body.status === "sent") {
+        const tracking = String(body.tracking || "").trim().slice(0, 40);
+        if (!tracking) throw new Error("Type the tracking number.");
+        order.tracking = tracking;
+      }
       order.status = body.status;
       await writeBook(book);
       res.status(200).json(publicOrder(order));
