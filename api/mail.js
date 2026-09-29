@@ -137,8 +137,10 @@ export default async function handler(req, res) {
   const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
   const order = body.order || {};
   const to = String(order.contact?.email || "").trim();
+  const shop = String(process.env.MAIL_USER || "").trim();
   const note = letter(body.kind, order);
-  if (!note || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+  const customerOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to);
+  if (!note || (!customerOk && !shop)) {
     res.status(400).json({ error: "That note could not be sent." });
     return;
   }
@@ -149,13 +151,25 @@ export default async function handler(req, res) {
       secure: true,
       auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
     });
-    await transport.sendMail({
-      from: `The Deviant's Shelf <${FROM}>`,
-      to,
-      replyTo: FROM,
-      subject: note.subject,
-      html: note.html,
-    });
+    if (customerOk) {
+      await transport.sendMail({
+        from: `The Deviant's Shelf <${FROM}>`,
+        to,
+        replyTo: FROM,
+        subject: note.subject,
+        html: note.html,
+      });
+    }
+    if (shop && shop.toLowerCase() !== to.toLowerCase()) {
+      const who = order.account ? `Member no. ${order.account}${order.accountName ? ` · ${order.accountName}` : ""}` : "A member";
+      await transport.sendMail({
+        from: `The Deviant's Shelf <${FROM}>`,
+        to: shop,
+        replyTo: to || FROM,
+        subject: `Desk copy — ${note.subject}`,
+        html: note.html.replace("<p>Hi ", `<p style="color:#2ec9b0;">${esc(who)}</p><p>Hi `),
+      });
+    }
     res.status(200).json({ ok: true });
   } catch {
     res.status(502).json({ error: "The note could not be sent." });
