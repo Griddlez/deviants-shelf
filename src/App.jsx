@@ -26,7 +26,7 @@ export default function App() {
   const [tick, setTick] = useState(0);
   const [session, setSession] = useState(() => store.getState().session);
   const [tab, setTab] = useState("catalog");
-  const [openId, setOpenId] = useState("r3");
+  const [openId, setOpenId] = useState("");
   const [cart, setCart] = useState(() => store.getState().cart);
   const [orders, setOrders] = useState(() => store.getState().orders);
   const [flow, setFlow] = useState(null);
