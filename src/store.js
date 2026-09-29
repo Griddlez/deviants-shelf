@@ -59,6 +59,10 @@ export function signInCard({ name, pin }) {
   return postBook({ action: "sign", name, pin });
 }
 
+export function saveCard({ name, pin, email, nextPin }) {
+  return postBook({ action: "save", name, pin, email, nextPin });
+}
+
 export function getState() {
   const s = load();
   return {

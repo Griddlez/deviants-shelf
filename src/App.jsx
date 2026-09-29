@@ -76,6 +76,9 @@ export default function App() {
           Active Orders{live.length ? ` (${live.length})` : ""}
         </button>
         <button className={tab === "history" ? "on" : ""} onClick={() => setTab("history")}>History</button>
+        {!session.admin && (
+          <button className={tab === "account" ? "on" : ""} onClick={() => setTab("account")}>Card</button>
+        )}
         {session.admin && (
           <button className={tab === "admin" ? "on" : ""} onClick={() => setTab("admin")}>Desk</button>
         )}
@@ -173,7 +176,7 @@ function Gate({ onIn }) {
     e.preventDefault();
     try {
       const claimed = await store.signInCard({ name, pin });
-      store.setSession({ name: claimed.name, account: claimed.account, admin: false });
+      store.setSession({ name: claimed.name, account: claimed.account, admin: false, pin: pin.replace(/\s/g, ""), email: claimed.email || "" });
       onIn();
     } catch (error) {
       setErr(error.message);
@@ -201,7 +204,7 @@ function Gate({ onIn }) {
       const claimed = door
         ? await store.joinCard({ token: door, pin, name })
         : await store.claimCard({ account: invite.account, pin, name });
-      store.setSession({ name: claimed.name, account: claimed.account, admin: false });
+      store.setSession({ name: claimed.name, account: claimed.account, admin: false, pin: pin.replace(/\s/g, ""), email: claimed.email || "" });
       window.history.replaceState({}, "", "/");
       onIn();
     } catch (error) {
@@ -232,9 +235,10 @@ function Gate({ onIn }) {
               <label>Name on card</label>
               <input value={name} onChange={(e) => setName(e.target.value)} maxLength={24} placeholder="Your name" required />
               <label>PIN</label>
+              <p className="tiny">Type your own, or keep the one shown. 4 to 8 digits.</p>
               <div className="row-btns">
                 <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" autoComplete="off" />
-                {door && <button className="btn slim" type="button" onClick={() => setPin(freshPin())}>New PIN</button>}
+                <button className="btn slim" type="button" onClick={() => setPin(freshPin())}>New PIN</button>
               </div>
               {err && <p className="err">{err}</p>}
               <button className="btn gold wide" type="submit">Claim your card</button>
@@ -479,7 +483,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
     city: "",
     state: "",
     zip: "",
-    email: "",
+    email: session.email || "",
   });
   const [ruo, setRuo] = useState(false);
   const [slid, setSlid] = useState(false);
@@ -728,6 +732,61 @@ function OrderCard({ order, onChange, tick }) {
   );
 }
 
+function AccountCard({ session, onSaved }) {
+  const [email, setEmail] = useState(session.email || "");
+  const [nextPin, setNextPin] = useState("");
+  const [pin, setPin] = useState("");
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+
+  async function save(e) {
+    e.preventDefault();
+    try {
+      const saved = await store.saveCard({
+        name: session.name,
+        pin: pin || session.pin,
+        email,
+        nextPin,
+      });
+      store.setSession({ ...session, email: saved.email, pin: saved.pin });
+      setNextPin("");
+      setPin("");
+      setMsg("Saved.");
+      setErr("");
+      onSaved();
+    } catch (error) {
+      setMsg("");
+      setErr(error.message);
+    }
+  }
+
+  return (
+    <section className="wrap">
+      <h2>Your card</h2>
+      <p className="muted">No. {session.account} · {session.name}</p>
+      <form className="panel" onSubmit={save}>
+        <label>Email for order notes</label>
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+        <label>New PIN</label>
+        <p className="tiny">Leave this blank to keep your PIN. Or type your own, or take a random one.</p>
+        <div className="row-btns">
+          <input value={nextPin} onChange={(e) => setNextPin(e.target.value)} inputMode="numeric" autoComplete="off" placeholder="4 to 8 digits" />
+          <button className="btn slim" type="button" onClick={() => setNextPin(freshPin())}>New PIN</button>
+        </div>
+        {!session.pin && (
+          <>
+            <label>Current PIN</label>
+            <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" autoComplete="off" />
+          </>
+        )}
+        {err && <p className="err">{err}</p>}
+        {msg && <p className="muted">{msg}</p>}
+        <button className="btn gold" type="submit">Save</button>
+      </form>
+    </section>
+  );
+}
+
 function labelStatus(s) {
   return {
     unpaid: "Unpaid",
@@ -780,7 +839,7 @@ function AdminDesk({ session, orders, onChange }) {
         <div className="panel">
           <h3>Members</h3>
           {members.map((c) => (
-            <p key={c.account} className="tiny">No. {c.account} · {c.name}</p>
+            <p key={c.account} className="tiny">No. {c.account} · {c.name}{c.email ? ` · ${c.email}` : ""}</p>
           ))}
         </div>
       )}

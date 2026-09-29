@@ -70,11 +70,38 @@ button, input { font: inherit; }
 .btn {
   background: rgba(28, 16, 8, 0.9); color: var(--text); border: 1px solid #8a6738;
   padding: 8px 14px; cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
 }
 .btn.gold {
+  position: relative;
   background: linear-gradient(180deg, #f0d089, #a56d28);
   color: var(--ink); border-color: #f3ddaa; font-weight: 700;
   font-family: Cinzel, serif; letter-spacing: 0.06em; text-transform: uppercase; font-size: 13px;
+}
+.btn.gold::after {
+  content: "";
+  position: absolute; right: 14px; top: 7px; width: 6px; height: 6px; border-radius: 50%;
+  background: #fff; opacity: 0; pointer-events: none;
+  box-shadow: -12px 9px 0 -1px #fff, 7px 11px 0 -2px #d8fff6;
+  transition: opacity .16s ease;
+}
+.btn:hover, .ship:hover, .doors button:hover, .pass-closed:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 16px rgba(240, 208, 137, .8), 0 0 28px rgba(46, 201, 176, .35);
+  filter: brightness(1.12);
+}
+.btn.gold:hover::after { opacity: .95; }
+.btn:active, .ship:active, .doors button:active, .pass-closed:active {
+  transform: translateY(1px) scale(.98);
+  box-shadow: 0 0 22px rgba(46, 201, 176, .9);
+}
+.btn:disabled:hover, .btn:disabled:active { transform: none; box-shadow: none; filter: none; }
+.tabs button, .ghost, .tinybtn, .ship, .doors button, .pass-closed {
+  transition: transform .16s ease, box-shadow .16s ease, color .16s ease, text-shadow .16s ease, filter .16s ease;
+}
+.tabs button:hover, .ghost:hover, .tinybtn:hover {
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(240, 208, 137, .85);
 }
 .btn.wide { width: 100%; margin-top: 12px; padding: 12px; }
 .btn.slim { padding: 4px 10px; font-size: 13px; }
