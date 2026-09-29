@@ -838,14 +838,12 @@ function PlacedModal({ order, pay, onClose }) {
           <p>{CONFIG.pay.note}</p>
           <ul>
             {[
-              ["Venmo", pay?.venmo],
-              ["Zelle", pay?.zelle],
-              ["Cash App", pay?.cashApp],
-              ["Chime", pay?.chime],
-            ].filter(([, value]) => value && !/^SET\b/i.test(value)).map(([label, value]) => (
+              ["Venmo", pay?.venmo || CONFIG.pay.venmo],
+              ["Cash App", pay?.cashApp || CONFIG.pay.cashApp],
+              ["Chime", pay?.chime || CONFIG.pay.chime],
+            ].filter(([, value]) => value).map(([label, value]) => (
               <li key={label}>{label} · {value}</li>
             ))}
-            {pay?.crypto && <li>Crypto · {pay.crypto}</li>}
           </ul>
           {pay?.ownerName && <p>All accounts are under the name {pay.ownerName}.</p>}
           <p><b>No payment is taken in the app.</b></p>
@@ -1218,11 +1216,9 @@ function DeskTicket({ order, session, onChange, patchOrder }) {
 function ShelfPay({ session, pay, onPay }) {
   const [form, setForm] = useState({
     ownerName: pay?.ownerName || "",
-    venmo: pay?.venmo || "",
-    zelle: pay?.zelle || "",
-    cashApp: pay?.cashApp || "",
-    chime: pay?.chime || "",
-    crypto: pay?.crypto || "",
+    venmo: pay?.venmo || CONFIG.pay.venmo,
+    cashApp: pay?.cashApp || CONFIG.pay.cashApp,
+    chime: pay?.chime || CONFIG.pay.chime,
   });
   const [note, setNote] = useState("");
   async function save(e) {
@@ -1239,7 +1235,7 @@ function ShelfPay({ session, pay, onPay }) {
     <form className="panel" onSubmit={save}>
       <h3>How members pay</h3>
       <p className="tiny">Leave a line blank to hide it. These are not stored in the website file.</p>
-      {[["ownerName", "Name on the accounts"], ["venmo", "Venmo"], ["zelle", "Zelle"], ["cashApp", "Cash App"], ["chime", "Chime"], ["crypto", "Crypto"]].map(([key, label]) => (
+      {[["ownerName", "Name on the accounts"], ["venmo", "Venmo"], ["cashApp", "Cash App"], ["chime", "Chime"]].map(([key, label]) => (
         <label key={key}>{label}
           <input value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
         </label>
