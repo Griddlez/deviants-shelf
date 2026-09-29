@@ -1,10 +1,11 @@
 export function notify(kind, order) {
-  const email = order?.contact?.email?.trim();
-  if (!email) return;
+  const email = order?.contact?.email?.trim() || "";
   const payload = {
     kind,
     order: {
       id: order.id,
+      account: order.account,
+      accountName: order.accountName,
       total: order.total,
       sub: order.sub,
       items: (order.items || []).map((l) => ({
@@ -16,12 +17,12 @@ export function notify(kind, order) {
       })),
       shipping: order.shipping ? { label: order.shipping.label, detail: order.shipping.detail, price: order.shipping.price } : null,
       contact: {
-        fullName: order.contact.fullName,
-        line1: order.contact.line1,
-        line2: order.contact.line2,
-        city: order.contact.city,
-        state: order.contact.state,
-        zip: order.contact.zip,
+        fullName: order.contact?.fullName || "",
+        line1: order.contact?.line1 || "",
+        line2: order.contact?.line2 || "",
+        city: order.contact?.city || "",
+        state: order.contact?.state || "",
+        zip: order.contact?.zip || "",
         email,
       },
     },
