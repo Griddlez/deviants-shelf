@@ -912,6 +912,29 @@ function AccountCard({ session, onSaved }) {
 
 function DeskTicket({ order, session, onChange }) {
   const left = remainingMs(order);
+  const [pick, setPick] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState("");
+  const chosen = pick && pick !== order.status;
+
+  async function confirm() {
+    if (!chosen || busy) return;
+    setBusy(true);
+    setNote("");
+    try {
+      await store.setOrderStatus({ deskPin: session.deskPin, id: order.id, status: pick });
+      if (pick === "processing") notify("confirmed", order);
+      if (pick === "shipped") notify("prepared", order);
+      setNote(`Updated to ${labelStatus(pick)}.`);
+      setPick("");
+      onChange();
+    } catch (error) {
+      setNote(error.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <article className="ticket">
       <div className="ticket-h">
@@ -932,16 +955,21 @@ function DeskTicket({ order, session, onChange }) {
       <p>Total {money(order.total)}</p>
       <div className="row-btns">
         {["review", "processing", "shipped", "history"].map((st) => (
-          <button key={st} className="btn slim" onClick={async () => {
-            await store.setOrderStatus({ deskPin: session.deskPin, id: order.id, status: st });
-            if (st === "processing") notify("confirmed", order);
-            if (st === "shipped") notify("prepared", order);
-            onChange();
-          }}>
+          <button
+            key={st}
+            type="button"
+            className={pick === st ? "btn slim picked" : "btn slim"}
+            onClick={() => { setPick(st); setNote(""); }}
+          >
             {labelStatus(st)}
           </button>
         ))}
       </div>
+      {chosen && <p className="tiny">Selected: {labelStatus(pick)}. Nothing is sent until you confirm.</p>}
+      <button className="btn gold" type="button" disabled={!chosen || busy} onClick={confirm}>
+        {busy ? "Updating…" : "Confirm order update"}
+      </button>
+      {note && <p className="muted">{note}</p>}
       {(order.receipts || []).map((r, i) => (
         <ReceiptPic key={r.path || i} session={session} path={r.path} name={r.name} />
       ))}

@@ -109,7 +109,12 @@ button.acct:hover, button.acct:active {
   text-shadow: 0 0 12px rgba(240, 208, 137, .85);
 }
 .btn.wide { width: 100%; margin-top: 12px; padding: 12px; }
-.btn.slim { padding: 4px 10px; font-size: 13px; }
+.btn.picked {
+  color: var(--ink);
+  background: linear-gradient(180deg, #f0d089, #a56d28);
+  border-color: #f3ddaa;
+  box-shadow: 0 0 16px rgba(240, 208, 137, .85);
+}
 .btn.coa { background: transparent; border-color: var(--gold); color: var(--gold); font-family: Cinzel, serif; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .ghost { background: none; border: 0; color: var(--muted); cursor: pointer; }
