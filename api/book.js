@@ -83,7 +83,7 @@ export default async function handler(req, res) {
       }
       const members = Object.values(book.people)
         .sort((a, b) => a.account - b.account)
-        .map((person) => ({ account: person.account, name: person.name, pin: person.pin }));
+        .map((person) => ({ account: person.account, name: person.name, pin: person.pin, email: person.email || "" }));
       res.status(200).json({
         url: `https://thedeviantsshelf.com/invite/link/${book.door}`,
         members,
@@ -106,7 +106,7 @@ export default async function handler(req, res) {
       const n = nextNumber(book);
       book.used.push(n);
       book.next = n + 1;
-      book.people[display] = { account: n, name: display, pin: pinClean };
+      book.people[display] = { account: n, name: display, pin: pinClean, email: "" };
       book.invites.unshift({ account: n, pin: pinClean, name: display, at: Date.now() });
       await writeBook(book);
       res.status(200).json({ account: String(n), name: display });
@@ -125,7 +125,8 @@ export default async function handler(req, res) {
       if (book.people[display] && book.people[display].account !== n) throw new Error("That name is already on another card.");
       invite.name = display;
       invite.pin = pinClean;
-      book.people[display] = { account: n, name: display, pin: pinClean };
+      if (!book.used.includes(n)) book.used.push(n);
+      book.people[display] = { account: n, name: display, pin: pinClean, email: invite.email || "" };
       await writeBook(book);
       res.status(200).json({ account: String(n), name: display });
       return;
@@ -138,7 +139,30 @@ export default async function handler(req, res) {
         res.status(401).json({ error: "That name and PIN do not match a card. Type the name exactly as it was claimed." });
         return;
       }
-      res.status(200).json({ account: String(person.account), name: person.name });
+      res.status(200).json({ account: String(person.account), name: person.name, email: person.email || "" });
+      return;
+    }
+    if (body.action === "save") {
+      const display = String(body.name || "").trim();
+      const book = await readBook();
+      const person = book.people[display];
+      if (!person || person.pin !== cleanPin(body.pin)) {
+        res.status(401).json({ error: "That PIN does not match this card." });
+        return;
+      }
+      const email = String(body.email || "").trim().slice(0, 80);
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("That email does not look right.");
+      const next = cleanPin(body.nextPin);
+      if (next) {
+        if (!/^\d{4,8}$/.test(next)) throw new Error("Use a PIN of 4 to 8 digits.");
+        person.pin = next;
+        const card = book.invites.find((c) => c.account === person.account);
+        if (card) card.pin = next;
+      }
+      person.email = email;
+      book.people[display] = person;
+      await writeBook(book);
+      res.status(200).json({ account: String(person.account), name: person.name, email, pin: person.pin });
       return;
     }
     res.status(400).json({ error: "Unknown request." });
