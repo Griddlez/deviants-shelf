@@ -342,17 +342,16 @@ function Gate({ onIn }) {
               <p className="eyebrow">An invitation from</p>
               <p className="lede">{CONFIG.shopName}</p>
               <button className="roll-btn" type="button" onClick={() => { setOpen(true); if (!pin) setPin(freshPin()); }}>
-                <span className="wax" />
+                <img src="/art/scroll-shut.webp" alt="A sealed scroll" />
               </button>
               <p className="scroll-hint">Tap the seal</p>
               <p className="tiny">An invitation has been sealed for you.</p>
             </div>
           ) : (
             <form className="invite" onSubmit={claim}>
-              <div className="rod" />
               <div className="sheet">
                 <p className="script-title">You are invited</p>
-                <p className="script">Come to the shelf. Write your name, choose a gate code, and the door will know you.</p>
+                <p className="script">Write your name. Choose a gate code. The door will know you.</p>
                 <label>Name on invitation</label>
                 <input value={name} onChange={(e) => setName(e.target.value)} maxLength={24} placeholder="Your name" required />
                 <label>Gate code</label>
@@ -367,9 +366,8 @@ function Gate({ onIn }) {
                   You are 21 or older.
                 </label>
                 <button className="btn gold wide" type="submit" disabled={!adult}>Claim your invitation</button>
-                <p className="fine">The name is kept exactly as you write it. Sign in later with that same name and gate code.</p>
+                <p className="fine">The name is kept as you write it. Sign in later with that name and gate code.</p>
               </div>
-              <div className="rod" />
             </form>
           )}
         </>
