@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Great+Vibes&family=Source+Sans+3:wght@400;500;600;700&display=swap");
 :root {
   --bg: #140c08;
   --panel: rgba(22, 13, 8, 0.86);
@@ -311,7 +312,106 @@ button.acct:hover, button.acct:active {
 .err { color: #f0a0a0; }
 .tiny { color: var(--muted); font-size: 12px; }
 .tinybtn { background: none; border: 0; color: var(--muted); cursor: pointer; }
-.line.total { font-size: 18px; }
+.scroll-shut { display: grid; justify-items: center; gap: 8px; }
+.roll-btn {
+  position: relative;
+  width: min(420px, 92vw);
+  height: 108px;
+  margin-top: 18px;
+  border: 0;
+  border-radius: 54px;
+  cursor: pointer;
+  background:
+    radial-gradient(ellipse at 50% 38%, #f8edd4 0%, #e4cc9e 42%, #b18452 78%, #6d4a28 100%);
+  box-shadow:
+    inset 0 10px 14px rgba(255, 248, 230, 0.7),
+    inset 0 -14px 16px rgba(70, 36, 12, 0.45),
+    0 16px 28px rgba(0, 0, 0, 0.5);
+}
+.roll-btn::before, .roll-btn::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  width: 28px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #5c3b1e, #f4e2bc 45%, #5c3b1e);
+  box-shadow: inset 0 0 0 1px rgba(90, 50, 20, 0.35);
+}
+.roll-btn::before { left: 16px; }
+.roll-btn::after { right: 16px; }
+.roll-btn:hover .wax, .roll-btn:focus-visible .wax {
+  transform: translate(-50%, -58%) scale(1.06);
+  filter: drop-shadow(0 0 14px rgba(196, 48, 48, 0.85));
+}
+.wax {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 92px;
+  height: 92px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.45), 0 0 0 3px rgba(120, 24, 24, 0.35);
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+.wax img { width: 118%; height: 118%; object-fit: cover; margin: -9%; display: block; }
+.scroll-hint {
+  margin: 10px 0 0;
+  font-family: "Great Vibes", cursive;
+  font-size: 32px;
+  color: #f3ddaa;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+.invite { width: min(460px, 100%); margin: 12px auto; text-align: left; animation: unroll 0.7s ease; }
+.rod {
+  height: 18px;
+  margin: 0 6px;
+  border-radius: 10px;
+  background: linear-gradient(#8d6436, #f6e6c4 46%, #6a4524);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+}
+.sheet {
+  margin: -6px 18px;
+  padding: 22px 22px 26px;
+  color: #3a2412;
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(255, 252, 240, 0.7), transparent 42%),
+    linear-gradient(90deg, #c9aa78, #f6ead0 10%, #fbf3e2 50%, #f6ead0 90%, #c9aa78);
+  box-shadow: inset 0 0 30px rgba(120, 80, 30, 0.18);
+}
+.script-title, .sheet label, .script {
+  font-family: "Great Vibes", cursive;
+  color: #4a2a14;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.script-title { margin: 0; font-size: 46px; line-height: 1; text-align: center; }
+.script { margin: 8px 0 14px; font-size: 26px; line-height: 1.25; text-align: center; }
+.sheet label { display: block; margin: 12px 0 0; font-size: 30px; }
+.sheet .fine { margin: 2px 0 6px; color: #6d4b2c; font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 16px; }
+.sheet input {
+  width: 100%;
+  margin-top: 2px;
+  padding: 4px 2px;
+  color: #2a180c;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(90, 52, 24, 0.45);
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: 24px;
+}
+.sheet .check { display: flex; gap: 8px; align-items: center; margin-top: 14px; font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 18px; color: #3a2412; }
+.sheet .err { color: #8d1d1d; }
+.sheet .btn { margin-top: 14px; }
+.codebox { margin: 12px 0; }
+.codebox input { flex: 1; }
+@keyframes unroll {
+  from { transform: scaleY(0.2); opacity: 0.35; }
+  to { transform: scaleY(1); opacity: 1; }
+}
 @media (max-width: 640px) {
   .ships { grid-template-columns: 1fr; }
   .top { flex-direction: column; align-items: stretch; }

@@ -16,6 +16,46 @@ export const CONFIG = {
   ],
 };
 
+const CODE_BOOK = {
+  "F&F30": { kind: "percent", amount: 30, label: "Friends and family" },
+  HNDLVR: { kind: "ship", label: "Hand delivery" },
+  "4DAKNG": { kind: "percent", amount: 10, label: "Military" },
+};
+
+export function quoteOrder(sub, shipId, rawCodes) {
+  const prices = Object.fromEntries(CONFIG.shipping.map((row) => [row.id, row.price]));
+  const codes = [];
+  for (const raw of rawCodes || []) {
+    const key = String(raw || "").trim().toUpperCase();
+    if (!key || codes.includes(key)) continue;
+    if (!CODE_BOOK[key]) return { error: "That code is not on the shelf." };
+    if (codes.length >= 2) return { error: "Two codes is the limit." };
+    codes.push(key);
+  }
+  let percent = 0;
+  let hand = false;
+  const labels = [];
+  for (const key of codes) {
+    const row = CODE_BOOK[key];
+    labels.push(row.label);
+    if (row.kind === "percent") percent += row.amount;
+    if (row.kind === "ship") hand = true;
+  }
+  const base = Math.max(0, Number(sub) || 0);
+  const discount = Math.round((base * percent) / 100);
+  if (!Object.prototype.hasOwnProperty.call(prices, shipId)) return { error: "Pick a shipping speed." };
+  const shipPrice = hand ? 0 : prices[shipId];
+  return {
+    error: "",
+    codes,
+    labels,
+    discount,
+    hand,
+    shipPrice,
+    total: Math.max(0, base - discount + shipPrice),
+  };
+}
+
 export const PRODUCTS = [
   {
     id: "kit",
