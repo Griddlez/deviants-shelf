@@ -188,6 +188,7 @@ function Gate({ onIn }) {
   const door = doorFromUrl();
   const [view, setView] = useState(door || invite ? "claim" : "welcome");
   const [open, setOpen] = useState(false);
+  const [adult, setAdult] = useState(false);
   const [name, setName] = useState("");
   const [pin, setPin] = useState(invite?.pin || "");
   const [err, setErr] = useState("");
@@ -220,6 +221,10 @@ function Gate({ onIn }) {
 
   async function claim(e) {
     e.preventDefault();
+    if (!adult) {
+      setErr("You have to be 21 or older to claim a card.");
+      return;
+    }
     try {
       const claimed = door
         ? await store.joinCard({ token: door, pin, name })
@@ -261,7 +266,11 @@ function Gate({ onIn }) {
                 <button className="btn slim" type="button" onClick={() => setPin(freshPin())}>New PIN</button>
               </div>
               {err && <p className="err">{err}</p>}
-              <button className="btn gold wide" type="submit">Claim your card</button>
+              <label className="check">
+                <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
+                You are 21 or older.
+              </label>
+              <button className="btn gold wide" type="submit" disabled={!adult}>Claim your card</button>
               <p className="tiny">Your name is saved exactly as you type it. Sign in the same way later. You can keep this PIN or change it before you claim.</p>
             </form>
           )}
@@ -513,7 +522,6 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
     email: session.email || "",
   });
   const [ruo, setRuo] = useState(false);
-  const [adult, setAdult] = useState(false);
   const [slid, setSlid] = useState(false);
 
   const ship = CONFIG.shipping.find((s) => s.id === shipId);
@@ -523,7 +531,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
   const [err, setErr] = useState("");
 
   async function place() {
-    if (!ruo || !adult || !slid || !cart.length) return;
+    if (!ruo || !slid || !cart.length) return;
     try {
       const order = await store.placeOrder({
         name: session.name,
@@ -631,10 +639,6 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
         <div className="panel">
           <h3>Confirm order</h3>
           <label className="check">
-            <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
-            You are 21 or older.
-          </label>
-          <label className="check">
             <input type="checkbox" checked={ruo} onChange={(e) => setRuo(e.target.checked)} />
             You understand all of these products are for Research Purposes Only.
           </label>
@@ -643,7 +647,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
           </p>
           <SlideConfirm done={slid} onDone={() => setSlid(true)} />
           {err && <p className="err">{err}</p>}
-          <button className="btn gold wide" disabled={!ruo || !adult || !slid} onClick={place}>
+          <button className="btn gold wide" disabled={!ruo || !slid} onClick={place}>
             Place order
           </button>
         </div>
@@ -665,6 +669,7 @@ function CartBox({ cart, setCart }) {
           </span>
         </div>
       ))}
+      <button className="btn slim" type="button" onClick={() => setCart([])}>Empty basket</button>
     </div>
   );
 }

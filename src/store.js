@@ -1,4 +1,5 @@
 const KEY = "deviants-shelf-v1";
+const DOOR = "deviants-shelf-door";
 
 function load() {
   try {
@@ -10,6 +11,14 @@ function load() {
 
 function save(state) {
   localStorage.setItem(KEY, JSON.stringify(state));
+}
+
+function readDoor() {
+  try {
+    return JSON.parse(sessionStorage.getItem(DOOR) || "null");
+  } catch {
+    return null;
+  }
 }
 
 function bookOf(s) {
@@ -88,7 +97,7 @@ export function receiptImage(session, path) {
 export function getState() {
   const s = load();
   return {
-    session: s.session || null,
+    session: readDoor(),
     cart: s.cart || [],
     orders: s.orders || [],
     nextId: s.nextId || 1001,
@@ -97,16 +106,11 @@ export function getState() {
 }
 
 export function setSession(session) {
-  const s = load();
-  s.session = session;
-  save(s);
+  sessionStorage.setItem(DOOR, JSON.stringify(session));
 }
 
 export function clearSession() {
-  const s = load();
-  s.session = null;
-  s.cart = [];
-  save(s);
+  sessionStorage.removeItem(DOOR);
 }
 
 export function setCart(cart) {
