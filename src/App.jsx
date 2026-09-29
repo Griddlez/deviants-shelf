@@ -341,9 +341,7 @@ function Gate({ onIn }) {
             <div className="scroll-shut">
               <p className="eyebrow">An invitation from</p>
               <p className="lede">{CONFIG.shopName}</p>
-              <button className="roll-btn" type="button" onClick={() => { setOpen(true); if (!pin) setPin(freshPin()); }}>
-                <img src="/art/scroll-shut.webp" alt="A sealed scroll" />
-              </button>
+              <button className="roll-btn" type="button" aria-label="Tap the seal" onClick={() => { setOpen(true); if (!pin) setPin(freshPin()); }} />
               <p className="scroll-hint">Tap the seal</p>
               <p className="tiny">An invitation has been sealed for you.</p>
             </div>
