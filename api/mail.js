@@ -20,10 +20,8 @@ function payRows(pay) {
   pay = pay || CONFIG.pay || {};
   return [
     ["Venmo", pay.venmo],
-    ["Zelle", pay.zelle],
     ["Cash App", pay.cashApp],
     ["Chime", pay.chime],
-    ["Crypto", pay.crypto],
   ].filter(([, value]) => value && !/^SET\b/i.test(value));
 }
 
@@ -227,7 +225,10 @@ export default async function handler(req, res) {
   }
   const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
   const order = { ...(body.order || {}) };
-  if (!order.pay) order.pay = await bookPay();
+  const stored = await bookPay();
+  const handles = ["venmo", "cashApp", "chime"];
+  const storedHas = handles.some((key) => stored?.[key] && !/^SET\b/i.test(stored[key]));
+  order.pay = storedHas ? stored : CONFIG.pay;
   const to = String(order.contact?.email || "").trim();
   const shop = String(process.env.MAIL_USER || "").trim();
   const note = letter(body.kind, order);

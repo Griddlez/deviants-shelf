@@ -73,7 +73,7 @@ function sweep(book) {
 
 function publicPay(pay) {
   const out = {};
-  for (const key of ["ownerName", "venmo", "zelle", "cashApp", "chime", "crypto"]) {
+  for (const key of ["ownerName", "venmo", "cashApp", "chime"]) {
     const value = String(pay?.[key] || "").trim();
     if (value && !/^SET\b/i.test(value)) out[key] = value;
   }
@@ -433,7 +433,7 @@ export default async function handler(req, res) {
       }
       const book = await readBook();
       const pay = {};
-      for (const key of ["ownerName", "venmo", "zelle", "cashApp", "chime", "crypto"]) {
+      for (const key of ["ownerName", "venmo", "cashApp", "chime"]) {
         pay[key] = String(body.pay?.[key] || "").trim().slice(0, 80);
       }
       book.pay = pay;
