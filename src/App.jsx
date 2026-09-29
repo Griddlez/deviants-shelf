@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CONFIG, PRODUCTS } from "./data.js";
+import { CONFIG, PRODUCTS, quoteOrder } from "./data.js";
 import { FLAVOR, ROW_ORDER } from "./flavor.js";
 import * as store from "./store.js";
 import { notify } from "./mail.js";
@@ -309,7 +309,7 @@ function Gate({ onIn }) {
   async function claim(e) {
     e.preventDefault();
     if (!adult) {
-      setErr("You have to be 21 or older to claim a card.");
+      setErr("You have to be 21 or older to claim an invitation.");
       return;
     }
     try {
@@ -337,50 +337,49 @@ function Gate({ onIn }) {
     <div className="gate">
       {view === "claim" && (door || invite) && (
         <>
-          <p className="eyebrow">You have been invited by</p>
-          <p className="lede">{CONFIG.shopName}</p>
           {!open ? (
-            <button className="pass pass-closed" type="button" onClick={() => { setOpen(true); if (!pin) setPin(freshPin()); }}>
-              <img className="pass-art" src="/art/logo.jpg" alt="The Deviant's Shelf" />
-              <span>Tap to open</span>
-            </button>
+            <div className="scroll-shut">
+              <p className="eyebrow">An invitation from</p>
+              <p className="lede">{CONFIG.shopName}</p>
+              <button className="roll-btn" type="button" onClick={() => { setOpen(true); if (!pin) setPin(freshPin()); }}>
+                <span className="wax"><img src="/art/seal.jpg" alt="" /></span>
+              </button>
+              <p className="scroll-hint">Tap the seal</p>
+              <p className="tiny">An invitation has been sealed for you.</p>
+            </div>
           ) : (
-            <form className="pass" onSubmit={claim}>
-              <div className="pass-top">
-                <img className="pass-mark tiny-mark" src="/art/crest.jpg" alt="" />
-                <span className="pass-pill">Member</span>
+            <form className="invite" onSubmit={claim}>
+              <div className="rod" />
+              <div className="sheet">
+                <p className="script-title">You are invited</p>
+                <p className="script">Come to the shelf. Write your name, choose a gate code, and the door will know you.</p>
+                <label>Name on invitation</label>
+                <input value={name} onChange={(e) => setName(e.target.value)} maxLength={24} placeholder="Your name" required />
+                <label>Gate code</label>
+                <p className="fine">Four to eight digits. Keep this one, or write your own.</p>
+                <div className="row-btns">
+                  <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" autoComplete="off" />
+                  <button className="btn slim" type="button" onClick={() => setPin(freshPin())}>New gate code</button>
+                </div>
+                {err && <p className="err">{err}</p>}
+                <label className="check">
+                  <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
+                  You are 21 or older.
+                </label>
+                <button className="btn gold wide" type="submit" disabled={!adult}>Claim your invitation</button>
+                <p className="fine">The name is kept exactly as you write it. Sign in later with that same name and gate code.</p>
               </div>
-              <img className="pass-word" src="/art/logo.jpg" alt="The Deviant's Shelf" />
-              <p className="pass-label">Member no.</p>
-              <p className="pass-no">{invite ? invite.account : "····"}</p>
-              <label>Name on card</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} maxLength={24} placeholder="Your name" required />
-              <label>PIN</label>
-              <p className="tiny">Type your own, or keep the one shown. 4 to 8 digits.</p>
-              <div className="row-btns">
-                <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" autoComplete="off" />
-                <button className="btn slim" type="button" onClick={() => setPin(freshPin())}>New PIN</button>
-              </div>
-              {err && <p className="err">{err}</p>}
-              <label className="check">
-                <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
-                You are 21 or older.
-              </label>
-              <button className="btn gold wide" type="submit" disabled={!adult}>Claim your card</button>
-              <p className="tiny">Your name is saved exactly as you type it. Sign in the same way later. You can keep this PIN or change it before you claim.</p>
+              <div className="rod" />
             </form>
           )}
-          <p className="tiny">A card has been prepared for you.</p>
         </>
       )}
 
       {view === "welcome" && (
         <>
-          <button className="pass pass-closed" type="button" onClick={() => { setView("signin"); setErr(""); }}>
-            <img className="pass-art" src="/art/logo.jpg" alt="The Deviant's Shelf" />
-          </button>
+          <img className="logo" src="/art/logo.jpg" alt="The Deviant's Shelf" />
           <p className="lede">Have you been invited?</p>
-          <p className="muted">This shelf is invitation-only. Open the invite link to claim a card. Each person who claims it gets their own number. Already have a card? Sign in with that name and PIN.</p>
+          <p className="muted">This shelf is invitation-only. Open the invitation and tap the seal. Already claimed? Sign in with the name on the invitation and your gate code.</p>
           <button className="btn gold wide" type="button" onClick={() => { setView("signin"); setErr(""); }}>Sign in</button>
           <button className="tinybtn" type="button" onClick={() => { setView("desk"); setErr(""); setPin(""); }}>Shop desk</button>
         </>
@@ -389,9 +388,9 @@ function Gate({ onIn }) {
       {view === "signin" && (
         <form className="panel" onSubmit={signIn}>
           <p className="eyebrow">Sign in</p>
-          <label>Name on card</label>
+          <label>Name on invitation</label>
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={24} placeholder="Your name" required />
-          <label>PIN</label>
+          <label>Gate code</label>
           <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" placeholder="••••••" autoComplete="off" />
           {err && <p className="err">{err}</p>}
           <button className="btn gold wide" type="submit">Sign in</button>
@@ -624,10 +623,31 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
   const [templates, setTemplates] = useState(session.templates || []);
   const [ruo, setRuo] = useState(false);
   const [slid, setSlid] = useState(false);
+  const [codes, setCodes] = useState([]);
+  const [draft, setDraft] = useState("");
+  const [codeErr, setCodeErr] = useState("");
 
   const ship = CONFIG.shipping.find((s) => s.id === shipId);
   const sub = cart.reduce((n, l) => n + l.price * l.qty, 0);
-  const total = sub + (ship?.price || 0);
+  const quote = quoteOrder(sub, shipId, codes);
+  const total = quote.total ?? sub + (ship?.price || 0);
+
+  function addCode() {
+    const key = draft.trim().toUpperCase();
+    if (!key) return;
+    if (codes.includes(key)) {
+      setCodeErr("That code is already on this order.");
+      return;
+    }
+    const next = quoteOrder(sub, shipId, [...codes, key]);
+    if (next.error) {
+      setCodeErr(next.error);
+      return;
+    }
+    setCodes(next.codes);
+    setDraft("");
+    setCodeErr("");
+  }
 
   const [err, setErr] = useState("");
 
@@ -639,8 +659,9 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
         pin: session.pin,
         order: {
           items: cart,
-          shipping: ship,
+          shipping: { ...ship, price: quote.shipPrice, label: quote.hand ? "Hand delivery" : ship.label, detail: quote.hand ? "No shipping fee" : ship.detail },
           contact,
+          codes: quote.codes,
           sub,
           total,
         },
@@ -712,7 +733,25 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
             </div>
           ))}
           <div className="line"><span>Subtotal</span><b>{money(sub)}</b></div>
-          <div className="line"><span>Shipping · {ship.label}</span><b>{money(ship.price)}</b></div>
+          {quote.discount > 0 && (
+            <div className="line"><span>Discount · {quote.labels.filter((label) => label !== "Hand delivery").join(" · ")}</span><b>−{money(quote.discount)}</b></div>
+          )}
+          <div className="codebox">
+            <h3 className="label">Discount codes</h3>
+            <p className="tiny">Two codes at most. Friends and family, hand delivery, or military.</p>
+            <div className="row-btns">
+              <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Code" autoComplete="off" />
+              <button className="btn slim" type="button" onClick={addCode}>Apply</button>
+            </div>
+            {(quote.codes || []).map((code) => (
+              <div className="line" key={code}>
+                <span>{code}</span>
+                <button className="tinybtn" type="button" onClick={() => setCodes(quote.codes.filter((item) => item !== code))}>Remove</button>
+              </div>
+            ))}
+            {codeErr && <p className="err">{codeErr}</p>}
+          </div>
+          <div className="line"><span>Shipping · {quote.hand ? "Hand delivery" : ship.label}</span><b>{money(quote.shipPrice)}</b></div>
           <div className="line total"><span>Total</span><b>{money(total)}</b></div>
           <div className="row-btns">
             <button className="btn" onClick={() => setStep("ship")}>Back</button>
@@ -761,6 +800,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
       {step === "confirm" && (
         <div className="panel">
           <h3>Confirm order</h3>
+          <p className="line total"><span>Total</span><b>{money(total)}</b></p>
           <label className="check">
             <input type="checkbox" checked={ruo} onChange={(e) => setRuo(e.target.checked)} />
             You understand all of these products are for Research Purposes Only.
@@ -939,6 +979,9 @@ function OrderCard({ order, onChange, tick, session, patchOrder }) {
         </div>
       ))}
       <div className="line"><span>Shipping · {order.shipping.label}</span><b>{money(order.shipping.price)}</b></div>
+      {order.discount > 0 && (
+        <div className="line"><span>Discount · {(order.codes || []).join(" · ")}</span><b>−{money(order.discount)}</b></div>
+      )}
       <div className="line total"><span>Total</span><b>{money(order.total)}</b></div>
       {order.status === "unpaid" && (
         <div className="upload">
@@ -1085,15 +1128,15 @@ function AccountCard({ session, onSaved }) {
         <input value={address.city || ""} onChange={(e) => setAddress({ ...address, city: e.target.value })} placeholder="City" />
         <input value={address.state || ""} onChange={(e) => setAddress({ ...address, state: e.target.value })} placeholder="State" />
         <input value={address.zip || ""} onChange={(e) => setAddress({ ...address, zip: e.target.value })} placeholder="ZIP" />
-        <label>New PIN</label>
-        <p className="tiny">Leave this blank to keep your PIN. Or type your own, or take a random one.</p>
+        <label>New gate code</label>
+        <p className="tiny">Leave this blank to keep your gate code. Or type your own, or take a random one.</p>
         <div className="row-btns">
           <input value={nextPin} onChange={(e) => setNextPin(e.target.value)} inputMode="numeric" autoComplete="off" placeholder="4 to 8 digits" />
-          <button className="btn slim" type="button" onClick={() => setNextPin(freshPin())}>New PIN</button>
+          <button className="btn slim" type="button" onClick={() => setNextPin(freshPin())}>New gate code</button>
         </div>
         {!session.pin && (
           <>
-            <label>Current PIN</label>
+            <label>Current gate code</label>
             <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" autoComplete="off" />
           </>
         )}
