@@ -28,6 +28,19 @@ function cleanPin(pin) {
   return String(pin || "").replace(/\s/g, "");
 }
 
+function makeToken() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  let out = "";
+  for (const byte of bytes) out += alphabet[byte % alphabet.length];
+  return out;
+}
+
+function nextNumber(book) {
+  let n = book.next || 1;
+  while (book.used.includes(n) || n === 0) n += 1;
+  return n;
+}
 function deskOk(pin) {
   const expected = process.env.DESK_PIN || "";
   return expected && cleanPin(pin) === expected;
@@ -64,13 +77,39 @@ export default async function handler(req, res) {
         return;
       }
       const book = await readBook();
+      if (!book.door) {
+        book.door = makeToken();
+        await writeBook(book);
+      }
+      const members = Object.values(book.people)
+        .sort((a, b) => a.account - b.account)
+        .map((person) => ({ account: person.account, name: person.name, pin: person.pin }));
       res.status(200).json({
+        url: `https://thedeviantsshelf.com/invite/link/${book.door}`,
+        members,
         invites: book.invites.map((c) => ({
           account: c.account,
           pin: c.pin,
           name: c.name || "",
         })),
       });
+      return;
+    }
+    if (body.action === "join") {
+      const display = String(body.name || "").trim().slice(0, 24);
+      const pinClean = cleanPin(body.pin);
+      if (!display) throw new Error("Type the name for this card.");
+      if (!/^\d{4,8}$/.test(pinClean)) throw new Error("Use a PIN of 4 to 8 digits.");
+      const book = await readBook();
+      if (!book.door || book.door !== String(body.token || "")) throw new Error("This invite is not valid.");
+      if (book.people[display]) throw new Error("That name is already on a card. Sign in, or use a different name.");
+      const n = nextNumber(book);
+      book.used.push(n);
+      book.next = n + 1;
+      book.people[display] = { account: n, name: display, pin: pinClean };
+      book.invites.unshift({ account: n, pin: pinClean, name: display, at: Date.now() });
+      await writeBook(book);
+      res.status(200).json({ account: String(n), name: display });
       return;
     }
     if (body.action === "claim") {
