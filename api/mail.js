@@ -78,6 +78,55 @@ function paymentBlock() {
     <p style="color:#d7fff8;">Payment is handled off the shelf. After you pay, open the order and attach a photo of the receipt.</p>`;
 }
 
+function deskLetter(kind, order) {
+  const id = esc(order.id);
+  const member = esc(order.accountName || order.contact?.fullName || "A member");
+  const no = esc(order.account || "—");
+  const mail = esc(order.contact?.email || "no email on the order");
+  const head = `<p style="color:#2ec9b0;">Desk note. This copy is only for you.</p><p>Member no. ${no} · ${member}<br>Their email · ${mail}</p>`;
+  if (kind === "received") {
+    return {
+      subject: `Desk — new order #${order.id} — ${order.accountName || "member"} ${order.account || ""}`.trim(),
+      html: shell({
+        kicker: "Desk",
+        title: `New order #${id} is waiting on payment`,
+        body: `${head}<p>They placed this order. Do not mark it paid until a receipt is attached.</p>${itemsTable(order)}${shipTo(order.contact)}`,
+      }),
+    };
+  }
+  if (kind === "receipt") {
+    return {
+      subject: `Desk — receipt attached for order #${order.id}`,
+      html: shell({
+        kicker: "Desk",
+        title: `Order #${id} needs your confirmation`,
+        body: `${head}<p>A payment receipt was just attached. Open the desk and confirm it when the payment checks out.</p><p>Order total: <span style="color:#2ec9b0;">${money(order.total)}</span></p>`,
+      }),
+    };
+  }
+  if (kind === "confirmed") {
+    return {
+      subject: `Desk — you confirmed payment for order #${order.id}`,
+      html: shell({
+        kicker: "Desk",
+        title: `Order #${id} marked paid`,
+        body: `${head}<p>You confirmed the payment. The member got a different note saying it is waiting to be prepared.</p>`,
+      }),
+    };
+  }
+  if (kind === "prepared") {
+    return {
+      subject: `Desk — order #${order.id} marked being prepared`,
+      html: shell({
+        kicker: "Desk",
+        title: `Order #${id} is being prepared`,
+        body: `${head}<p>You marked this order as being prepared. The member got a different note saying it is in final prep.</p>`,
+      }),
+    };
+  }
+  return null;
+}
+
 function letter(kind, order) {
   const name = esc(order.contact?.fullName || "there");
   const id = esc(order.id);
@@ -161,14 +210,16 @@ export default async function handler(req, res) {
       });
     }
     if (shop && shop.toLowerCase() !== to.toLowerCase()) {
-      const who = order.account ? `Member no. ${order.account}${order.accountName ? ` · ${order.accountName}` : ""}` : "A member";
-      await transport.sendMail({
-        from: `The Deviant's Shelf <${FROM}>`,
-        to: shop,
-        replyTo: to || FROM,
-        subject: `Desk copy — ${note.subject}`,
-        html: note.html.replace("<p>Hi ", `<p style="color:#2ec9b0;">${esc(who)}</p><p>Hi `),
-      });
+      const desk = deskLetter(body.kind, order);
+      if (desk) {
+        await transport.sendMail({
+          from: `The Deviant's Shelf <${FROM}>`,
+          to: shop,
+          replyTo: to || FROM,
+          subject: desk.subject,
+          html: desk.html,
+        });
+      }
     }
     res.status(200).json({ ok: true });
   } catch {
