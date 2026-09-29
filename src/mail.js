@@ -8,6 +8,8 @@ export function notify(kind, order) {
       accountName: order.accountName,
       total: order.total,
       sub: order.sub,
+      discount: order.discount || 0,
+      codes: order.codes || [],
       items: (order.items || []).map((l) => ({
         name: l.name,
         sku: l.sku,
