@@ -522,7 +522,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
   const [err, setErr] = useState("");
 
   async function place() {
-    if (!ruo || !slid || !cart.length) return;
+    if (!ruo || !adult || !slid || !cart.length) return;
     try {
       const order = await store.placeOrder({
         name: session.name,
@@ -630,6 +630,10 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
         <div className="panel">
           <h3>Confirm order</h3>
           <label className="check">
+            <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
+            You are 21 or older.
+          </label>
+          <label className="check">
             <input type="checkbox" checked={ruo} onChange={(e) => setRuo(e.target.checked)} />
             You understand all of these products are for Research Purposes Only.
           </label>
@@ -638,7 +642,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
           </p>
           <SlideConfirm done={slid} onDone={() => setSlid(true)} />
           {err && <p className="err">{err}</p>}
-          <button className="btn gold wide" disabled={!ruo || !slid} onClick={place}>
+          <button className="btn gold wide" disabled={!ruo || !adult || !slid} onClick={place}>
             Place order
           </button>
         </div>
