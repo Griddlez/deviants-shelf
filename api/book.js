@@ -72,36 +72,108 @@ function sweep(book) {
   return dirty;
 }
 
-function applySheetStock(book) {
-  const onHand = {
-    "KIT-1": 27,
-    "R3-20": 30,
-    "R3-5": 8,
-    "BPC-10": 19,
-    "BPC-5": 3,
-    "TB5-5": 18,
-    "AMQ-50": 29,
-    "CJC-5-5": 9,
-    "MOT-20": 20,
-    "NAD-500": 20,
-    "GHK-100": 12,
-    "PT-10": 9,
-    "SEM-10": 11,
-    "NAD-100": 4,
-    "KPV-10": 8,
-    "SEL-5": 6,
-    "ARA-10": 9,
-    "EPI-10": 9,
-    "PIN-10": 9,
-    "BAC-10": 27,
-  };
-  if (!book.stock || typeof book.stock !== "object") book.stock = {};
-  let dirty = false;
-  for (const [sku, qty] of Object.entries(onHand)) {
-    if (typeof book.stock[sku] !== "number") {
-      book.stock[sku] = qty;
-      dirty = true;
+const SHEET_CSV = "https://docs.google.com/spreadsheets/d/1bGdHhJ7B2ej1Jt_io8GRdFU6eFCuG4lhcgzn-vpK1Co/export?format=csv";
+const SHEET_SKU = {
+  "retatrutide|20 mg": "R3-20",
+  "retatrutide|5 mg": "R3-5",
+  "bpc-157|10 mg": "BPC-10",
+  "bpc-157|5 mg": "BPC-5",
+  "tb-500|5 mg": "TB5-5",
+  "5-amino-1mq|50 mg": "AMQ-50",
+  "ipamorelin + cjc no dac|10 mg": "CJC-5-5",
+  "mots-c|20 mg": "MOT-20",
+  "nad+|500 mg": "NAD-500",
+  "ghk-cu|100 mg": "GHK-100",
+  "pt-141|10 mg": "PT-10",
+  "semax|10 mg": "SEM-10",
+  "nad+|100 mg": "NAD-100",
+  "kpv|10 mg": "KPV-10",
+  "selank|5 mg": "SEL-5",
+  "ara-290|10 mg": "ARA-10",
+  "epithalon|10 mg": "EPI-10",
+  "pinealon|10 mg": "PIN-10",
+  "bac water|10 ml": "BAC-10",
+  "starter kit|1 bac + 10 pin + 20 wipe": "KIT-1",
+};
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') { cell += '"'; i += 1; }
+      else if (c === '"') quoted = false;
+      else cell += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i += 1;
+      row.push(cell);
+      cell = "";
+      if (row.some((part) => part.trim())) rows.push(row);
+      row = [];
+    } else cell += c;
+  }
+  if (cell || row.length) {
+    row.push(cell);
+    if (row.some((part) => part.trim())) rows.push(row);
+  }
+  return rows;
+}
+
+function countsFromSheet(text) {
+  const counts = {};
+  let nameI = -1;
+  let sizeI = -1;
+  let handI = -1;
+  for (const row of parseCsv(text)) {
+    const head = row.map((part) => part.trim().toLowerCase());
+    if (head[0] === "code" && head.includes("on hand")) {
+      nameI = head.indexOf("compound");
+      sizeI = head.indexOf("size / vial");
+      handI = head.indexOf("on hand");
+      continue;
     }
+    if (handI < 0) continue;
+    const key = `${String(row[nameI] || "").trim().toLowerCase()}|${String(row[sizeI] || "").trim().toLowerCase()}`;
+    const sku = SHEET_SKU[key];
+    if (!sku) continue;
+    const qty = Number(String(row[handI] || "").replace(/[^0-9.-]/g, ""));
+    if (!Number.isFinite(qty)) continue;
+    counts[sku] = Math.max(0, Math.min(999, Math.round(qty)));
+  }
+  return counts;
+}
+
+async function pullSheet(book) {
+  if (!book.stock || typeof book.stock !== "object") book.stock = {};
+  if (!book.sheetSeen || typeof book.sheetSeen !== "object") book.sheetSeen = {};
+  let dirty = false;
+  try {
+    const res = await fetch(SHEET_CSV, { redirect: "manual" });
+    if (!res.ok || (res.status >= 300 && res.status < 400)) return dirty;
+    const text = await res.text();
+    if (!text || /<!doctype|<html/i.test(text.slice(0, 300))) return dirty;
+    const counts = countsFromSheet(text);
+    if (!Object.keys(counts).length) return dirty;
+    for (const [sku, qty] of Object.entries(counts)) {
+      const seen = book.sheetSeen[sku];
+      if (seen === undefined || seen !== qty) {
+        if (book.stock[sku] !== qty) {
+          book.stock[sku] = qty;
+          dirty = true;
+        }
+      }
+      if (book.sheetSeen[sku] !== qty) {
+        book.sheetSeen[sku] = qty;
+        dirty = true;
+      }
+    }
+  } catch {
+    return dirty;
   }
   return dirty;
 }
@@ -289,7 +361,7 @@ export default async function handler(req, res) {
       const incoming = body.order || {};
       const items = Array.isArray(incoming.items) ? incoming.items.slice(0, 40) : [];
       if (!items.length) throw new Error("The basket is empty.");
-      applySheetStock(book);
+      await pullSheet(book);
       const need = {};
       for (const line of items) {
         const sku = String(line.sku || "");
@@ -356,7 +428,7 @@ export default async function handler(req, res) {
     }
     if (body.action === "orders") {
       const book = await readBook();
-      const dirty = sweep(book) || applySheetStock(book);
+      const dirty = sweep(book) || await pullSheet(book);
       if (dirty) await writeBook(book);
       let list = book.orders;
       if (!deskOk(body.deskPin)) {
