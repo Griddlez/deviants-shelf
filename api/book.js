@@ -71,6 +71,40 @@ function sweep(book) {
   return dirty;
 }
 
+function applySheetStock(book) {
+  const onHand = {
+    "KIT-1": 27,
+    "R3-20": 30,
+    "R3-5": 8,
+    "BPC-10": 19,
+    "BPC-5": 3,
+    "TB5-5": 18,
+    "AMQ-50": 29,
+    "CJC-5-5": 9,
+    "MOT-20": 20,
+    "NAD-500": 20,
+    "GHK-100": 12,
+    "PT-10": 9,
+    "SEM-10": 11,
+    "NAD-100": 4,
+    "KPV-10": 8,
+    "SEL-5": 6,
+    "ARA-10": 9,
+    "EPI-10": 9,
+    "PIN-10": 9,
+    "BAC-10": 27,
+  };
+  if (!book.stock || typeof book.stock !== "object") book.stock = {};
+  let dirty = false;
+  for (const [sku, qty] of Object.entries(onHand)) {
+    if (typeof book.stock[sku] !== "number") {
+      book.stock[sku] = qty;
+      dirty = true;
+    }
+  }
+  return dirty;
+}
+
 function publicPay(pay) {
   const out = {};
   for (const key of ["ownerName", "venmo", "cashApp", "chime"]) {
@@ -254,7 +288,7 @@ export default async function handler(req, res) {
       const incoming = body.order || {};
       const items = Array.isArray(incoming.items) ? incoming.items.slice(0, 40) : [];
       if (!items.length) throw new Error("The basket is empty.");
-      if (!book.stock || typeof book.stock !== "object") book.stock = {};
+      applySheetStock(book);
       const need = {};
       for (const line of items) {
         const sku = String(line.sku || "");
@@ -309,7 +343,7 @@ export default async function handler(req, res) {
     }
     if (body.action === "orders") {
       const book = await readBook();
-      const dirty = sweep(book);
+      const dirty = sweep(book) || applySheetStock(book);
       if (dirty) await writeBook(book);
       let list = book.orders;
       if (!deskOk(body.deskPin)) {
