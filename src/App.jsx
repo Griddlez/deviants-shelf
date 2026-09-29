@@ -89,6 +89,7 @@ export default function App() {
           openId={openId}
           setOpenId={setOpenId}
           cart={cart}
+          onBasket={() => { setTab("order"); setFlow({ step: "ship" }); }}
           onAdd={(line) => {
             const next = [...cart, line];
             store.setCart(next);
@@ -293,7 +294,7 @@ function Gate({ onIn }) {
   );
 }
 
-function Catalog({ openId, setOpenId, cart, onAdd }) {
+function Catalog({ openId, setOpenId, cart, onAdd, onBasket }) {
   const [q, setQ] = useState("");
   const [coa, setCoa] = useState(null);
   const list = PRODUCTS.filter((p) => {
@@ -321,7 +322,14 @@ function Catalog({ openId, setOpenId, cart, onAdd }) {
       <p className="muted">Current availability and pricing. Vial = 1 vial. COA is the lab report for that lot.</p>
       <div className="tools">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products" />
-        <span className="muted">{count} in order</span>
+        <button className="btn slim basket" type="button" onClick={() => count && onBasket()}>
+          <svg className="basket-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9h16l-1.4 9.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8L4 9z" />
+            <path d="M8 9c0-3 1.8-5 4-5s4 2 4 5" />
+            <path d="M8 13h8M9 16.5h6" />
+          </svg>
+          {count === 0 ? "Basket is empty" : count === 1 ? "1 in the basket" : `${count} in the basket`}
+        </button>
       </div>
       {groups.map((g) => (
         <div key={g.row}>

@@ -116,6 +116,8 @@ button.acct:hover, button.acct:active {
 .wrap h2 { margin: 0 0 6px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7); }
 .muted { color: var(--muted); }
 .tools { display: flex; gap: 10px; align-items: center; margin: 12px 0 16px; }
+.basket { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; }
+.basket-mark { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .tools input, .panel input {
   width: 100%; background: rgba(8, 5, 3, 0.72); border: 1px solid var(--line); color: var(--text); padding: 10px;
 }
