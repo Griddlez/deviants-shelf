@@ -43,9 +43,12 @@ export function cutCard(deskPin) {
   return postBook({ action: "cut", deskPin });
 }
 
-export async function listInvites(deskPin) {
-  const data = await postBook({ action: "list", deskPin });
-  return data.invites || [];
+export function deskBook(deskPin) {
+  return postBook({ action: "list", deskPin });
+}
+
+export function joinCard({ token, pin, name }) {
+  return postBook({ action: "join", token, pin, name });
 }
 
 export function claimCard({ account, pin, name }) {

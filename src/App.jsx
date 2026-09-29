@@ -150,9 +150,20 @@ function inviteFromUrl() {
   return { account: match[1], pin: match[2] };
 }
 
+function doorFromUrl() {
+  const path = window.location.pathname.match(/^\/invite\/link\/([A-Za-z0-9]+)$/);
+  if (path) return path[1];
+  return new URLSearchParams(window.location.search).get("invite") || "";
+}
+
+function freshPin() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
 function Gate({ onIn }) {
   const invite = inviteFromUrl();
-  const [view, setView] = useState(invite ? "claim" : "welcome");
+  const door = doorFromUrl();
+  const [view, setView] = useState(door || invite ? "claim" : "welcome");
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [pin, setPin] = useState(invite?.pin || "");
@@ -187,9 +198,11 @@ function Gate({ onIn }) {
   async function claim(e) {
     e.preventDefault();
     try {
-      const claimed = await store.claimCard({ account: invite.account, pin, name });
+      const claimed = door
+        ? await store.joinCard({ token: door, pin, name })
+        : await store.claimCard({ account: invite.account, pin, name });
       store.setSession({ name: claimed.name, account: claimed.account, admin: false });
-      window.history.replaceState({}, "", window.location.pathname);
+      window.history.replaceState({}, "", "/");
       onIn();
     } catch (error) {
       setErr(error.message);
@@ -198,12 +211,12 @@ function Gate({ onIn }) {
 
   return (
     <div className="gate">
-      {view === "claim" && invite && (
+      {view === "claim" && (door || invite) && (
         <>
           <p className="eyebrow">You have been invited by</p>
           <p className="lede">{CONFIG.shopName}</p>
           {!open ? (
-            <button className="pass pass-closed" type="button" onClick={() => setOpen(true)}>
+            <button className="pass pass-closed" type="button" onClick={() => { setOpen(true); if (!pin) setPin(freshPin()); }}>
               <img className="pass-art" src="/art/logo.jpg" alt="The Deviant's Shelf" />
               <span>Tap to open</span>
             </button>
@@ -215,11 +228,14 @@ function Gate({ onIn }) {
               </div>
               <img className="pass-word" src="/art/logo.jpg" alt="The Deviant's Shelf" />
               <p className="pass-label">Member no.</p>
-              <p className="pass-no">{invite.account}</p>
+              <p className="pass-no">{invite ? invite.account : "····"}</p>
               <label>Name on card</label>
               <input value={name} onChange={(e) => setName(e.target.value)} maxLength={24} placeholder="Your name" required />
               <label>PIN</label>
-              <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" autoComplete="off" />
+              <div className="row-btns">
+                <input value={pin} onChange={(e) => setPin(e.target.value)} inputMode="numeric" autoComplete="off" />
+                {door && <button className="btn slim" type="button" onClick={() => setPin(freshPin())}>New PIN</button>}
+              </div>
               {err && <p className="err">{err}</p>}
               <button className="btn gold wide" type="submit">Claim your card</button>
               <p className="tiny">Your name is saved exactly as you type it. Sign in the same way later. You can keep this PIN or change it before you claim.</p>
@@ -235,7 +251,7 @@ function Gate({ onIn }) {
             <img className="pass-art" src="/art/logo.jpg" alt="The Deviant's Shelf" />
           </button>
           <p className="lede">Have you been invited?</p>
-          <p className="muted">This shelf is invitation-only. If a card link was sent to you, open it to claim your name and PIN. Already have a card? Sign in with that name and PIN.</p>
+          <p className="muted">This shelf is invitation-only. Open the invite link to claim a card. Each person who claims it gets their own number. Already have a card? Sign in with that name and PIN.</p>
           <button className="btn gold wide" type="button" onClick={() => { setView("signin"); setErr(""); }}>Sign in</button>
           <button className="tinybtn" type="button" onClick={() => { setView("desk"); setErr(""); setPin(""); }}>Shop desk</button>
         </>
@@ -724,8 +740,8 @@ function labelStatus(s) {
 }
 
 function AdminDesk({ session, orders, onChange }) {
-  const [cards, setCards] = useState([]);
-  const [fresh, setFresh] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [link, setLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState("");
 
@@ -734,24 +750,15 @@ function AdminDesk({ session, orders, onChange }) {
       setErr("Sign out, then open the shop desk again.");
       return;
     }
-    store.listInvites(session.deskPin).then(setCards).catch((e) => setErr(e.message));
+    store.deskBook(session.deskPin).then((data) => {
+      setLink(data.url || "");
+      setMembers(data.members || []);
+    }).catch((e) => setErr(e.message));
   }, [session]);
 
-  async function cut() {
+  async function copy() {
     try {
-      const card = await store.cutCard(session.deskPin);
-      setFresh(card);
-      setCards(await store.listInvites(session.deskPin));
-      setCopied(false);
-      setErr("");
-    } catch (e) {
-      setErr(e.message);
-    }
-  }
-
-  async function copy(url) {
-    try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(link);
       setCopied(true);
     } catch {
       setCopied(false);
@@ -761,22 +768,19 @@ function AdminDesk({ session, orders, onChange }) {
   return (
     <section className="wrap">
       <h2>Desk</h2>
-      <p className="muted">Account 0 is this door. Cut a card to give the next number. The book is shared, so every phone sees the same cards, and a used number is not given out again.</p>
+      <p className="muted">Account 0 is this door. Share the invite link. Every person who claims it gets the next number. A used number is not given out again.</p>
       {err && <p className="err">{err}</p>}
-      <button className="btn gold" type="button" onClick={cut}>Cut a card</button>
-      {fresh && (
+      {link && (
         <div className="panel">
-          <p>Member no. {fresh.account}</p>
-          <p>PIN {fresh.pin}</p>
-          <p className="tiny">{fresh.url}</p>
-          <button className="btn" type="button" onClick={() => copy(fresh.url)}>{copied ? "Copied" : "Copy card link"}</button>
+          <p className="tiny">{link}</p>
+          <button className="btn gold" type="button" onClick={copy}>{copied ? "Copied" : "Copy invite link"}</button>
         </div>
       )}
-      {cards.length > 0 && (
+      {members.length > 0 && (
         <div className="panel">
-          <h3>Cards cut</h3>
-          {cards.map((c) => (
-            <p key={c.account} className="tiny">No. {c.account} · PIN {c.pin}</p>
+          <h3>Members</h3>
+          {members.map((c) => (
+            <p key={c.account} className="tiny">No. {c.account} · {c.name}</p>
           ))}
         </div>
       )}
