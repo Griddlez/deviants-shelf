@@ -18,6 +18,7 @@ async function readBook() {
 }
 
 async function writeBook(book) {
+  book.rev = (Number(book.rev) || 0) + 1;
   await put("ledger.json", JSON.stringify(book), {
     access: "private",
     addRandomSuffix: false,
@@ -192,6 +193,15 @@ export default async function handler(req, res) {
       book.people[display] = person;
       await writeBook(book);
       res.status(200).json({ account: String(person.account), name: person.name, email, pin: person.pin });
+      return;
+    }
+    if (body.action === "ping") {
+      const book = await readBook();
+      if (!deskOk(body.deskPin) && !memberOk(book, body.name, body.pin)) {
+        res.status(401).json({ error: "Sign in again." });
+        return;
+      }
+      res.status(200).json({ rev: Number(book.rev) || 0 });
       return;
     }
     if (body.action === "place") {
