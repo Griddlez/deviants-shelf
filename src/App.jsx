@@ -769,16 +769,34 @@ function PlacedModal({ order, onClose }) {
 }
 
 function OrderList({ title, subtitle, orders, onChange, tick, session, patchOrder }) {
+  const [openId, setOpenId] = useState(null);
   return (
     <section className="wrap">
       <h2>{title}</h2>
       <p className="muted">{subtitle}</p>
+      {session?.admin && <p className="tiny">Click an order number to open it. Update that one, then open the next.</p>}
       {!orders.length && <p className="muted">Nothing here yet.</p>}
-      {orders.map((o) => (
-        session?.admin
-          ? <DeskTicket key={o.id} order={o} session={session} onChange={onChange} patchOrder={patchOrder} />
-          : <OrderCard key={o.id} order={o} tick={tick} onChange={onChange} session={session} patchOrder={patchOrder} />
-      ))}
+      {session?.admin
+        ? orders.map((o) => (
+          <div key={o.id}>
+            <button
+              type="button"
+              className={openId === o.id ? "order-row on" : "order-row"}
+              onClick={() => setOpenId(openId === o.id ? null : o.id)}
+            >
+              <b>#{o.id}</b>
+              <span>No. {o.account ?? "—"} · {o.accountName || o.contact?.fullName || "Member"}</span>
+              <span className={`badge ${o.status}`}>{labelStatus(o.status)}</span>
+              <span>{money(o.total)}</span>
+            </button>
+            {openId === o.id && (
+              <DeskTicket order={o} session={session} onChange={onChange} patchOrder={patchOrder} />
+            )}
+          </div>
+        ))
+        : orders.map((o) => (
+          <OrderCard key={o.id} order={o} tick={tick} onChange={onChange} session={session} patchOrder={patchOrder} />
+        ))}
     </section>
   );
 }
