@@ -306,6 +306,7 @@ button.acct:hover, button.acct:active {
 .gate { max-width: 520px; margin: 8vh auto; padding: 20px; text-align: center; }
 .tinybtn { display: block; margin: 14px auto 0; }
 .gate .logo { width: min(480px, 100%); }
+.gate .gate-art { width: min(720px, 96vw); border-radius: 12px; box-shadow: 0 16px 30px rgba(0, 0, 0, 0.45); }
 .doors { display: flex; gap: 8px; margin: 8px 0 0; }
 .doors button {
   flex: 1; background: rgba(8, 5, 3, 0.55); color: var(--muted);
