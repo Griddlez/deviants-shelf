@@ -1,0 +1,26 @@
+.sheet .check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 10px;
+  font-size: 0;
+  line-height: 1.2;
+}
+.sheet .check input {
+  width: auto;
+  height: 18px;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  accent-color: #6b2a12;
+}
+.sheet .check::after {
+  content: "I attest that I am at least 21 years of age";
+  font-family: "Grenze Gotisch", serif;
+  font-size: 18px;
+  color: #24160c;
+  letter-spacing: 0;
+  text-transform: none;
+}
