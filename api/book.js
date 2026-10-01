@@ -31,7 +31,12 @@ async function writeBook(book) {
 }
 
 function cleanPin(pin) {
-  return String(pin || "").replace(/\s/g, "");
+  return String(pin || "").trim();
+}
+
+function passwordOk(pin) {
+  const value = cleanPin(pin);
+  return value.length >= 4 && value.length <= 40;
 }
 
 function makeToken() {
@@ -268,7 +273,7 @@ export default async function handler(req, res) {
       const display = String(body.name || "").trim().slice(0, 24);
       const pinClean = cleanPin(body.pin);
       if (!display) throw new Error("Type the name on the invitation.");
-      if (!/^\d{4,8}$/.test(pinClean)) throw new Error("Use a gate code of 4 to 8 digits.");
+      if (!passwordOk(pinClean)) throw new Error("Use a password of at least 4 characters.");
       const book = await readBook();
       if (!book.door || book.door !== String(body.token || "")) throw new Error("This invite is not valid.");
       if (book.people[display]) throw new Error("That name is already on an invitation. Sign in, or use a different name.");
@@ -286,7 +291,7 @@ export default async function handler(req, res) {
       const pinClean = cleanPin(body.pin);
       const n = Number(body.account);
       if (!display) throw new Error("Type the name on the invitation.");
-      if (!/^\d{4,8}$/.test(pinClean)) throw new Error("Use a gate code of 4 to 8 digits.");
+      if (!passwordOk(pinClean)) throw new Error("Use a password of at least 4 characters.");
       const book = await readBook();
       const invite = book.invites.find((c) => c.account === n);
       if (!invite) throw new Error("This invitation is not in the book.");
@@ -305,7 +310,7 @@ export default async function handler(req, res) {
       const book = await readBook();
       const person = book.people[display];
       if (!person || person.pin !== cleanPin(body.pin)) {
-        res.status(401).json({ error: "That name and gate code do not match an invitation. Type the name exactly as it was claimed." });
+        res.status(401).json({ error: "That name and password do not match an invitation. Type the name exactly as it was claimed." });
         return;
       }
       res.status(200).json({
@@ -323,14 +328,14 @@ export default async function handler(req, res) {
       const book = await readBook();
       const person = book.people[display];
       if (!person || person.pin !== cleanPin(body.pin)) {
-        res.status(401).json({ error: "That gate code does not match this invitation." });
+        res.status(401).json({ error: "That password does not match this invitation." });
         return;
       }
       const email = String(body.email || "").trim().slice(0, 80);
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("That email does not look right.");
       const next = cleanPin(body.nextPin);
       if (next) {
-        if (!/^\d{4,8}$/.test(next)) throw new Error("Use a gate code of 4 to 8 digits.");
+        if (!passwordOk(next)) throw new Error("Use a password of at least 4 characters.");
         person.pin = next;
         const card = book.invites.find((c) => c.account === person.account);
         if (card) card.pin = next;
