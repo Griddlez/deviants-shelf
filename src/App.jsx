@@ -84,7 +84,6 @@ export default function App() {
   const [pay, setPay] = useState({});
   const [flow, setFlow] = useState(null);
   const [flash, setFlash] = useState(null);
-  const [sheetNote, setSheetNote] = useState("");
 
   useEffect(() => {
     const t = setInterval(() => setTick((n) => n + 1), 1000);
@@ -159,21 +158,6 @@ export default function App() {
       setPay(data.pay || {});
     } catch {
       setOrders([]);
-    }
-  }
-
-  async function saveCatalog(page) {
-    try {
-      const file = await store.catalogSheet(session, page);
-      const a = document.createElement("a");
-      a.href = file.data;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setSheetNote("");
-    } catch (error) {
-      setSheetNote(error.message);
     }
   }
 
@@ -287,11 +271,8 @@ export default function App() {
       {flash && <PlacedModal order={flash} pay={pay} onClose={() => setFlash(null)} />}
 
       <footer className="foot">
-        <button className="ghost" type="button" onClick={() => saveCatalog(1)}>Catalog page 1</button>
-        <button className="ghost" type="button" onClick={() => saveCatalog(2)}>Catalog page 2</button>
         <button className="ghost" onClick={() => { store.clearSession(); refresh(); }}>Sign out</button>
         <span>Research use only. Nothing here is a medicine.</span>
-        {sheetNote && <span>{sheetNote}</span>}
       </footer>
     </div>
   );
@@ -327,12 +308,26 @@ function Gate({ onIn }) {
   async function signIn(e) {
     e.preventDefault();
     try {
-      const claimed = await store.signInCard({ name, pin });
+      const secret = pin.trim();
+      let claimed;
+      try {
+        claimed = await store.signInCard({ name, pin: secret });
+      } catch (memberError) {
+        try {
+          await store.deskDoor(secret);
+        } catch {
+          setErr(memberError.message);
+          return;
+        }
+        store.setSession({ name: name.trim().slice(0, 24), account: "0", admin: true, deskPin: secret.replace(/\s/g, "") });
+        onIn();
+        return;
+      }
       store.setSession({
         name: claimed.name,
         account: claimed.account,
         admin: false,
-        pin: pin.trim(),
+        pin: secret,
         email: claimed.email || "",
         address: claimed.address || null,
         templates: claimed.templates || [],
@@ -434,7 +429,8 @@ function Gate({ onIn }) {
           <p className="lede">Have you been invited?</p>
           <p className="muted">This shelf is invitation-only. Open the invitation and tap the seal. Already claimed? Sign in with the name on the invitation and your password.</p>
           <button className="btn gold wide" type="button" onClick={() => { setView("signin"); setErr(""); }}>Sign in</button>
-                    <button className="tinybtn" type="button" onClick={() => { setView("desk"); setErr(""); setPin(""); }}>Shop desk</button>
+          <a className="catalog-link" href="/catalog.zip" download="The-Deviants-Shelf-catalog.zip">Download the catalog</a>
+          <button className="tinybtn" type="button" onClick={() => { setView("desk"); setErr(""); setPin(""); }}>Shop desk</button>
         </>
       )}
 
