@@ -4,8 +4,9 @@
   align-items: center;
   justify-content: flex-start;
   margin-top: 10px;
-  font-size: 0;
+  font-size: 18px;
   line-height: 1.2;
+  text-align: left;
 }
 .sheet .check input {
   width: auto;
@@ -16,11 +17,29 @@
   border: 0;
   accent-color: #6b2a12;
 }
-.sheet .check::after {
-  content: "I attest that I am at least 21 years of age";
-  font-family: "Grenze Gotisch", serif;
-  font-size: 18px;
-  color: #24160c;
-  letter-spacing: 0;
-  text-transform: none;
+.gate:has(.gate-art) { max-width: 780px; }
+.gate .logo-frame {
+  display: block;
+  width: min(680px, 100%);
+  margin: 0 auto 14px;
+  padding: 8px;
+  border-radius: 18px;
+}
+.gate .logo.gate-art {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 12px;
+  object-fit: contain;
+  object-position: center;
+  box-shadow: none;
+}
+.catalog-link {
+  display: block;
+  margin: 14px auto 0;
+  color: #e4c27a;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 12px;
 }
