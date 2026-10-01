@@ -96,6 +96,29 @@ export function placeOrder({ name, pin, order }) {
   return postBook({ action: "place", name, pin, order });
 }
 
+export async function downloadCatalog(session) {
+  const res = await fetch("/api/catalog", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(session?.admin
+      ? { deskPin: session.deskPin }
+      : { name: session?.name, pin: session?.pin }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "The catalog could not be opened.");
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "The-Deviants-Shelf-catalog.zip";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
 export function ping(session) {
   if (session?.admin) return postBook({ action: "ping", deskPin: session.deskPin });
   return postBook({ action: "ping", name: session?.name, pin: session?.pin });

@@ -208,6 +208,7 @@ export default function App() {
           cart={cart}
           stock={stock}
           onBasket={() => { setTab("order"); setFlow({ step: "ship" }); }}
+          onDownload={() => store.downloadCatalog(session)}
           onAdd={(line) => {
             const left = stock[line.sku];
             const have = cart.find((item) => item.sku === line.sku)?.qty || 0;
@@ -438,7 +439,6 @@ function Gate({ onIn }) {
           <p className="lede">Have you been invited?</p>
           <p className="muted">This shelf is invitation-only. Open the invitation and tap the seal. Already claimed? Sign in with the name on the invitation and your password.</p>
           <button className="btn gold wide" type="button" onClick={() => { setView("signin"); setErr(""); }}>Sign in</button>
-          <a className="catalog-link" href="/catalog.zip" download="The-Deviants-Shelf-catalog.zip">Download the catalog</a>
           <button className="tinybtn" type="button" onClick={() => { setView("desk"); setErr(""); setPin(""); }}>Shop desk</button>
         </>
       )}
@@ -473,9 +473,10 @@ function Gate({ onIn }) {
   );
 }
 
-function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock }) {
+function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock, onDownload }) {
   const [q, setQ] = useState("");
   const [coa, setCoa] = useState(null);
+  const [note, setNote] = useState("");
   const list = PRODUCTS.filter((p) => {
     const hay = `${p.code} ${p.name} ${p.sizes.map((s) => s.sku).join(" ")}`.toLowerCase();
     return hay.includes(q.trim().toLowerCase());
@@ -498,6 +499,21 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock }) {
   return (
     <section className="wrap">
       <h2>Catalog</h2>
+      <button
+        className="catalog-dl"
+        type="button"
+        onClick={async () => {
+          try {
+            setNote("");
+            await onDownload();
+          } catch (error) {
+            setNote(error.message);
+          }
+        }}
+      >
+        Download the catalog
+      </button>
+      {note && <p className="err">{note}</p>}
       <p className="muted">Current availability and pricing. The kit is one kit. Everything else is one vial.</p>
       <div className="tools">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products" />

@@ -3,7 +3,7 @@ import { CONFIG, quoteOrder } from "../src/data.js";
 
 const EMPTY = { next: 2, used: [0, 1], people: {}, invites: [] };
 
-async function readBook() {
+export async function readBook() {
   const result = await get("ledger.json", { access: "private" });
   if (!result) return structuredClone(EMPTY);
   const text = await new Response(result.stream).text();
@@ -52,13 +52,13 @@ function nextNumber(book) {
   while (book.used.includes(n) || n === 0) n += 1;
   return n;
 }
-function deskOk(pin) {
+export function deskOk(pin) {
   const expected = String(process.env.DESK_PIN || "").replace(/\s/g, "");
   const given = String(pin || "").replace(/\s/g, "");
   return expected && given === expected;
 }
 
-function memberOk(book, name, pin) {
+export function memberOk(book, name, pin) {
   const person = book.people[String(name || "").trim()];
   if (!person || person.pin !== cleanPin(pin)) return null;
   return person;

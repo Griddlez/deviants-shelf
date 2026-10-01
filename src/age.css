@@ -56,6 +56,20 @@
 .gate .back-in:hover {
   color: #9af6f1;
 }
+.catalog-dl {
+  display: block;
+  margin: 2px 0 12px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: #e4c27a;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: Cinzel, serif;
+  font-size: 12px;
+  cursor: pointer;
+}
+.catalog-dl:hover { color: #9af6f1; }
 .catalog-link {
   display: block;
   margin: 14px auto 0;
