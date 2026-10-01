@@ -35,6 +35,27 @@
   object-position: center;
   box-shadow: none;
 }
+.sheet .check.research {
+  align-items: flex-start;
+}
+.sheet .check.research input {
+  margin-top: 4px;
+}
+.gate .back-in {
+  color: #3dccc7;
+  text-shadow: 0 0 12px rgba(61, 204, 199, 0.45);
+}
+.sheet .back-in {
+  color: #0c6e68;
+  text-shadow: none;
+}
+.sheet .back-in:hover {
+  color: #14968f;
+  text-shadow: none;
+}
+.gate .back-in:hover {
+  color: #9af6f1;
+}
 .catalog-link {
   display: block;
   margin: 14px auto 0;

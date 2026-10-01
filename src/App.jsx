@@ -301,6 +301,7 @@ function Gate({ onIn }) {
   const [view, setView] = useState(door || invite ? "claim" : "welcome");
   const [open, setOpen] = useState(false);
   const [adult, setAdult] = useState(false);
+  const [research, setResearch] = useState(false);
   const [name, setName] = useState("");
   const [pin, setPin] = useState(invite?.pin || "");
   const [err, setErr] = useState("");
@@ -361,6 +362,10 @@ function Gate({ onIn }) {
       setErr("You have to be 21 or older to claim an invitation.");
       return;
     }
+    if (!research) {
+      setErr("Confirm these are for research only.");
+      return;
+    }
     if (pin.trim().length < 4) {
       setErr("Use a password of at least 4 characters.");
       return;
@@ -397,7 +402,7 @@ function Gate({ onIn }) {
               <button className="roll-btn" type="button" aria-label="Tap the seal" onClick={() => setOpen(true)} />
               <p className="scroll-hint">Tap the seal</p>
               <p className="tiny">An invitation has been sealed for you.</p>
-              <button className="tinybtn" type="button" onClick={() => { setView("signin"); setErr(""); }}>Already claimed? Sign in</button>
+              <button className="tinybtn back-in" type="button" onClick={() => { setView("signin"); setErr(""); }}>Already claimed? Sign in</button>
                           </div>
           ) : (
             <form className="invite" onSubmit={claim}>
@@ -414,9 +419,13 @@ function Gate({ onIn }) {
                   <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
                   I attest that I am at least 21 years of age
                 </label>
-                <button className="btn gold wide" type="submit" disabled={!adult}>Claim your invitation</button>
+                <label className="check research">
+                  <input type="checkbox" checked={research} onChange={(e) => setResearch(e.target.checked)} />
+                  I am an independent researcher, and I intend to use these products for research purposes only.
+                </label>
+                <button className="btn gold wide" type="submit" disabled={!adult || !research}>Claim your invitation</button>
                 <p className="fine">The name is kept as you write it. Sign in later with that name and password.</p>
-                <button className="tinybtn" type="button" onClick={() => { setView("signin"); setErr(""); }}>Already claimed? Sign in</button>
+                <button className="tinybtn back-in" type="button" onClick={() => { setView("signin"); setErr(""); }}>Already claimed? Sign in</button>
               </div>
             </form>
           )}
