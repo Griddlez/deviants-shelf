@@ -96,6 +96,11 @@ export function placeOrder({ name, pin, order }) {
   return postBook({ action: "place", name, pin, order });
 }
 
+export function catalogSheet(session, page) {
+  if (session?.admin) return postBook({ action: "sheet", deskPin: session.deskPin, page });
+  return postBook({ action: "sheet", name: session?.name, pin: session?.pin, page });
+}
+
 export function ping(session) {
   if (session?.admin) return postBook({ action: "ping", deskPin: session.deskPin });
   return postBook({ action: "ping", name: session?.name, pin: session?.pin });

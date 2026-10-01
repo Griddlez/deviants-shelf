@@ -1,5 +1,10 @@
 {
   "rewrites": [
     { "source": "/invite/(.*)", "destination": "/index.html" }
-  ]
+  ],
+  "functions": {
+    "api/book.js": {
+      "includeFiles": "api/sheets/**"
+    }
+  }
 }
