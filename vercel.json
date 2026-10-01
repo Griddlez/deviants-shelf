@@ -4,7 +4,7 @@
   ],
   "functions": {
     "api/catalog.js": {
-      "includeFiles": "api/catalog.zip"
+      "includeFiles": "api/shelf-catalog.zip"
     }
   }
 }

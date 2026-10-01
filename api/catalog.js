@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     res.status(401).json({ error: "Sign in again." });
     return;
   }
-  const bytes = await readFile(new URL("./catalog.zip", import.meta.url));
+  const bytes = await readFile(new URL("./shelf-catalog.zip", import.meta.url));
   res.setHeader("Content-Type", "application/zip");
   res.setHeader("Content-Disposition", "attachment; filename=\"The-Deviants-Shelf-catalog.zip\"");
   res.status(200).send(bytes);
