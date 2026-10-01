@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import { get, put } from "@vercel/blob";
 import { CONFIG, quoteOrder } from "../src/data.js";
 
@@ -54,8 +53,9 @@ function nextNumber(book) {
   return n;
 }
 function deskOk(pin) {
-  const expected = process.env.DESK_PIN || "";
-  return expected && cleanPin(pin) === expected;
+  const expected = String(process.env.DESK_PIN || "").replace(/\s/g, "");
+  const given = String(pin || "").replace(/\s/g, "");
+  return expected && given === expected;
 }
 
 function memberOk(book, name, pin) {
@@ -355,20 +355,6 @@ export default async function handler(req, res) {
         return;
       }
       res.status(200).json({ rev: Number(book.rev) || 0 });
-      return;
-    }
-    if (body.action === "sheet") {
-      const book = await readBook();
-      if (!deskOk(body.deskPin) && !memberOk(book, body.name, body.pin)) {
-        res.status(401).json({ error: "Sign in again." });
-        return;
-      }
-      const page = Number(body.page) === 2 ? 2 : 1;
-      const bytes = await readFile(new URL("./sheets/page-" + page + ".jpg", import.meta.url));
-      res.status(200).json({
-        name: "The-Deviants-Shelf-catalog-" + page + ".jpg",
-        data: "data:image/jpeg;base64," + bytes.toString("base64"),
-      });
       return;
     }
     if (body.action === "place") {
