@@ -119,6 +119,7 @@ button.acct:hover, button.acct:active {
 .btn.coa { background: transparent; border-color: var(--gold); color: var(--gold); font-family: Cinzel, serif; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .ghost { background: none; border: 0; color: var(--muted); cursor: pointer; }
+a.ghost { text-decoration: none; }
 .wrap h2 { margin: 0 0 6px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7); }
 .muted { color: var(--muted); }
 .tools { display: flex; gap: 10px; align-items: center; margin: 12px 0 16px; }

@@ -272,6 +272,7 @@ export default function App() {
       {flash && <PlacedModal order={flash} pay={pay} onClose={() => setFlash(null)} />}
 
       <footer className="foot">
+        <a className="ghost" href="https://discord.gg/8hEaZ6mWV" target="_blank" rel="noreferrer">Discord</a>
         <button className="ghost" onClick={() => { store.clearSession(); refresh(); }}>Sign out</button>
         <span>Research use only. Nothing here is a medicine.</span>
       </footer>
