@@ -56,6 +56,29 @@
 .gate .back-in:hover {
   color: #9af6f1;
 }
+.invite-miss {
+  margin: 22px 0 10px;
+  text-align: center;
+  color: #f3e6c8;
+  font-family: Cinzel, serif;
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+.discord-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 4px;
+  border-radius: 16px;
+  background: #5865f2;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+.discord-mark svg { width: 32px; height: 32px; }
+.discord-mark:hover { background: #4752c4; box-shadow: 0 0 18px rgba(88, 101, 242, 0.7); }
 .catalog-dl {
   display: block;
   margin: 2px 0 12px;
