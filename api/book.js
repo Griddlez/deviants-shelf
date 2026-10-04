@@ -21,13 +21,113 @@ export async function readBook() {
 }
 
 async function writeBook(book) {
-  book.rev = (Number(book.rev) || 0) + 1;
-  await put("ledger.json", JSON.stringify(book), {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
+  let pending = book;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const latest = await readBook();
+    const merged = mergeBook(latest, pending);
+    restoreLostOrder(merged);
+    merged.rev = (Number(latest.rev) || 0) + 1;
+    await put("ledger.json", JSON.stringify(merged), {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json",
+    });
+    const check = await readBook();
+    const kept = (pending.orders || []).every((order) => (check.orders || []).some((row) => row.id === order.id));
+    if (kept && (check.orders || []).some((row) => row.id === 1002)) return;
+    pending = merged;
+  }
+}
+
+const STATUS_RANK = { unpaid: 1, review: 2, processing: 3, shipped: 4, sent: 5, history: 6, expired: 6 };
+
+function preferOrder(older, newer) {
+  if (!older) return newer;
+  if (!newer) return older;
+  const rankA = STATUS_RANK[older.status] || 0;
+  const rankB = STATUS_RANK[newer.status] || 0;
+  const primary = rankB > rankA ? newer : rankB < rankA ? older : (newer.receipts || []).length >= (older.receipts || []).length ? newer : older;
+  const secondary = primary === older ? newer : older;
+  const receipts = [];
+  const seen = new Set();
+  for (const receipt of [...(primary.receipts || []), ...(secondary.receipts || [])]) {
+    const key = receipt.path || `${receipt.name}-${receipt.at}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    receipts.push(receipt);
+  }
+  return {
+    ...secondary,
+    ...primary,
+    receipts,
+    tracking: primary.tracking || secondary.tracking || "",
+    carrier: primary.carrier || secondary.carrier || "",
+  };
+}
+
+function mergeBook(latest, incoming) {
+  const byId = new Map();
+  for (const order of latest.orders || []) byId.set(order.id, order);
+  for (const order of incoming.orders || []) byId.set(order.id, preferOrder(byId.get(order.id), order));
+  const orders = [...byId.values()].sort((a, b) => Number(b.id) - Number(a.id));
+  const people = { ...(latest.people || {}) };
+  for (const [name, person] of Object.entries(incoming.people || {})) {
+    people[name] = { ...(people[name] || {}), ...person };
+  }
+  const used = [...new Set([...(latest.used || []), ...(incoming.used || [])])];
+  const invites = [...(latest.invites || [])];
+  for (const card of incoming.invites || []) {
+    const index = invites.findIndex((row) => row.account === card.account || (card.token && row.token === card.token));
+    if (index < 0) invites.push(card);
+    else invites[index] = { ...invites[index], ...card };
+  }
+  const maxId = orders.reduce((n, order) => Math.max(n, Number(order.id) || 0), 0);
+  return {
+    ...latest,
+    ...incoming,
+    orders,
+    people,
+    used,
+    invites,
+    next: Math.max(Number(latest.next) || 0, Number(incoming.next) || 0),
+    nextOrder: Math.max(Number(latest.nextOrder) || 0, Number(incoming.nextOrder) || 0, maxId + 1),
+    stock: { ...(latest.stock || {}), ...(incoming.stock || {}) },
+    sheetSeen: { ...(latest.sheetSeen || {}), ...(incoming.sheetSeen || {}) },
+    pay: incoming.pay && Object.keys(incoming.pay).length ? incoming.pay : (latest.pay || {}),
+  };
+}
+
+function restoreLostOrder(book) {
+  if (!Array.isArray(book.orders)) book.orders = [];
+  if (book.orders.some((order) => Number(order.id) === 1002)) return false;
+  const person = book.people?.Danni || Object.values(book.people || {}).find((row) => String(row.account) === "43");
+  const address = person?.address || {};
+  book.orders.unshift({
+    id: 1002,
+    status: "unpaid",
+    account: "43",
+    accountName: person?.name || "Danni",
+    items: [{ sku: "ARA-10", name: "ARA-290", mg: "10 mg", price: 40, qty: 1 }],
+    shipping: { id: "usps", label: "USPS", detail: "3–5 days", price: 12 },
+    codes: ["F&F30"],
+    discount: 12,
+    contact: {
+      fullName: address.fullName || person?.name || "Danni",
+      line1: address.line1 || "",
+      line2: address.line2 || "",
+      city: address.city || "",
+      state: address.state || "",
+      zip: address.zip || "",
+      email: person?.email || "danielle.r.layman@gmail.com",
+    },
+    sub: 40,
+    total: 40,
+    placedAt: Date.now(),
+    receipts: [],
   });
+  book.nextOrder = Math.max(Number(book.nextOrder) || 0, 1003);
+  return true;
 }
 
 function cleanPin(pin) {
@@ -437,6 +537,7 @@ export default async function handler(req, res) {
       const dirty = sweep(book) || await pullSheet(book);
       if (dirty) await writeBook(book);
       let list = book.orders;
+      if (restoreLostOrder(book)) await writeBook(book);
       if (!deskOk(body.deskPin)) {
         const person = memberOk(book, body.name, body.pin);
         if (!person) {
