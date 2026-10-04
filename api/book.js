@@ -35,7 +35,7 @@ async function writeBook(book) {
     });
     const check = await readBook();
     const kept = (pending.orders || []).every((order) => (check.orders || []).some((row) => row.id === order.id));
-    if (kept && (check.orders || []).some((row) => row.id === 1002)) return;
+    if (kept && hasDanniOrders(check)) return;
     pending = merged;
   }
 }
@@ -98,36 +98,87 @@ function mergeBook(latest, incoming) {
   };
 }
 
+function danniPerson(book) {
+  const people = Object.values(book.people || {});
+  return book.people?.Danni
+    || people.find((row) => String(row.account) === "43")
+    || people.find((row) => String(row.email || "").toLowerCase() === "danielle.r.layman@gmail.com")
+    || null;
+}
+
+function danniContact(person) {
+  const address = person?.address || {};
+  return {
+    fullName: address.fullName || person?.name || "Danni",
+    line1: address.line1 || "",
+    line2: address.line2 || "",
+    city: address.city || "",
+    state: address.state || "",
+    zip: address.zip || "",
+    email: person?.email || "danielle.r.layman@gmail.com",
+  };
+}
+
+function hasDanniOrders(book) {
+  const orders = book.orders || [];
+  const ara = orders.some((order) => Number(order.id) === 1002 && (order.items || []).some((line) => line.sku === "ARA-10"));
+  const kit = orders.some((order) => String(order.account) === "43" && (order.items || []).some((line) => line.sku === "KIT-1"));
+  return ara && kit;
+}
+
 function restoreLostOrder(book) {
   if (!Array.isArray(book.orders)) book.orders = [];
-  if (book.orders.some((order) => Number(order.id) === 1002)) return false;
-  const person = book.people?.Danni || Object.values(book.people || {}).find((row) => String(row.account) === "43");
-  const address = person?.address || {};
-  book.orders.unshift({
-    id: 1002,
-    status: "unpaid",
-    account: "43",
-    accountName: person?.name || "Danni",
-    items: [{ sku: "ARA-10", name: "ARA-290", mg: "10 mg", price: 40, qty: 1 }],
-    shipping: { id: "usps", label: "USPS", detail: "3–5 days", price: 12 },
-    codes: ["F&F30"],
-    discount: 12,
-    contact: {
-      fullName: address.fullName || person?.name || "Danni",
-      line1: address.line1 || "",
-      line2: address.line2 || "",
-      city: address.city || "",
-      state: address.state || "",
-      zip: address.zip || "",
-      email: person?.email || "danielle.r.layman@gmail.com",
-    },
-    sub: 40,
-    total: 40,
-    placedAt: Date.now(),
-    receipts: [],
-  });
-  book.nextOrder = Math.max(Number(book.nextOrder) || 0, 1003);
-  return true;
+  const person = danniPerson(book);
+  const contact = danniContact(person);
+  let changed = false;
+  const kitTicket = book.orders.find((order) => Number(order.id) === 1002 && (order.items || []).some((line) => line.sku === "KIT-1"));
+  if (kitTicket) {
+    kitTicket.id = 1003;
+    changed = true;
+  }
+  if (!book.orders.some((order) => Number(order.id) === 1002 && (order.items || []).some((line) => line.sku === "ARA-10"))) {
+    book.orders.unshift({
+      id: 1002,
+      status: "unpaid",
+      account: "43",
+      accountName: person?.name || "Danni",
+      items: [{ sku: "ARA-10", name: "ARA-290", mg: "10 mg", price: 40, qty: 1 }],
+      shipping: { id: "usps", label: "USPS", detail: "3–5 days", price: 12 },
+      codes: ["F&F30"],
+      discount: 12,
+      contact,
+      sub: 40,
+      total: 40,
+      placedAt: Date.now(),
+      receipts: [],
+    });
+    changed = true;
+  }
+  if (!book.orders.some((order) => String(order.account) === "43" && (order.items || []).some((line) => line.sku === "KIT-1"))) {
+    book.orders.unshift({
+      id: 1003,
+      status: "unpaid",
+      account: "43",
+      accountName: person?.name || "Danni",
+      items: [{ sku: "KIT-1", name: "BAC water · 10 syringes · 20 wipes", charge: "Beginners Alchemy Kit", mg: "kit", price: 15, qty: 1 }],
+      shipping: { id: "usps", label: "Hand delivery", detail: "No shipping fee", price: 0 },
+      codes: ["F&F30", "HNDLVR"],
+      discount: 5,
+      contact,
+      sub: 15,
+      total: 10,
+      placedAt: Date.now(),
+      receipts: [],
+    });
+    changed = true;
+  }
+  const maxId = book.orders.reduce((n, order) => Math.max(n, Number(order.id) || 0), 1000);
+  const next = maxId + 1;
+  if ((Number(book.nextOrder) || 0) < next) {
+    book.nextOrder = next;
+    changed = true;
+  }
+  return changed;
 }
 
 function cleanPin(pin) {
@@ -481,7 +532,8 @@ export default async function handler(req, res) {
         }
       }
       sweep(book);
-      const id = book.nextOrder;
+      const maxId = (book.orders || []).reduce((n, order) => Math.max(n, Number(order.id) || 0), 1000);
+      const id = Math.max(Number(book.nextOrder) || 1001, maxId + 1);
       book.nextOrder = id + 1;
       const contact = incoming.contact || {};
       const fullItems = items.map((line) => ({
