@@ -58,15 +58,9 @@ export function quoteOrder(sub, shipId, rawCodes) {
 
 export const PRODUCTS = [
   {
-    id: "kit",
-    code: "KIT",
-    name: "Beginner alchemy kit",
-    blurb: "Bac water · 10 syringes · 20 wipes.",
-    sizes: [{ sku: "KIT-1", mg: "kit", vial: 15 }],
-  },
-  {
     id: "r3",
     code: "R3",
+    charge: "Ember's Fast",
     name: "Retatrutide",
     blurb: "Triple agonist research analog.",
     sizes: [
@@ -77,6 +71,7 @@ export const PRODUCTS = [
   {
     id: "amq",
     code: "AMQ",
+    charge: "Cinderlock",
     name: "5-Amino-1MQ",
     blurb: "NNMT research compound.",
     sizes: [{ sku: "AMQ-50", mg: "50 mg", vial: 50, coa: { lab: "Krause Analytical", batch: "212014", tested: "Sep 1, 2026", purity: "99.9%", file: "/coa/AMQ-50.pdf" } }],
@@ -84,6 +79,7 @@ export const PRODUCTS = [
   {
     id: "bpc",
     code: "BPC",
+    charge: "Mender's Thread",
     name: "BPC-157",
     blurb: "Pentadecapeptide research standard.",
     sizes: [
@@ -94,6 +90,7 @@ export const PRODUCTS = [
   {
     id: "tb5",
     code: "TB5",
+    charge: "Wanderer's Salve",
     name: "TB-500",
     blurb: "Thymosin β4 fragment.",
     sizes: [{ sku: "TB5-5", mg: "5 mg", vial: 45 }],
@@ -101,6 +98,7 @@ export const PRODUCTS = [
   {
     id: "mot",
     code: "MOT",
+    charge: "Sparkwell",
     name: "MOTS-c",
     blurb: "Mitochondrial-derived peptide.",
     sizes: [{ sku: "MOT-20", mg: "20 mg", vial: 65 }],
@@ -108,6 +106,7 @@ export const PRODUCTS = [
   {
     id: "kpv",
     code: "KPV",
+    charge: "Cool Salve",
     name: "KPV",
     blurb: "α-MSH fragment.",
     sizes: [{ sku: "KPV-10", mg: "10 mg", vial: 50, coa: { lab: "BTL Testing", batch: "KPV010-012604A", tested: "Apr 28, 2026", purity: "99.8%", file: "/coa/KPV-10.pdf" } }],
@@ -115,6 +114,7 @@ export const PRODUCTS = [
   {
     id: "ara",
     code: "ARA",
+    charge: "Nerve's Whisper",
     name: "ARA-290",
     blurb: "Cibinetide analog.",
     sizes: [{ sku: "ARA-10", mg: "10 mg", vial: 40, coa: { lab: "Krause Analytical", batch: "212008", tested: "Sep 1, 2026", purity: "98.4%", file: "/coa/ARA-10.pdf" } }],
@@ -122,6 +122,7 @@ export const PRODUCTS = [
   {
     id: "cjc",
     code: "CJC",
+    charge: "Night's Draft",
     name: "CJC-1295 + Ipamorelin",
     blurb: "GHRH fragment + ghrelin analog.",
     sizes: [{ sku: "CJC-5-5", mg: "5 mg + 5 mg", vial: 60, coa: { lab: "Krause Analytical", batch: "212026", tested: "Sep 4, 2026", purity: "99.2%", file: "/coa/CJC-5-5.pdf" } }],
@@ -129,6 +130,7 @@ export const PRODUCTS = [
   {
     id: "pin",
     code: "PIN",
+    charge: "Still Water",
     name: "Pinealon",
     blurb: "Tripeptide bioregulator.",
     sizes: [{ sku: "PIN-10", mg: "10 mg", vial: 40, coa: { lab: "Krause Analytical", batch: "203757", tested: "Apr 22, 2026", purity: "99.6%", file: "/coa/PIN-10.pdf" } }],
@@ -136,6 +138,7 @@ export const PRODUCTS = [
   {
     id: "epi",
     code: "EPI",
+    charge: "Long Night's Watch",
     name: "Epithalon",
     blurb: "Pineal tetrapeptide.",
     sizes: [{ sku: "EPI-10", mg: "10 mg", vial: 30 }],
@@ -143,6 +146,7 @@ export const PRODUCTS = [
   {
     id: "sel",
     code: "SEL",
+    charge: "Quiet Bell",
     name: "Selank",
     blurb: "Tuftsin analog.",
     sizes: [{ sku: "SEL-5", mg: "5 mg", vial: 35 }],
@@ -150,6 +154,7 @@ export const PRODUCTS = [
   {
     id: "sem",
     code: "SEM",
+    charge: "Brightwire",
     name: "Semax",
     blurb: "ACTH fragment analog.",
     sizes: [{ sku: "SEM-10", mg: "10 mg", vial: 40, coa: { lab: "BTL Testing", batch: "SMX010-012604A", tested: "Apr 28, 2026", purity: "99.8%", file: "/coa/SEM-10.pdf" } }],
@@ -157,6 +162,7 @@ export const PRODUCTS = [
   {
     id: "nad",
     code: "NAD",
+    charge: "Keepfire",
     name: "NAD+",
     blurb: "Nicotinamide adenine dinucleotide.",
     sizes: [
@@ -167,6 +173,7 @@ export const PRODUCTS = [
   {
     id: "pt",
     code: "PT",
+    charge: "Kindled Flame",
     name: "PT-141",
     blurb: "Bremelanotide analog.",
     sizes: [{ sku: "PT-10", mg: "10 mg", vial: 30, coa: { lab: "BTL Testing", batch: "PT1010-012604A", tested: "Apr 28, 2026", purity: "99.9%", file: "/coa/PT-10.pdf" } }],
@@ -174,6 +181,7 @@ export const PRODUCTS = [
   {
     id: "ghk",
     code: "GHK",
+    charge: "Giltstitch",
     name: "GHK-Cu",
     blurb: "Copper tripeptide.",
     sizes: [{ sku: "GHK-100", mg: "100 mg", vial: 45, coa: { lab: "Krause Analytical", batch: "203764", tested: "Apr 22, 2026", purity: ">99.9%", file: "/coa/GHK-100.pdf" } }],
@@ -181,8 +189,18 @@ export const PRODUCTS = [
   {
     id: "bac",
     code: "BAC",
+    charge: "Null Spring",
     name: "Bacteriostatic water",
     blurb: "Null Spring — reconstitution water.",
     sizes: [{ sku: "BAC-10", mg: "10 ml", vial: 7 }],
+  },
+
+  {
+    id: "kit",
+    code: "KIT",
+    charge: "Beginners Alchemy Kit",
+    name: "BAC water · 10 syringes · 20 wipes",
+    blurb: "Bac water · 10 syringes · 20 wipes.",
+    sizes: [{ sku: "KIT-1", mg: "kit", vial: 15 }],
   },
 ];

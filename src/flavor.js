@@ -1,5 +1,5 @@
 // Shelf voice only. Compound names stay on the vials. No cantrip names.
-export const ROW_ORDER = ["The bench", "The Ember Row", "The Lantern Row", "The Mender's Row"];
+export const ROW_ORDER = ["The Ember Row", "The Lantern Row", "The Mender's Row", "The bench"];
 
 export const FLAVOR = {
   kit: { row: "The bench", note: "The first tools on the bench", line: "Bac water, ten syringes, twenty wipes. The kit that opens the rest of the shelf." },

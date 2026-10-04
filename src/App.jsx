@@ -13,10 +13,22 @@ function usualFrom(orders) {
   return last.items.map((line) => ({
     sku: line.sku,
     name: line.name,
+    charge: line.charge,
     mg: line.mg,
     price: line.price,
     qty: line.qty,
   }));
+}
+
+function itemLabel(line, { sku = true, mg = true, qty = true } = {}) {
+  const billed = line.charge || line.name || line.sku;
+  const compound = line.charge && line.name && line.charge !== line.name ? line.name : "";
+  const bits = [billed];
+  if (compound) bits.push(compound);
+  if (sku && line.sku) bits.push(line.sku);
+  if (mg && line.mg) bits.push(line.mg);
+  if (qty) bits.push(`×${line.qty}`);
+  return bits.join(" · ");
 }
 
 function pathAt(status) {
@@ -485,7 +497,7 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock, onDownload }
   const [coa, setCoa] = useState(null);
   const [note, setNote] = useState("");
   const list = PRODUCTS.filter((p) => {
-    const hay = `${p.code} ${p.name} ${p.sizes.map((s) => s.sku).join(" ")}`.toLowerCase();
+    const hay = `${p.code} ${p.charge || ""} ${p.name} ${p.sizes.map((s) => s.sku).join(" ")}`.toLowerCase();
     return hay.includes(q.trim().toLowerCase());
   }).map((p) => {
     const f = FLAVOR[p.id] || { row: "The shelf", note: "", line: p.blurb };
@@ -538,7 +550,10 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock, onDownload }
           {g.items.map((p) => (
         <article key={p.id} className={openId === p.id ? "acc open" : "acc"}>
           <button className="acc-h" onClick={() => setOpenId(openId === p.id ? "" : p.id)}>
-            <span>{openId === p.id ? "▼" : "▶"} {p.name}</span>
+            <span className="acc-names">
+              <b>{openId === p.id ? "▼" : "▶"} {p.charge || p.name}</b>
+              {p.charge && p.charge !== p.name && <small>{p.name}</small>}
+            </span>
             <em>{p.code}</em>
           </button>
           {openId === p.id && (
@@ -551,7 +566,7 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock, onDownload }
                     {s.coa?.file && (
                       <button
                         className="btn slim coa"
-                        onClick={() => setCoa({ ...s, name: p.name })}
+                        onClick={() => setCoa({ ...s, name: p.name, charge: p.charge })}
                       >
                         COA
                       </button>
@@ -567,6 +582,7 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock, onDownload }
                         onAdd({
                           sku: s.sku,
                           name: p.name,
+                          charge: p.charge || p.name,
                           mg: s.mg,
                           price: s.vial,
                           qty: 1,
@@ -599,8 +615,8 @@ function CoaModal({ item, onClose }) {
     <div className="modal" onClick={onClose}>
       <div className="panel modal-card coa-card" onClick={(e) => e.stopPropagation()}>
         <p className="eyebrow">Certificate of analysis</p>
-        <h3>{item.name}</h3>
-        <p className="muted">{item.sku} · {item.mg}</p>
+        <h3>{item.charge || item.name}</h3>
+        <p className="muted">{item.charge && item.charge !== item.name ? `${item.name} · ` : ""}{item.sku} · {item.mg}</p>
         {c && (c.file || c.lab || c.batch || c.tested || c.purity) ? (
           <>
             <ul className="coa-meta">
@@ -809,7 +825,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced, usual }) {
           <h3>Review order</h3>
           {cart.map((l, i) => (
             <div className="line" key={i}>
-              <span>{l.name} · {l.sku} · {l.mg} ×{l.qty}</span>
+              <span>{itemLabel(l)}</span>
               <b>{money(l.price * l.qty)}</b>
             </div>
           ))}
@@ -923,7 +939,7 @@ function CartBox({ cart, setCart, session, onTemplates }) {
     <div className="cart">
       {cart.map((l, i) => (
         <div className="line" key={i}>
-          <span>{l.sku} ×{l.qty}</span>
+          <span>{itemLabel(l, { mg: false })}</span>
           <span>
             {money(l.price * l.qty)}{" "}
             <button className="tinybtn" type="button" onClick={() => qty(i, -1)}>−</button>
@@ -1056,7 +1072,7 @@ function OrderCard({ order, onChange, tick, session, patchOrder }) {
       )}
       {order.items.map((l, i) => (
         <div className="line" key={i}>
-          <span>{l.name} · {l.sku} · {l.mg} ×{l.qty}</span>
+          <span>{itemLabel(l)}</span>
           <b>{money(l.price * l.qty)}</b>
         </div>
       ))}
@@ -1290,7 +1306,7 @@ function DeskTicket({ order, session, onChange, patchOrder }) {
       {order.status === "unpaid" && <p className="timer">Waiting on their receipt · {fmtRemain(left)}</p>}
       {order.items.map((l, i) => (
         <div className="line" key={i}>
-          <span>{l.name} · {l.sku} ×{l.qty}</span>
+          <span>{itemLabel(l, { mg: false })}</span>
           <b>{money(l.price * l.qty)}</b>
         </div>
       ))}
@@ -1369,7 +1385,7 @@ function ShelfPay({ session, pay, onPay }) {
 }
 
 function ShelfStock({ session, stock, onStock }) {
-  const rows = PRODUCTS.flatMap((product) => product.sizes.map((size) => ({ ...size, name: product.name })));
+  const rows = PRODUCTS.flatMap((product) => product.sizes.map((size) => ({ ...size, name: product.name, charge: product.charge })));
   const [draft, setDraft] = useState(() => Object.fromEntries(rows.map((row) => [row.sku, stock?.[row.sku] ?? ""])));
   const [note, setNote] = useState("");
   async function save(sku) {
@@ -1388,7 +1404,7 @@ function ShelfStock({ session, stock, onStock }) {
       <p className="tiny">The sheet is the count. A number you save here sticks until that row's On hand cell changes on the sheet. At 0 it cannot be added.</p>
       {rows.map((row) => (
         <div className="line" key={row.sku}>
-          <span>{row.name} · {row.sku}</span>
+          <span>{itemLabel(row, { mg: false, qty: false })}</span>
           <span>
             <input style={{ width: 70 }} value={draft[row.sku]} onChange={(e) => setDraft({ ...draft, [row.sku]: e.target.value })} />
             <button className="btn slim" type="button" onClick={() => save(row.sku)}>Save</button>

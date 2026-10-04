@@ -12,6 +12,7 @@ export function notify(kind, order) {
       codes: order.codes || [],
       items: (order.items || []).map((l) => ({
         name: l.name,
+        charge: l.charge || l.name,
         sku: l.sku,
         mg: l.mg,
         qty: l.qty,

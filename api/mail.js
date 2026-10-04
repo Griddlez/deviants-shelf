@@ -49,7 +49,7 @@ function shell({ kicker, title, body }) {
 function itemsTable(order) {
   const rows = (order.items || []).map((item) => `
     <tr>
-      <td style="padding:8px 0;border-top:1px solid #3a2158;color:#f6ecff;">${esc(item.name || item.sku)}<div style="color:#9d8fb4;font-size:13px;">${esc(item.mg || "")}</div></td>
+      <td style="padding:8px 0;border-top:1px solid #3a2158;color:#f6ecff;">${esc(item.charge || item.name || item.sku)}<div style="color:#9d8fb4;font-size:13px;">${esc([item.charge && item.name && item.charge !== item.name ? item.name : "", item.mg || ""].filter(Boolean).join(" · "))}</div></td>
       <td style="padding:8px 0;border-top:1px solid #3a2158;color:#d7fff8;text-align:right;">${esc(item.qty)} ${item.mg === "kit" ? "kit" : "vial"}</td>
       <td style="padding:8px 0;border-top:1px solid #3a2158;color:#2ec9b0;text-align:right;">${money(item.price * item.qty)}</td>
     </tr>`).join("");
