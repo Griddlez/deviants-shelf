@@ -122,7 +122,7 @@ export const PRODUCTS = [
   {
     id: "cjc",
     code: "CJC",
-    charge: "Night's Draft",
+    charge: "Knight's Draft",
     name: "CJC-1295 + Ipamorelin",
     blurb: "GHRH fragment + ghrelin analog.",
     sizes: [{ sku: "CJC-5-5", mg: "5 mg + 5 mg", vial: 60, coa: { lab: "Krause Analytical", batch: "212026", tested: "Sep 4, 2026", purity: "99.2%", file: "/coa/CJC-5-5.pdf" } }],
