@@ -80,8 +80,6 @@ async function paint(canvas, { name, purity, batch, size, slug, proof }) {
   const rightText = qrX - gap;
   const column = rightText - left;
   const mid = (left + rightText) / 2;
-  const researchY = H - 62;
-
   const nameSize = fit(ctx, name || "Product", { size: 24, min: 13, style: "700 SIZEpx Cinzel, serif" }, column);
   const pure = purityLine(purity);
   const batchText = `Batch #${batch || "—"}  •  ${size || "—"} Vial`;
@@ -91,7 +89,8 @@ async function paint(canvas, { name, purity, batch, size, slug, proof }) {
   const batchSize = fit(ctx, batchText, { size: 15, min: 10, style: "bold SIZEpx 'Times New Roman', serif" }, column);
   const block = nameSize + 8 + (pure ? subSize + 8 : 0) + batchSize;
   const top = 82;
-  let y = top + Math.max(0, (researchY - 10 - top - block) / 2);
+  const researchTop = 168;
+  let y = top + Math.max(0, (researchTop - 8 - top - block) / 2);
 
   ctx.textAlign = "center";
   ctx.font = `700 ${nameSize}px Cinzel, serif`;
@@ -108,11 +107,12 @@ async function paint(canvas, { name, purity, batch, size, slug, proof }) {
   ctx.font = `bold ${batchSize}px 'Times New Roman', serif`;
   ctx.fillText(batchText, mid, y);
 
-  const fine = "Research Use Only  •  Not for Human Consumption";
-  const fineMax = Math.min(rightText, Math.round(W * 0.68)) - 36;
-  const fineSize = fit(ctx, fine, { size: 12, min: 9, style: "italic SIZEpx 'Times New Roman', serif" }, fineMax);
-  ctx.font = `italic ${fineSize}px 'Times New Roman', serif`;
-  ctx.fillText(fine, (36 + Math.min(rightText, Math.round(W * 0.68))) / 2, researchY);
+  const lines = ["Research Use Only", "Not for Human Consumption"];
+  lines.forEach((line, i) => {
+    const size = fit(ctx, line, { size: 12, min: 9, style: "italic SIZEpx 'Times New Roman', serif" }, column - 16);
+    ctx.font = `italic ${size}px 'Times New Roman', serif`;
+    ctx.fillText(line, mid, researchTop + i * 15);
+  });
 }
 
 function loadImage(src) {
