@@ -37,14 +37,17 @@ async function paint(canvas, { name, purity, batch, size, slug, proof }) {
   const ctx = canvas.getContext("2d");
   canvas.width = W;
   canvas.height = H;
-  ctx.fillStyle = proof ? "#d9d9dc" : "#ffffff";
-  ctx.fillRect(0, 0, W, H);
+  ctx.clearRect(0, 0, W, H);
   if (proof) {
     const silver = await loadImage("/art/label-silver.jpg");
     ctx.drawImage(silver, 0, 0, W, H);
   }
   const frame = await loadImage("/art/label-frame.png");
-  ctx.drawImage(frame, 0, 0, W, H);
+  const plate = document.createElement("canvas");
+  plate.width = W;
+  plate.height = H;
+  const plateCtx = plate.getContext("2d");
+  plateCtx.drawImage(frame, 0, 0, W, H);
 
   const url = `HTTPS://THEDEVIANTSSHELF.COM/C/${String(slug || "").toUpperCase()}`;
   const qr = QRCode.create(url, { errorCorrectionLevel: "H" });
@@ -52,12 +55,12 @@ async function paint(canvas, { name, purity, batch, size, slug, proof }) {
   const mod = 3;
   const quiet = Math.round(MM);
   const gap = Math.round(2 * MM);
-  const matrix = n * mod;
-  const box = matrix + quiet * 2;
+  const box = n * mod + quiet * 2;
   const qrX = W - Math.round(2.4 * MM) - box;
   const qrY = 78;
-  ctx.fillStyle = proof ? "#e8e8eb" : "#ffffff";
-  ctx.fillRect(qrX, qrY, box, box);
+  plateCtx.globalCompositeOperation = "destination-out";
+  plateCtx.fillRect(qrX, qrY, box, box);
+  ctx.drawImage(plate, 0, 0);
   ctx.fillStyle = "#000";
   for (let y = 0; y < n; y += 1) {
     for (let x = 0; x < n; x += 1) {
@@ -70,38 +73,43 @@ async function paint(canvas, { name, purity, batch, size, slug, proof }) {
   await document.fonts.load("700 32px Cinzel");
   ctx.fillStyle = "#000";
   ctx.textBaseline = "top";
-  const left = 22;
+  const left = 28;
   const rightText = qrX - gap;
   const column = rightText - left;
+  const mid = (left + rightText) / 2;
+  const researchY = H - 62;
 
-  const nameSize = fit(ctx, name || "Product", { size: 26, min: 14, style: "700 SIZEpx Cinzel, serif" }, column);
-  ctx.font = `700 ${nameSize}px Cinzel, serif`;
-  ctx.textAlign = "center";
-  ctx.fillText(name || "Product", (left + rightText) / 2, qrY + 2);
-
+  const nameSize = fit(ctx, name || "Product", { size: 24, min: 13, style: "700 SIZEpx Cinzel, serif" }, column);
   const pure = purityLine(purity);
-  if (pure) {
-    const subSize = fit(ctx, pure, { size: 15, min: 10, style: "italic SIZEpx 'Times New Roman', serif" }, column - 36);
-    ctx.font = `italic ${subSize}px 'Times New Roman', serif`;
-    const y = qrY + 42;
-    ctx.fillText(pure, (left + rightText) / 2, y);
-    const tw = ctx.measureText(pure).width;
-    const mid = (left + rightText) / 2;
-    ctx.fillRect(left, y + subSize / 2, Math.max(8, mid - tw / 2 - left - 8), 1);
-    ctx.fillRect(mid + tw / 2 + 8, y + subSize / 2, Math.max(8, rightText - (mid + tw / 2 + 8)), 1);
-  }
-
   const batchText = `Batch #${batch || "—"}  •  ${size || "—"} Vial`;
-  const batchSize = fit(ctx, batchText, { size: 16, min: 11, style: "bold SIZEpx 'Times New Roman', serif" }, column);
+  const subSize = pure
+    ? fit(ctx, pure, { size: 14, min: 10, style: "italic SIZEpx 'Times New Roman', serif" }, column - 24)
+    : 0;
+  const batchSize = fit(ctx, batchText, { size: 15, min: 10, style: "bold SIZEpx 'Times New Roman', serif" }, column);
+  const block = nameSize + 8 + (pure ? subSize + 8 : 0) + batchSize;
+  const top = 82;
+  let y = top + Math.max(0, (researchY - 10 - top - block) / 2);
+
+  ctx.textAlign = "center";
+  ctx.font = `700 ${nameSize}px Cinzel, serif`;
+  ctx.fillText(name || "Product", mid, y);
+  y += nameSize + 8;
+  if (pure) {
+    ctx.font = `italic ${subSize}px 'Times New Roman', serif`;
+    ctx.fillText(pure, mid, y);
+    const tw = ctx.measureText(pure).width;
+    ctx.fillRect(left, y + subSize / 2, Math.max(6, mid - tw / 2 - left - 8), 1);
+    ctx.fillRect(mid + tw / 2 + 8, y + subSize / 2, Math.max(6, rightText - (mid + tw / 2 + 8)), 1);
+    y += subSize + 8;
+  }
   ctx.font = `bold ${batchSize}px 'Times New Roman', serif`;
-  ctx.textAlign = "right";
-  ctx.fillText(batchText, rightText, qrY + box / 2 - 6);
+  ctx.fillText(batchText, mid, y);
 
   const fine = "Research Use Only  •  Not for Human Consumption";
-  ctx.font = "italic 12px 'Times New Roman', serif";
-  ctx.textAlign = "center";
-  const dsLeft = Math.round(W * 0.72);
-  ctx.fillText(fine, (18 + dsLeft) / 2, H - 38);
+  const fineMax = Math.min(rightText, Math.round(W * 0.68)) - 36;
+  const fineSize = fit(ctx, fine, { size: 12, min: 9, style: "italic SIZEpx 'Times New Roman', serif" }, fineMax);
+  ctx.font = `italic ${fineSize}px 'Times New Roman', serif`;
+  ctx.fillText(fine, (36 + Math.min(rightText, Math.round(W * 0.68))) / 2, researchY);
 }
 
 function loadImage(src) {
