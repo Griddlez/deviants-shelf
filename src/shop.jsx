@@ -188,7 +188,7 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
   return (
     <article className={`product-card theme-${theme}`}>
       {/* Same portrait plate for every school. Only the interior color, glow, metal, and texture change. */}
-      <img className="product-card-plate" src={theme === "emberforge" ? "/art/card/plate-emberforge-2.jpg" : `/art/card/plate-${theme}.jpg`} alt="" decoding="async" />
+      <img className="product-card-plate" src={`/art/card/plate2-${theme}.jpg`} alt="" decoding="async" />
       <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
       {photoSrc ? (
         <div className="product-card-vial has-photo">
@@ -228,7 +228,6 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
 function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, onPrintLabel, others }) {
   const [sku, setSku] = useState(product.sizes[0].sku);
   const [tab, setTab] = useState("description");
-  const [bottle, setBottle] = useState(false);
   const size = product.sizes.find((row) => row.sku === sku) || product.sizes[0];
   const live = library[size.sku];
   const lot = live?.current
@@ -247,7 +246,7 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
           stock={stock}
           onOpen={() => {}}
           onAdd={onAdd}
-          photo={bottle ? VIAL_PHOTOS[`${product.id}-bottle`] : VIAL_PHOTOS[product.id]}
+          photo={VIAL_PHOTOS[product.id]}
           sku={sku}
           onSku={setSku}
         />
@@ -256,9 +255,6 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
           <h2>{product.charge || product.name}</h2>
           {product.charge && product.charge !== product.name && <p className="compound">{product.name}</p>}
           <p className="potion-line">{product.line}</p>
-          <button className="text-link" type="button" onClick={() => setBottle((v) => !v)}>
-            {bottle ? "View vial" : "View bottle details"}
-          </button>
           {admin && live?.slug && (
             <button className="text-link" type="button" onClick={() => onPrintLabel(live.slug)}>Print label</button>
           )}
