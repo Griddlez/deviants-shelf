@@ -82,6 +82,10 @@ function HeroTarot({ onOpen }) {
 
   const tone = HERO_CARDS[index].tone;
 
+  const count = HERO_CARDS.length;
+  const prev = (index - 1 + count) % count;
+  const next = (index + 1) % count;
+
   return (
     <div
       className={`hero-tarot tone-${tone}`}
@@ -99,7 +103,7 @@ function HeroTarot({ onOpen }) {
           tabIndex={n === index ? 0 : -1}
           onClick={() => onOpen(card.id)}
         >
-          <img src={card.src} alt="" />
+          {(n === index || n === prev || n === next) && <img src={card.src} alt="" decoding="async" />}
         </button>
       ))}
     </div>
@@ -171,7 +175,7 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
   const size = product.sizes.find((row) => row.sku === sku) || product.sizes[0];
   const soldOut = !inStock(stock, size.sku);
   const theme = THEME[product.id] || "emberforge";
-  const src = photo || VIAL_PHOTOS[product.id] || `/art/card/vial-${theme}.png`;
+  const photoSrc = photo || VIAL_PHOTOS[product.id] || "";
   const title = product.charge || product.name;
   const compound = product.charge && product.charge !== product.name ? product.name : "";
   const purity = purityLine(lot);
@@ -184,13 +188,13 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
   return (
     <article className={`product-card theme-${theme}`}>
       {/* Same portrait plate for every school. Only the interior color, glow, metal, and texture change. */}
-      <img className="product-card-plate" src={`/art/card/theme-${theme}.jpg`} alt="" />
-      <img className="product-card-scene" src={`/art/card/scene-${theme}.jpg`} alt="" />
+      <img className="product-card-plate" src={`/art/card/plate-${theme}.jpg`} alt="" decoding="async" />
       <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
-      {/* School vial sits in the same window. A product photo still wins if one is supplied. */}
-      <div className="product-card-vial has-photo">
-        <img className={photo || VIAL_PHOTOS[product.id] ? "" : "silhouette"} src={src} alt="" />
-      </div>
+      {photoSrc ? (
+        <div className="product-card-vial has-photo">
+          <img src={photoSrc} alt="" />
+        </div>
+      ) : null}
       <CoaBadge show={!!lot} />
       <p className="product-card-title" style={{ fontSize: titleSize(title) }}>{title}</p>
       {compound ? <p className="product-card-compound" style={{ fontSize: compound.length > 24 ? "2.45cqw" : compound.length > 16 ? "2.85cqw" : "3.3cqw" }}>{compound}</p> : null}
