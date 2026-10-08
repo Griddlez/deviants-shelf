@@ -139,6 +139,19 @@
   pointer-events: none;
   user-select: none;
 }
+/* School scene, only the window behind the vial. The plate frame stays on top of the fade. */
+.product-card-scene {
+  position: absolute;
+  left: 14%;
+  width: 72%;
+  top: 22%;
+  height: 38%;
+  object-fit: cover;
+  z-index: 1;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 80% 74% at 50% 52%, #000 58%, transparent 80%);
+  mask-image: radial-gradient(ellipse 80% 74% at 50% 52%, #000 58%, transparent 80%);
+}
 .product-card-open {
   position: absolute;
   left: 7%;
@@ -303,6 +316,10 @@
   object-fit: contain;
   mask-image: radial-gradient(ellipse at center, #000 58%, transparent 78%);
   -webkit-mask-image: radial-gradient(ellipse at center, #000 58%, transparent 78%);
+}
+.product-card-vial img.silhouette {
+  mask-image: none;
+  -webkit-mask-image: none;
 }
 .product-card:hover { transform: translateY(-3px); }
 .product-card { transition: transform 0.2s ease; }

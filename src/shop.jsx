@@ -170,11 +170,11 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
   const sku = skuProp || localSku;
   const size = product.sizes.find((row) => row.sku === sku) || product.sizes[0];
   const soldOut = !inStock(stock, size.sku);
-  const src = photo || VIAL_PHOTOS[product.id];
+  const theme = THEME[product.id] || "emberforge";
+  const src = photo || VIAL_PHOTOS[product.id] || `/art/card/vial-${theme}.png`;
   const title = product.charge || product.name;
   const compound = product.charge && product.charge !== product.name ? product.name : "";
   const purity = purityLine(lot);
-  const theme = THEME[product.id] || "emberforge";
 
   function choose(next) {
     setLocalSku(next);
@@ -185,10 +185,11 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
     <article className={`product-card theme-${theme}`}>
       {/* Same portrait plate for every school. Only the interior color, glow, metal, and texture change. */}
       <img className="product-card-plate" src={`/art/card/theme-${theme}.jpg`} alt="" />
+      <img className="product-card-scene" src={`/art/card/scene-${theme}.jpg`} alt="" />
       <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
-      {/* Vial slot. Leave VIAL_PHOTOS empty and the painted bottle stays. A photo covers that window. */}
-      <div className={src ? "product-card-vial has-photo" : "product-card-vial"}>
-        {src ? <img src={src} alt="" /> : null}
+      {/* School vial sits in the same window. A product photo still wins if one is supplied. */}
+      <div className="product-card-vial has-photo">
+        <img className={photo || VIAL_PHOTOS[product.id] ? "" : "silhouette"} src={src} alt="" />
       </div>
       <CoaBadge show={!!lot} />
       <p className="product-card-title" style={{ fontSize: titleSize(title) }}>{title}</p>
