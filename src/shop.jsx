@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PRODUCTS } from "./data.js";
 import { FLAVOR, ROW_ORDER } from "./flavor.js";
 
@@ -55,6 +55,56 @@ const THEME = {
 };
 
 const FEATURED = ["r3", "bpc", "cjc", "tb5", "pt", "bac"];
+
+/* Tarot cards for the hero window. Same box the vial outline used to sit in. */
+const HERO_CARDS = [
+  { id: "r3", src: "/art/tarot/triad.jpg", label: "Retatrutide, The Triad", tone: "ember" },
+  { id: "amq", src: "/art/tarot/unbound.jpg", label: "5-Amino-1MQ, The Unbound", tone: "ember" },
+  { id: "mot", src: "/art/tarot/engine.jpg", label: "MOTS-c, The Engine", tone: "ember" },
+  { id: "nad", src: "/art/tarot/eternal.jpg", label: "NAD+, The Eternal Flame", tone: "ember" },
+  { id: "bpc", src: "/art/tarot/mender.jpg", label: "BPC-157, The Mender", tone: "mend" },
+  { id: "tb5", src: "/art/tarot/swift.jpg", label: "TB-500, The Swift", tone: "mend" },
+  { id: "ghk", src: "/art/tarot/phoenix.jpg", label: "GHK-Cu, The Azure Phoenix", tone: "mend" },
+  { id: "sem", src: "/art/tarot/weaver.jpg", label: "Semax, The Weaver", tone: "mind" },
+  { id: "pt", src: "/art/tarot/spark.jpg", label: "PT-141, The Spark", tone: "flame" },
+];
+
+function HeroTarot({ onOpen }) {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return undefined;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+    const timer = setInterval(() => setIndex((n) => (n + 1) % HERO_CARDS.length), 4200);
+    return () => clearInterval(timer);
+  }, [paused]);
+
+  const tone = HERO_CARDS[index].tone;
+
+  return (
+    <div
+      className={`hero-tarot tone-${tone}`}
+      aria-roledescription="carousel"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      {HERO_CARDS.map((card, n) => (
+        <button
+          key={card.id}
+          type="button"
+          className={n === index ? "on" : ""}
+          aria-label={card.label}
+          aria-hidden={n === index ? undefined : true}
+          tabIndex={n === index ? 0 : -1}
+          onClick={() => onOpen(card.id)}
+        >
+          <img src={card.src} alt="" />
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function money(n) {
   return `$${n}`;
@@ -308,8 +358,8 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
             <a className="potion-add alt" href="#featured">Shop peptides</a>
           </div>
         </div>
-        <div className="ornate-frame hero-vial tone-ember">
-          <Vial id="r3" tone="ember" />
+        <div className="ornate-frame hero-vial">
+          <HeroTarot onOpen={setOpenId} />
         </div>
       </div>
 
