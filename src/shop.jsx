@@ -68,33 +68,77 @@ export function Vial({ id, tone, photo }) {
   );
 }
 
-function PotionCard({ product, library, stock, onOpen, onAdd }) {
+function titleSize(title) {
+  const n = title.length;
+  if (n > 22) return "4.8cqw";
+  if (n > 16) return "5.6cqw";
+  if (n > 13) return "6.5cqw";
+  return "7.62cqw";
+}
+
+function purityLine(lot) {
+  if (!lot?.purity) return "";
+  return `${String(lot.purity).replace(/\s*purity\s*/i, "")} Purity (HPLC Verified)`;
+}
+
+/* The shield is the real ornament cut from the card, not a redrawn icon. */
+export function CoaBadge({ show }) {
+  if (!show) return null;
+  return <img className="coa-shield" src="/art/card/badge.png" alt="COA Verified" />;
+}
+
+export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku: skuProp, onSku }) {
   const lot = lotFor(product, library);
-  const size = product.sizes.find((row) => inStock(stock, row.sku)) || product.sizes[0];
-  const from = product.sizes.length > 1;
+  const first = product.sizes.find((row) => inStock(stock, row.sku)) || product.sizes[0];
+  const [localSku, setLocalSku] = useState(first.sku);
+  const sku = skuProp || localSku;
+  const size = product.sizes.find((row) => row.sku === sku) || product.sizes[0];
+  const soldOut = !inStock(stock, size.sku);
+  const src = photo || VIAL_PHOTOS[product.id];
+  const title = product.charge || product.name;
+  const compound = product.charge && product.charge !== product.name ? product.name : "";
+  const purity = purityLine(lot);
+
+  function choose(next) {
+    setLocalSku(next);
+    if (onSku) onSku(next);
+  }
+
   return (
-    <article className={`potion-card tone-${product.tone}`}>
-      <button className="potion-open" type="button" onClick={() => onOpen(product.id)}>
-        <span className="potion-stage">
-          <Vial id={product.id} tone={product.tone} />
-        </span>
-        <span className="potion-kicker">{product.row}</span>
-        <strong>{product.charge || product.name}</strong>
-        <em>{product.name}</em>
-        <span className="potion-meta">
-          {lot ? `${lot.purity} purity` : "Research vial"}
-          {lot ? ` · Batch ${lot.id}` : ""}
-        </span>
-      </button>
+    <article className="product-card">
+      {/* Gold frame, leather header, candlelit window, parchment, and the Add Potion plaque. */}
+      <img className="product-card-plate" src="/art/card/base.jpg" alt="" />
+      <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
+      {/* Vial slot. Leave VIAL_PHOTOS empty and the painted bottle stays. A photo covers that window. */}
+      <div className={src ? "product-card-vial has-photo" : "product-card-vial"}>
+        {src ? <img src={src} alt="" /> : null}
+      </div>
+      <CoaBadge show={!!lot} />
+      <p className="product-card-title" style={{ fontSize: titleSize(title) }}>{title}</p>
+      {compound ? <p className="product-card-compound" style={{ fontSize: compound.length > 24 ? "2.45cqw" : compound.length > 16 ? "2.85cqw" : "3.3cqw" }}>{compound}</p> : null}
+      {purity ? <p className="product-card-purity">{purity}</p> : null}
+      <div className={product.sizes.length < 2 ? "product-card-rows one" : "product-card-rows"}>
+        {product.sizes.map((row) => (
+          <button
+            key={row.sku}
+            type="button"
+            className={row.sku === sku ? "on" : ""}
+            onClick={() => choose(row.sku)}
+          >
+            <span>Batch: {row.sku}</span>
+            <b>{money(row.vial)}</b>
+          </button>
+        ))}
+      </div>
       <button
-        className="potion-add"
+        className="product-card-add"
         type="button"
-        disabled={!inStock(stock, size.sku)}
+        disabled={soldOut}
         onClick={() => onAdd(size, product)}
       >
-        {product.id === "kit" ? "Add kit" : "Add potion"} · {from ? "from " : ""}{money(Math.min(...product.sizes.map((row) => row.vial)))}
+        {soldOut ? "None on the shelf" : "Add Potion"}
       </button>
-      <p className="potion-line">{product.line}</p>
+      <p className="product-card-flavor" style={{ fontSize: (product.line || "").length > 48 ? "2.55cqw" : "3.15cqw" }}>{product.line}</p>
     </article>
   );
 }
@@ -110,33 +154,26 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
     : size.coa?.batch
       ? { id: size.coa.batch, purity: size.coa.purity, tested: size.coa.tested, href: size.coa.file, page: "", slug: "" }
       : null;
-  const soldOut = !inStock(stock, size.sku);
 
   return (
     <section className="apothecary">
       <button className="back-link" type="button" onClick={onBack}>← Back to the shelf</button>
       <div className="product-top">
-        <div className={`ornate-frame tone-${product.tone}`}>
-          <Vial id={bottle ? `${product.id}-bottle` : product.id} tone={product.tone} photo={bottle ? VIAL_PHOTOS[`${product.id}-bottle`] : VIAL_PHOTOS[product.id]} />
-        </div>
+        <ProductCard
+          product={product}
+          library={library}
+          stock={stock}
+          onOpen={() => {}}
+          onAdd={onAdd}
+          photo={bottle ? VIAL_PHOTOS[`${product.id}-bottle`] : VIAL_PHOTOS[product.id]}
+          sku={sku}
+          onSku={setSku}
+        />
         <div className="product-copy">
           <p className="potion-kicker">{product.row}</p>
           <h2>{product.charge || product.name}</h2>
           {product.charge && product.charge !== product.name && <p className="compound">{product.name}</p>}
-          <p className="product-price">{money(size.vial)}</p>
           <p className="potion-line">{product.line}</p>
-          {lot && <p className="coa-badge">COA Verified · {lot.purity} · {lot.tested}</p>}
-          <div className="size-list">
-            {product.sizes.map((row) => (
-              <button key={row.sku} type="button" className={row.sku === sku ? "size-pick on" : "size-pick"} onClick={() => setSku(row.sku)}>
-                <span>{row.mg} · {row.sku}</span>
-                <b>{money(row.vial)}</b>
-              </button>
-            ))}
-          </div>
-          <button className="potion-add glow" type="button" disabled={soldOut} onClick={() => onAdd(size, product)}>
-            {soldOut ? "None on the shelf" : product.id === "kit" ? "Add kit" : "Add potion"}
-          </button>
           <button className="text-link" type="button" onClick={() => setBottle((v) => !v)}>
             {bottle ? "View vial" : "View bottle details"}
           </button>
@@ -173,7 +210,7 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
       <h3 className="band-title">Also on this row</h3>
       <div className="potion-grid">
         {others.map((item) => (
-          <PotionCard key={item.id} product={item} library={library} stock={stock} onOpen={onOpen} onAdd={onAdd} />
+          <ProductCard key={item.id} product={item} library={library} stock={stock} onOpen={onOpen} onAdd={onAdd} />
         ))}
       </div>
     </section>
@@ -260,7 +297,7 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
       <h3 id="featured" className="band-title">Featured on the shelf</h3>
       <div className="potion-grid">
         {featured.map((item) => (
-          <PotionCard key={item.id} product={item} library={library} stock={stock} onOpen={setOpenId} onAdd={add} />
+          <ProductCard key={item.id} product={item} library={library} stock={stock} onOpen={setOpenId} onAdd={add} />
         ))}
       </div>
 
@@ -298,7 +335,7 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
           {group.note && <p className="row-note">{group.note}</p>}
           <div className="potion-grid">
             {group.items.map((item) => (
-              <PotionCard key={item.id} product={item} library={library} stock={stock} onOpen={setOpenId} onAdd={add} />
+              <ProductCard key={item.id} product={item} library={library} stock={stock} onOpen={setOpenId} onAdd={add} />
             ))}
           </div>
         </div>

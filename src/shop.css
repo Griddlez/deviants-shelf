@@ -28,7 +28,7 @@
   background: #16110d; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; color: #e7d3b0;
 }
 .band-title { text-align: center; margin: 28px 0 12px; }
-.potion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.potion-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
 .potion-card {
   display: flex; flex-direction: column; gap: 8px; padding: 14px;
   background: linear-gradient(180deg, #22180f, #120e0b);
@@ -75,7 +75,7 @@
 }
 .parchment-block h3, .parchment-block p { color: #2a1c10; }
 .parchment-block a { color: #6a3b12; }
-.product-top { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 20px; align-items: center; }
+.product-top { display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); gap: 20px; align-items: start; }
 .product-copy h2 { font-size: clamp(32px, 4vw, 48px); margin: 0; }
 .product-price { font-size: 28px; color: #f0d7a2; }
 .size-list { display: grid; gap: 8px; margin: 12px 0; }
@@ -96,9 +96,192 @@
 }
 .stone-foot a { color: #f0d7a2; text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; }
 .foot { background: #0c0907; border-top: 1px solid #c6a15a; }
-@media (max-width: 900px) {
-  .hero-frame, .product-top, .potion-grid { grid-template-columns: 1fr; }
+
+/* The portrait plate is the uploaded card. Type sits in the same bands the lettering was lifted from. */
+.product-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1024 / 1536;
+  container-type: inline-size;
+  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.45));
 }
-@media (min-width: 901px) and (max-width: 1200px) {
-  .potion-grid { grid-template-columns: 1fr 1fr; }
+.product-card-plate {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+.product-card-open {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 5%;
+  height: 57%;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+.product-card-title,
+.product-card-compound,
+.product-card-purity,
+.product-card-flavor {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  margin: 0;
+  text-align: center;
+  pointer-events: none;
+  z-index: 4;
+}
+/* Trajan gold on the leather header. */
+.product-card-title {
+  top: 9.6%;
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: 7.62cqw;
+  line-height: 0.95;
+  letter-spacing: 0.015em;
+  background: linear-gradient(#f8e7a2, #e2b15a 42%, #f3d78a 58%, #b8863a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0.35cqw 0 #3a2208);
+}
+/* Smaller cream line under the flavor name. */
+.product-card-compound {
+  top: 17.1%;
+  font-family: Cinzel, serif;
+  font-weight: 500;
+  font-size: 3.3cqw;
+  letter-spacing: 0.06em;
+  color: #f0e2c4;
+  text-shadow: 0 1px 0 #1a0e06;
+  white-space: nowrap;
+}
+/* Purity line, with the dotted leaders from the plate. */
+.product-card-purity {
+  top: 63.05%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4cqw;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 2.85cqw;
+  color: #2c180c;
+  white-space: nowrap;
+}
+.product-card-purity::before,
+.product-card-purity::after {
+  content: "";
+  width: 9cqw;
+  border-bottom: 0.45cqw dotted rgba(62, 36, 14, 0.7);
+  transform: translateY(-0.15cqw);
+}
+/* Batch / price rows sit between the ruled lines. */
+.product-card-rows {
+  position: absolute;
+  left: 12%;
+  right: 13.5%;
+  top: 68.5%;
+  z-index: 5;
+  display: grid;
+  gap: 1.55cqw;
+}
+.product-card-rows.one { top: 71.4%; }
+.product-card-rows button {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-weight: 700;
+  font-size: 3.15cqw;
+  color: #2a160c;
+}
+.product-card-rows button.on { color: #140a04; }
+.product-card-rows button.on span::before {
+  content: "◆ ";
+  color: #7a5420;
+  font-size: 0.72em;
+}
+/* Wooden plaque. The plate already says Add Potion, so the label stays invisible until the vial is gone. */
+.product-card-add {
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  top: 79.7%;
+  height: 10.4%;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  font-family: Cinzel, serif;
+  font-weight: 700;
+  font-size: 3.6cqw;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.product-card-add:disabled {
+  color: #f3e2b0;
+  background: rgba(12, 7, 3, 0.72);
+  cursor: not-allowed;
+}
+/* Italic line above the bottom filigree. */
+.product-card-flavor {
+  top: 89.15%;
+  left: 12%;
+  right: 12%;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 3.15cqw;
+  color: #1a0e08;
+  line-height: 1.15;
+}
+/* Shiny shield, same pixels as the template, lower right of the window. */
+.coa-shield {
+  position: absolute;
+  left: 68.16%;
+  top: 47.14%;
+  width: 23.34%;
+  height: auto;
+  z-index: 3;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
+}
+/* Empty until a real photo is dropped in VIAL_PHOTOS. Then it covers the painted bottle. */
+.product-card-vial {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 23.5%;
+  height: 37%;
+  z-index: 1;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+}
+.product-card-vial img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mask-image: radial-gradient(ellipse at center, #000 58%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 58%, transparent 78%);
+}
+.product-card:hover { transform: translateY(-3px); }
+.product-card { transition: transform 0.2s ease; }
+
+@media (max-width: 640px) {
+  .hero-frame, .product-top, .potion-grid { grid-template-columns: 1fr; }
 }
