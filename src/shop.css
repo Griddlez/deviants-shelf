@@ -1,0 +1,104 @@
+.apothecary { color: #f3e6cf; }
+.apothecary h2, .apothecary h3, .band-title, .potion-card strong, .product-copy h2 {
+  font-family: Cinzel, serif;
+  color: #f0d7a2;
+}
+.hero-frame, .ornate-frame, .potion-card, .parchment-block, .trust-row {
+  border: 1px solid #c6a15a;
+  box-shadow: inset 0 0 0 4px #140e0a, inset 0 0 0 5px #6e5424, 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.hero-frame {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 24px;
+  padding: 28px;
+  margin-bottom: 18px;
+  background:
+    radial-gradient(circle at 15% 80%, rgba(255, 140, 40, 0.28), transparent 28%),
+    radial-gradient(circle at 80% 20%, rgba(90, 40, 160, 0.28), transparent 32%),
+    linear-gradient(180deg, #1a120c, #0c0907);
+}
+.hero-copy h2 { font-size: clamp(32px, 5vw, 54px); line-height: 1.05; margin: 8px 0; }
+.hero-actions, .hero-copy { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.hero-copy { align-content: center; }
+.hero-vial { min-height: 220px; display: grid; place-items: center; background: radial-gradient(circle, rgba(255, 150, 50, 0.2), transparent 70%); }
+.trust-row {
+  display: flex; justify-content: center; gap: 22px; flex-wrap: wrap;
+  list-style: none; padding: 12px; margin: 0 0 22px;
+  background: #16110d; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; color: #e7d3b0;
+}
+.band-title { text-align: center; margin: 28px 0 12px; }
+.potion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.potion-card {
+  display: flex; flex-direction: column; gap: 8px; padding: 14px;
+  background: linear-gradient(180deg, #22180f, #120e0b);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.potion-card:hover { transform: translateY(-4px); box-shadow: inset 0 0 0 4px #140e0a, inset 0 0 0 5px #6e5424, 0 0 24px var(--glow, rgba(224, 160, 70, 0.45)); }
+.tone-ember { --glow: rgba(255, 140, 40, 0.55); --liquid: #e07020; }
+.tone-flame { --glow: rgba(220, 40, 80, 0.55); --liquid: #d12a55; }
+.tone-mend { --glow: rgba(40, 220, 120, 0.5); --liquid: #1faa62; }
+.tone-mind, .tone-lantern { --glow: rgba(140, 80, 255, 0.5); --liquid: #7a4dff; }
+.tone-spring { --glow: rgba(180, 220, 255, 0.45); --liquid: #c5e4f5; }
+.tone-bench { --glow: rgba(200, 170, 110, 0.4); --liquid: #d7c4a1; }
+.potion-open { background: none; border: 0; color: inherit; text-align: center; cursor: pointer; padding: 0; }
+.potion-open strong { display: block; font-size: 22px; }
+.potion-open em, .compound { display: block; color: #d9c7a4; font-style: normal; }
+.potion-kicker { letter-spacing: 0.14em; text-transform: uppercase; font-size: 11px; color: #c6a15a; }
+.potion-meta, .potion-line, .row-note { color: #d7c4a4; font-size: 14px; }
+.potion-stage, .ornate-frame { display: grid; place-items: center; min-height: 150px; }
+.potion-add, a.potion-add {
+  display: inline-block; text-align: center; text-decoration: none;
+  background: #2a1c10; color: #f0d7a2; border: 1px solid #c6a15a;
+  padding: 8px 14px; font-family: Cinzel, serif; cursor: pointer;
+}
+.potion-add:hover, a.potion-add:hover { box-shadow: 0 0 16px var(--glow, rgba(224, 160, 70, 0.55)); }
+.potion-add.alt { background: transparent; }
+.potion-add:disabled { opacity: 0.45; cursor: not-allowed; }
+.vial { width: 72px; height: 110px; position: relative; filter: drop-shadow(0 0 12px var(--glow)); }
+.vial-cap { position: absolute; top: 0; left: 18px; width: 36px; height: 16px; background: #2b241c; border: 2px solid #d7c08a; border-radius: 3px; }
+.vial-neck { position: absolute; top: 14px; left: 28px; width: 16px; height: 14px; background: linear-gradient(#d7c08a, #6a5430); }
+.vial-glass {
+  position: absolute; top: 26px; left: 10px; width: 52px; height: 78px;
+  border: 2px solid rgba(255, 236, 200, 0.7); border-radius: 8px 8px 18px 18px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.18), transparent 40%, rgba(255,255,255,0.08));
+  overflow: hidden;
+}
+.vial-liquid { position: absolute; left: 0; right: 0; bottom: 0; height: 68%; background: linear-gradient(180deg, rgba(255,255,255,0.35), var(--liquid)); }
+.vial-photo { max-width: 100%; max-height: 240px; object-fit: contain; }
+.parchment-block {
+  margin: 22px 0; padding: 18px 20px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.25), transparent 30%),
+    linear-gradient(180deg, #efe0c4, #d9c29a);
+  color: #2a1c10;
+}
+.parchment-block h3, .parchment-block p { color: #2a1c10; }
+.parchment-block a { color: #6a3b12; }
+.product-top { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 20px; align-items: center; }
+.product-copy h2 { font-size: clamp(32px, 4vw, 48px); margin: 0; }
+.product-price { font-size: 28px; color: #f0d7a2; }
+.size-list { display: grid; gap: 8px; margin: 12px 0; }
+.size-pick {
+  display: flex; justify-content: space-between; background: #1a120c; color: #f3e6cf;
+  border: 1px solid #6e5424; padding: 8px 12px; cursor: pointer;
+}
+.size-pick.on { border-color: #f0d7a2; box-shadow: 0 0 12px var(--glow); }
+.rune-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.rune-tabs button { background: transparent; color: #f0d7a2; border: 1px solid #6e5424; padding: 6px 12px; cursor: pointer; font-family: Cinzel, serif; }
+.rune-tabs button.on { background: #2a1c10; }
+.shelf-tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.shelf-tools input { flex: 1; min-width: 180px; background: #1a120c; color: #f3e6cf; border: 1px solid #6e5424; padding: 8px 10px; }
+.text-link, .back-link { background: none; border: 0; color: #e4c27a; cursor: pointer; padding: 0; text-decoration: underline; }
+.stone-foot {
+  display: flex; gap: 18px; justify-content: center; flex-wrap: wrap;
+  margin-top: 28px; padding: 16px; background: #0c0907; border-top: 1px solid #c6a15a;
+}
+.stone-foot a { color: #f0d7a2; text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; }
+.foot { background: #0c0907; border-top: 1px solid #c6a15a; }
+@media (max-width: 900px) {
+  .hero-frame, .product-top, .potion-grid { grid-template-columns: 1fr; }
+}
+@media (min-width: 901px) and (max-width: 1200px) {
+  .potion-grid { grid-template-columns: 1fr 1fr; }
+}
