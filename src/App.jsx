@@ -3,6 +3,7 @@ import { CONFIG, PRODUCTS, quoteOrder } from "./data.js";
 import { FLAVOR, ROW_ORDER } from "./flavor.js";
 import * as store from "./store.js";
 import { notify } from "./mail.js";
+import { CoaLibrary, PublicCoa } from "./coa.jsx";
 
 
 function usualFrom(orders) {
@@ -174,8 +175,13 @@ export default function App() {
   }
 
   if (!session) {
+    const coaSlug = window.location.pathname.match(/^\/c\/([a-z0-9-]+)\/?$/i);
+    if (coaSlug) return <PublicCoa slug={coaSlug[1].toLowerCase()} />;
     return <Gate onIn={refresh} />;
   }
+
+  const coaSlug = window.location.pathname.match(/^\/c\/([a-z0-9-]+)\/?$/i);
+  if (coaSlug) return <PublicCoa slug={coaSlug[1].toLowerCase()} />;
 
   const visible = session.admin
     ? orders
@@ -210,6 +216,9 @@ export default function App() {
         <button className={tab === "account" ? "on" : ""} onClick={() => setTab("account")}>Card</button>
         {session.admin && (
           <button className={tab === "admin" ? "on" : ""} onClick={() => setTab("admin")}>Desk</button>
+        )}
+        {session.admin && (
+          <button className={tab === "coa" ? "on" : ""} onClick={() => setTab("coa")}>COA Library</button>
         )}
       </nav>
 
@@ -264,6 +273,8 @@ export default function App() {
       {tab === "admin" && session.admin && (
           <AdminDesk session={session} stock={stock} pay={pay} onStock={setStock} onPay={setPay} />
         )}
+
+      {tab === "coa" && session.admin && <CoaLibrary session={session} />}
 
       {(tab === "order" || flow) && tab === "order" && (
         <PlaceOrder
@@ -496,6 +507,14 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock, onDownload }
   const [q, setQ] = useState("");
   const [coa, setCoa] = useState(null);
   const [note, setNote] = useState("");
+  const [library, setLibrary] = useState({});
+  useEffect(() => {
+    store.coaIndex().then((rows) => {
+      const map = {};
+      for (const row of rows) if (row.sku) map[row.sku] = row;
+      setLibrary(map);
+    }).catch(() => {});
+  }, []);
   const list = PRODUCTS.filter((p) => {
     const hay = `${p.code} ${p.charge || ""} ${p.name} ${p.sizes.map((s) => s.sku).join(" ")}`.toLowerCase();
     return hay.includes(q.trim().toLowerCase());
@@ -563,10 +582,25 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock, onDownload }
                 <div className="row" key={s.sku}>
                   <div className="sku-line">
                     <b className="sku">{s.sku}</b> <span className="mg">{s.mg}</span>
-                    {s.coa?.file && (
+                    {(s.coa?.file || library[s.sku]?.current) && (
                       <button
                         className="btn slim coa"
-                        onClick={() => setCoa({ ...s, name: p.name, charge: p.charge })}
+                        onClick={() => {
+                          const live = library[s.sku];
+                          setCoa({
+                            ...s,
+                            name: p.name,
+                            charge: p.charge,
+                            coa: live?.current ? {
+                              batch: live.current.id,
+                              tested: live.current.tested,
+                              purity: live.current.purity,
+                              file: live.current.href,
+                              lab: s.coa?.lab,
+                              page: live.shortUrl,
+                            } : s.coa,
+                          });
+                        }}
                       >
                         COA
                       </button>
@@ -631,6 +665,9 @@ function CoaModal({ item, onClose }) {
             )}
             {file && (
               <a className="btn" href={file} target="_blank" rel="noreferrer">Open certificate</a>
+            )}
+            {c.page && (
+              <a className="btn" href={c.page} target="_blank" rel="noreferrer">Public page</a>
             )}
           </>
         ) : (

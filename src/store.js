@@ -142,6 +142,30 @@ export function receiptImage(session, path) {
   return postBook({ action: "picture", name: session?.name, pin: session?.pin, path });
 }
 
+export function coaIndex() {
+  return postBook({ action: "coa-index" }).then((data) => data.items || []);
+}
+
+export function coaPublic(slug) {
+  return postBook({ action: "coa-public", slug }).then((data) => data.item);
+}
+
+export function coaList(deskPin) {
+  return postBook({ action: "coa-list", deskPin }).then((data) => data.items || []);
+}
+
+export function coaSave(body) {
+  return postBook({ action: "coa-save", ...body }).then((data) => data.items || []);
+}
+
+export function coaBatch(body) {
+  return postBook({ action: "coa-batch", ...body }).then((data) => data.items || []);
+}
+
+export function coaReplace(body) {
+  return postBook({ action: "coa-replace", ...body }).then((data) => data.items || []);
+}
+
 export function getState() {
   const s = load();
   return {

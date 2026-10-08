@@ -16,7 +16,7 @@ export async function readBook() {
   if (!data.nextOrder || data.nextOrder < 1001) data.nextOrder = 1001;
   if (!data.stock || typeof data.stock !== "object") data.stock = {};
   if (!data.pay || typeof data.pay !== "object") data.pay = {};
-  if (!data.next || data.next < 1) data.next = 2;
+  if (!Array.isArray(data.coaLibrary)) data.coaLibrary = [];
   return data;
 }
 
@@ -95,7 +95,155 @@ function mergeBook(latest, incoming) {
     stock: { ...(latest.stock || {}), ...(incoming.stock || {}) },
     sheetSeen: { ...(latest.sheetSeen || {}), ...(incoming.sheetSeen || {}) },
     pay: incoming.pay && Object.keys(incoming.pay).length ? incoming.pay : (latest.pay || {}),
+    coaLibrary: mergeCoa(latest, incoming),
+    coaSeeded: Boolean(latest.coaSeeded || incoming.coaSeeded),
   };
+}
+
+function mergeCoa(latest, incoming) {
+  const map = new Map();
+  for (const item of latest.coaLibrary || []) if (item?.slug) map.set(item.slug, item);
+  for (const item of incoming.coaLibrary || []) {
+    if (!item?.slug) continue;
+    const prev = map.get(item.slug);
+    if (!prev) {
+      map.set(item.slug, item);
+      continue;
+    }
+    const batches = new Map();
+    for (const batch of prev.batches || []) batches.set(batch.id, batch);
+    for (const batch of item.batches || []) {
+      const older = batches.get(batch.id);
+      batches.set(batch.id, older ? { ...older, ...batch } : batch);
+    }
+    map.set(item.slug, {
+      ...prev,
+      ...item,
+      aliases: [...new Set([...(prev.aliases || []), ...(item.aliases || [])])],
+      batches: [...batches.values()],
+    });
+  }
+  return [...map.values()];
+}
+
+function slugify(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+}
+
+const COA_SEED = [
+  ["retatrutide-5", "Retatrutide 5 mg", "R3-5"],
+  ["retatrutide-20", "Retatrutide 20 mg", "R3-20", "212022", ">99.9%", "Sep 1, 2026", "/coa/R3-20.pdf"],
+  ["5-amino-1mq-50", "5-Amino-1MQ 50 mg", "AMQ-50", "212014", "99.9%", "Sep 1, 2026", "/coa/AMQ-50.pdf"],
+  ["bpc-157-5", "BPC-157 5 mg", "BPC-5"],
+  ["bpc-157-10", "BPC-157 10 mg", "BPC-10", "212028", "99.4%", "Sep 1, 2026", "/coa/BPC-10.pdf"],
+  ["tb-500-5", "TB-500 5 mg", "TB5-5"],
+  ["mots-c-20", "MOTS-c 20 mg", "MOT-20"],
+  ["kpv-10", "KPV 10 mg", "KPV-10", "KPV010-012604A", "99.8%", "Apr 28, 2026", "/coa/KPV-10.pdf"],
+  ["ara-290-10", "ARA-290 10 mg", "ARA-10", "212008", "98.4%", "Sep 1, 2026", "/coa/ARA-10.pdf"],
+  ["cjc-ipamorelin", "CJC-1295 + Ipamorelin", "CJC-5-5", "212026", "99.2%", "Sep 4, 2026", "/coa/CJC-5-5.pdf"],
+  ["pinealon-10", "Pinealon 10 mg", "PIN-10", "203757", "99.6%", "Apr 22, 2026", "/coa/PIN-10.pdf"],
+  ["epithalon-10", "Epithalon 10 mg", "EPI-10"],
+  ["selank-5", "Selank 5 mg", "SEL-5"],
+  ["semax-10", "Semax 10 mg", "SEM-10", "SMX010-012604A", "99.8%", "Apr 28, 2026", "/coa/SEM-10.pdf"],
+  ["nad-100", "NAD+ 100 mg", "NAD-100"],
+  ["nad-500", "NAD+ 500 mg", "NAD-500", "201770", "99.89%", "Mar 9, 2026", "/coa/NAD-500.pdf"],
+  ["pt-141-10", "PT-141 10 mg", "PT-10", "PT1010-012604A", "99.9%", "Apr 28, 2026", "/coa/PT-10.pdf"],
+  ["ghk-cu-100", "GHK-Cu 100 mg", "GHK-100", "203764", ">99.9%", "Apr 22, 2026", "/coa/GHK-100.pdf"],
+  ["bac-water", "Bacteriostatic water", "BAC-10"],
+  ["beginners-kit", "Beginners Alchemy Kit", "KIT-1"],
+];
+
+function seedCoa(book) {
+  if (!Array.isArray(book.coaLibrary)) book.coaLibrary = [];
+  if (book.coaSeeded) return false;
+  if (book.coaLibrary.length) {
+    book.coaSeeded = true;
+    return true;
+  }
+  book.coaLibrary = COA_SEED.map(([slug, name, sku, batch, purity, tested, file]) => ({
+    slug,
+    aliases: [],
+    name,
+    sku,
+    batches: file ? [{
+      id: batch,
+      purity,
+      tested,
+      current: true,
+      file,
+      mime: "application/pdf",
+      fileName: file.split("/").pop(),
+      addedAt: Date.now(),
+      replaced: [],
+    }] : [],
+  }));
+  book.coaSeeded = true;
+  return true;
+}
+
+function findCoa(book, slug) {
+  const key = slugify(slug);
+  if (!key) return null;
+  return (book.coaLibrary || []).find((item) => item.slug === key || (item.aliases || []).includes(key)) || null;
+}
+
+function fileHref(slug, batch) {
+  return `/api/coa-file?slug=${encodeURIComponent(slug)}&batch=${encodeURIComponent(batch.id)}`;
+}
+
+function publicCoa(item) {
+  const batches = (item.batches || []).map((batch) => ({
+    id: batch.id,
+    purity: batch.purity,
+    tested: batch.tested,
+    current: Boolean(batch.current),
+    fileName: batch.fileName || "certificate",
+    href: fileHref(item.slug, batch),
+  }));
+  const current = batches.find((batch) => batch.current) || batches[0] || null;
+  return {
+    name: item.name,
+    slug: item.slug,
+    sku: item.sku || "",
+    verified: Boolean(current),
+    shortUrl: `/c/${item.slug}`,
+    current,
+    batches,
+  };
+}
+
+export async function readyCoaBook() {
+  const book = await readBook();
+  if (seedCoa(book)) await writeBook(book);
+  return book;
+}
+
+export function lookupCoaFile(book, slug, batchId) {
+  const item = findCoa(book, slug);
+  if (!item) return null;
+  const batch = (item.batches || []).find((row) => row.id === batchId) || (item.batches || []).find((row) => row.current) || item.batches?.[0];
+  if (!batch?.file) return null;
+  return { file: batch.file, mime: batch.mime || "application/pdf", fileName: batch.fileName || "certificate" };
+}
+
+async function storeCoaFile(slug, batchId, dataUrl, fileName) {
+  const match = String(dataUrl || "").match(/^data:([^;]+);base64,([A-Za-z0-9+/=\s]+)$/);
+  if (!match) throw new Error("Upload a PDF or image.");
+  const mime = match[1].toLowerCase();
+  if (!/pdf|png|jpeg|webp/.test(mime)) throw new Error("Use a PDF or an image.");
+  const bytes = Buffer.from(match[2].replace(/\s/g, ""), "base64");
+  if (!bytes.length) throw new Error("That file was empty.");
+  if (bytes.length > 3500000) throw new Error("That file is too large. Keep it under 3 MB.");
+  const safeBatch = String(batchId || "batch").replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 40) || "batch";
+  const ext = /pdf/.test(mime) ? "pdf" : /png/.test(mime) ? "png" : /webp/.test(mime) ? "webp" : "jpg";
+  const path = `coa-files/${slug}/${safeBatch}-${Date.now()}.${ext}`;
+  await put(path, bytes, {
+    access: "private",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: mime,
+  });
+  return { path, mime, fileName: String(fileName || `certificate.${ext}`).slice(0, 80) };
 }
 
 function danniPerson(book) {
@@ -739,6 +887,119 @@ export default async function handler(req, res) {
       book.people[person.name] = person;
       await writeBook(book);
       res.status(200).json({ templates: person.templates });
+      return;
+    }
+    if (body.action === "coa-index") {
+      const book = await readBook();
+      if (seedCoa(book)) await writeBook(book);
+      res.status(200).json({ items: (book.coaLibrary || []).map(publicCoa) });
+      return;
+    }
+    if (body.action === "coa-public") {
+      const book = await readBook();
+      if (seedCoa(book)) await writeBook(book);
+      const item = findCoa(book, body.slug);
+      if (!item) {
+        res.status(404).json({ error: "That certificate is not on the shelf." });
+        return;
+      }
+      res.status(200).json({ item: publicCoa(item) });
+      return;
+    }
+    if (body.action === "coa-list" || body.action === "coa-save" || body.action === "coa-batch" || body.action === "coa-replace") {
+      if (!deskOk(body.deskPin)) {
+        res.status(401).json({ error: "That desk PIN is not right." });
+        return;
+      }
+      const book = await readBook();
+      seedCoa(book);
+      if (!Array.isArray(book.coaLibrary)) book.coaLibrary = [];
+      if (body.action === "coa-list") {
+        book.coaSeeded = true;
+        await writeBook(book);
+        res.status(200).json({ items: book.coaLibrary.map(publicCoa) });
+        return;
+      }
+      if (body.action === "coa-save") {
+        const name = String(body.name || "").trim().slice(0, 80);
+        if (!name) throw new Error("Name the product.");
+        const wanted = slugify(body.slug || name);
+        if (!wanted) throw new Error("The short link needs a name.");
+        const existing = body.currentSlug ? findCoa(book, body.currentSlug) : null;
+        if (!existing) {
+          if (book.coaLibrary.some((row) => row.slug === wanted)) throw new Error("That short link is already used.");
+          const batchId = String(body.batch || "").trim().slice(0, 40);
+          const purity = String(body.purity || "").trim().slice(0, 20);
+          const tested = String(body.tested || "").trim().slice(0, 40);
+          if (!batchId || !purity || !tested) throw new Error("Add a batch, purity, and date.");
+          const stored = await storeCoaFile(wanted, batchId, body.data, body.fileName);
+          book.coaLibrary.unshift({
+            slug: wanted,
+            aliases: [],
+            name,
+            sku: String(body.sku || "").trim().slice(0, 40),
+            batches: [{
+              id: batchId,
+              purity,
+              tested,
+              current: true,
+              file: stored.path,
+              mime: stored.mime,
+              fileName: stored.fileName,
+              addedAt: Date.now(),
+              replaced: [],
+            }],
+          });
+        } else {
+          if (wanted !== existing.slug && book.coaLibrary.some((row) => row.slug === wanted)) {
+            throw new Error("That short link is already used.");
+          }
+          if (wanted !== existing.slug) {
+            existing.aliases = [...new Set([...(existing.aliases || []), existing.slug])];
+            existing.slug = wanted;
+          }
+          existing.name = name;
+          if (body.sku !== undefined) existing.sku = String(body.sku || "").trim().slice(0, 40);
+        }
+        book.coaSeeded = true;
+        await writeBook(book);
+        res.status(200).json({ items: book.coaLibrary.map(publicCoa) });
+        return;
+      }
+      const item = findCoa(book, body.slug);
+      if (!item) throw new Error("That product is not in the library.");
+      if (body.action === "coa-batch") {
+        const batchId = String(body.batch || "").trim().slice(0, 40);
+        const purity = String(body.purity || "").trim().slice(0, 20);
+        const tested = String(body.tested || "").trim().slice(0, 40);
+        if (!batchId || !purity || !tested) throw new Error("Add a batch, purity, and date.");
+        if ((item.batches || []).some((row) => row.id === batchId)) throw new Error("That batch is already on this product.");
+        const stored = await storeCoaFile(item.slug, batchId, body.data, body.fileName);
+        for (const row of item.batches || []) row.current = false;
+        item.batches = [{
+          id: batchId,
+          purity,
+          tested,
+          current: true,
+          file: stored.path,
+          mime: stored.mime,
+          fileName: stored.fileName,
+          addedAt: Date.now(),
+          replaced: [],
+        }, ...(item.batches || [])];
+      } else {
+        const current = (item.batches || []).find((row) => row.current) || item.batches?.[0];
+        if (!current) throw new Error("Add a batch before replacing the file.");
+        const stored = await storeCoaFile(item.slug, current.id, body.data, body.fileName);
+        current.replaced = [...(current.replaced || []), { file: current.file, at: Date.now() }].slice(-8);
+        current.file = stored.path;
+        current.mime = stored.mime;
+        current.fileName = stored.fileName;
+        current.addedAt = Date.now();
+      }
+      book.coaSeeded = true;
+      await writeBook(book);
+      res.status(200).json({ items: book.coaLibrary.map(publicCoa) });
       return;
     }
     res.status(400).json({ error: "Unknown request." });
