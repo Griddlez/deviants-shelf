@@ -28,6 +28,32 @@ const TONE = {
   kit: "bench",
 };
 
+/* Card schools. Same plate geometry, different interior.
+   emberforge  Metabolic — basalt, ember, brass
+   verdant     Healing & Recovery — moss, emerald, silver leaf
+   astral      Cognitive — indigo, violet, gold
+   rosefire    Libido — velvet, magenta, rose gold
+   ironwright  Solvents & Accessories — steel, cool white */
+const THEME = {
+  r3: "emberforge",
+  amq: "emberforge",
+  mot: "emberforge",
+  nad: "emberforge",
+  bpc: "verdant",
+  tb5: "verdant",
+  ghk: "verdant",
+  kpv: "verdant",
+  ara: "verdant",
+  epi: "verdant",
+  cjc: "verdant",
+  sem: "astral",
+  sel: "astral",
+  pin: "astral",
+  pt: "rosefire",
+  bac: "ironwright",
+  kit: "ironwright",
+};
+
 const FEATURED = ["r3", "bpc", "cjc", "tb5", "pt", "bac"];
 
 function money(n) {
@@ -98,6 +124,7 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
   const title = product.charge || product.name;
   const compound = product.charge && product.charge !== product.name ? product.name : "";
   const purity = purityLine(lot);
+  const theme = THEME[product.id] || "emberforge";
 
   function choose(next) {
     setLocalSku(next);
@@ -105,9 +132,9 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
   }
 
   return (
-    <article className="product-card">
-      {/* Gold frame, leather header, candlelit window, parchment, and the Add Potion plaque. */}
-      <img className="product-card-plate" src="/art/card/base.jpg" alt="" />
+    <article className={`product-card theme-${theme}`}>
+      {/* Same portrait plate for every school. Only the interior color, glow, metal, and texture change. */}
+      <img className="product-card-plate" src={`/art/card/theme-${theme}.jpg`} alt="" />
       <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
       {/* Vial slot. Leave VIAL_PHOTOS empty and the painted bottle stays. A photo covers that window. */}
       <div className={src ? "product-card-vial has-photo" : "product-card-vial"}>
