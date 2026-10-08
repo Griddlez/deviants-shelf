@@ -1,10 +1,10 @@
 // Five schools. Compound names stay on the vials. Flavor text is the school line.
 export const ROW_ORDER = [
-  "Emberforge — Metabolic School",
-  "Verdant Restoration — Healing & Recovery School",
-  "Astral Insight — Cognitive School",
-  "Rosefire Enchantment — Libido School",
-  "Ironwright Utility — Solvents & Accessories School",
+  "Emberforge",
+  "Verdant Restoration",
+  "Astral Insight",
+  "Rosefire Enchantment",
+  "Ironwright Utility",
 ];
 
 const EMBER = "Volcanic alchemy. Ember-charged vitality. The furnace within.";
