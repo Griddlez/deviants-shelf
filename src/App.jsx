@@ -4,6 +4,7 @@ import { FLAVOR, ROW_ORDER } from "./flavor.js";
 import * as store from "./store.js";
 import { notify } from "./mail.js";
 import { CoaLibrary, PublicCoa } from "./coa.jsx";
+import { LabelMaker } from "./label.jsx";
 
 
 function usualFrom(orders) {
@@ -220,6 +221,9 @@ export default function App() {
         {session.admin && (
           <button className={tab === "coa" ? "on" : ""} onClick={() => setTab("coa")}>COA Library</button>
         )}
+        {session.admin && (
+          <button className={tab === "labels" ? "on" : ""} onClick={() => setTab("labels")}>Label Generator</button>
+        )}
       </nav>
 
       {tab === "catalog" && (
@@ -275,6 +279,7 @@ export default function App() {
         )}
 
       {tab === "coa" && session.admin && <CoaLibrary session={session} />}
+      {tab === "labels" && session.admin && <LabelMaker session={session} />}
 
       {(tab === "order" || flow) && tab === "order" && (
         <PlaceOrder

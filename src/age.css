@@ -114,3 +114,6 @@
 .coa-link { margin: 0; color: #e4c27a; text-align: left; }
 .coa-history { list-style: none; padding: 0; }
 .coa-history li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid rgba(228, 194, 122, 0.25); }
+.label-desk { display: grid; gap: 8px; max-width: 720px; }
+.label-proof { width: 100%; height: auto; background: #111; border-radius: 8px; }
+
