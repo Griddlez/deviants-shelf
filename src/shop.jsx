@@ -188,7 +188,7 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
   return (
     <article className={`product-card theme-${theme}`}>
       {/* Same portrait plate for every school. Only the interior color, glow, metal, and texture change. */}
-      <img className="product-card-plate" src={`/art/card/plate-${theme}.jpg`} alt="" decoding="async" />
+      <img className="product-card-plate" src={theme === "emberforge" ? "/art/card/plate-emberforge-2.jpg" : `/art/card/plate-${theme}.jpg`} alt="" decoding="async" />
       <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
       {photoSrc ? (
         <div className="product-card-vial has-photo">
