@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import * as store from "./store.js";
 
-const W = 591;
+const W = 472;
 const H = 236;
 const MM = 300 / 25.4;
 
@@ -74,7 +74,7 @@ async function paint(canvas, { name, purity, batch, size, slug, proof }) {
   const rightText = qrX - gap;
   const column = rightText - left;
 
-  const nameSize = fit(ctx, name || "Product", { size: 30, min: 16, style: "700 SIZEpx Cinzel, serif" }, column);
+  const nameSize = fit(ctx, name || "Product", { size: 26, min: 14, style: "700 SIZEpx Cinzel, serif" }, column);
   ctx.font = `700 ${nameSize}px Cinzel, serif`;
   ctx.textAlign = "center";
   ctx.fillText(name || "Product", (left + rightText) / 2, qrY + 2);
@@ -161,7 +161,7 @@ export function LabelMaker({ session }) {
   return (
     <section className="wrap">
       <h2>Label Generator</h2>
-      <p className="muted">50×20 mm black plate for Niimbot M2 silver holographic tape, 300 dpi. The rainbow is the tape. Print the downloaded file, not a screenshot of this preview.</p>
+      <p className="muted">40×20 mm black plate for Niimbot M2 silver holographic tape, 300 dpi. The rainbow is the tape. Print the downloaded file, not a screenshot of this preview.</p>
       {err && <p className="err">{err}</p>}
       <div className="panel label-desk">
         <label>Product</label>
