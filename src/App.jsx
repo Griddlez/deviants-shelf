@@ -97,6 +97,7 @@ export default function App() {
   const [stock, setStock] = useState({});
   const [pay, setPay] = useState({});
   const [flow, setFlow] = useState(null);
+  const [labelSlug, setLabelSlug] = useState("");
   const [flash, setFlash] = useState(null);
 
   useEffect(() => {
@@ -234,6 +235,8 @@ export default function App() {
           stock={stock}
           onBasket={() => { setTab("order"); setFlow({ step: "ship" }); }}
           onDownload={() => store.downloadCatalog(session)}
+          admin={session.admin}
+          onPrintLabel={(slug) => { setLabelSlug(slug); setTab("labels"); }}
           onAdd={(line) => {
             const left = stock[line.sku];
             const have = cart.find((item) => item.sku === line.sku)?.qty || 0;
@@ -278,8 +281,10 @@ export default function App() {
           <AdminDesk session={session} stock={stock} pay={pay} onStock={setStock} onPay={setPay} />
         )}
 
-      {tab === "coa" && session.admin && <CoaLibrary session={session} />}
-      {tab === "labels" && session.admin && <LabelMaker session={session} />}
+      {tab === "coa" && session.admin && (
+        <CoaLibrary session={session} onPrintLabel={(slug) => { setLabelSlug(slug); setTab("labels"); }} />
+      )}
+      {tab === "labels" && session.admin && <LabelMaker session={session} presetSlug={labelSlug} />}
 
       {(tab === "order" || flow) && tab === "order" && (
         <PlaceOrder
@@ -508,17 +513,22 @@ function Gate({ onIn }) {
   );
 }
 
-function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock, onDownload }) {
+function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock, onDownload, admin, onPrintLabel }) {
   const [q, setQ] = useState("");
   const [coa, setCoa] = useState(null);
   const [note, setNote] = useState("");
   const [library, setLibrary] = useState({});
   useEffect(() => {
-    store.coaIndex().then((rows) => {
+    let stop = false;
+    const pull = () => store.coaIndex().then((rows) => {
+      if (stop) return;
       const map = {};
       for (const row of rows) if (row.sku) map[row.sku] = row;
       setLibrary(map);
     }).catch(() => {});
+    pull();
+    const timer = setInterval(pull, 5000);
+    return () => { stop = true; clearInterval(timer); };
   }, []);
   const list = PRODUCTS.filter((p) => {
     const hay = `${p.code} ${p.charge || ""} ${p.name} ${p.sizes.map((s) => s.sku).join(" ")}`.toLowerCase();
@@ -583,33 +593,53 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock, onDownload }
           {openId === p.id && (
             <div className="acc-b">
               <p className="blurb">{p.line}</p>
-              {p.sizes.map((s) => (
+              {p.sizes.map((s) => {
+                const live = library[s.sku];
+                const lot = live?.current || (s.coa?.batch ? {
+                  id: s.coa.batch,
+                  purity: s.coa.purity,
+                  tested: s.coa.tested,
+                  href: s.coa.file,
+                } : null);
+                return (
                 <div className="row" key={s.sku}>
+                  <div>
                   <div className="sku-line">
                     <b className="sku">{s.sku}</b> <span className="mg">{s.mg}</span>
-                    {(s.coa?.file || library[s.sku]?.current) && (
+                    {lot && <span className="coa-badge">COA Verified · {lot.purity} · {lot.tested}</span>}
+                    {lot && (
                       <button
                         className="btn slim coa"
                         onClick={() => {
-                          const live = library[s.sku];
                           setCoa({
                             ...s,
                             name: p.name,
                             charge: p.charge,
-                            coa: live?.current ? {
-                              batch: live.current.id,
-                              tested: live.current.tested,
-                              purity: live.current.purity,
-                              file: live.current.href,
+                            coa: {
+                              batch: lot.id,
+                              tested: lot.tested,
+                              purity: lot.purity,
+                              file: lot.href,
                               lab: s.coa?.lab,
-                              page: live.shortUrl,
-                            } : s.coa,
+                              page: live?.shortUrl || "",
+                              verified: true,
+                            },
                           });
                         }}
                       >
                         COA
                       </button>
                     )}
+                    {admin && live?.slug && (
+                      <button className="btn slim" type="button" onClick={() => onPrintLabel(live.slug)}>Print Label</button>
+                    )}
+                  </div>
+                  {lot && (
+                    <p className="lot-line">
+                      Batch {lot.id}
+                      {live?.shortUrl && <> · <a href={live.shortUrl}>Latest COA</a></>}
+                    </p>
+                  )}
                   </div>
                   <div className="row-r">
                     <span>{money(s.vial)}</span>
@@ -632,7 +662,8 @@ function Catalog({ openId, setOpenId, cart, onAdd, onBasket, stock, onDownload }
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </article>
@@ -659,9 +690,10 @@ function CoaModal({ item, onClose }) {
         {c && (c.file || c.lab || c.batch || c.tested || c.purity) ? (
           <>
             <ul className="coa-meta">
+              {c.verified && <li>COA Verified</li>}
               {c.lab && <li>Lab · {c.lab}</li>}
               {c.batch && <li>Batch · {c.batch}</li>}
-              {c.tested && <li>Tested · {c.tested}</li>}
+              {c.tested && <li>Date of analysis · {c.tested}</li>}
               {c.purity && <li>Purity · {c.purity}</li>}
             </ul>
             {file && local && image && <img className="coa-img" src={file} alt={`COA ${item.sku}`} />}
@@ -672,7 +704,7 @@ function CoaModal({ item, onClose }) {
               <a className="btn" href={file} target="_blank" rel="noreferrer">Open certificate</a>
             )}
             {c.page && (
-              <a className="btn" href={c.page} target="_blank" rel="noreferrer">Public page</a>
+              <a className="btn" href={c.page} target="_blank" rel="noreferrer">Latest COA</a>
             )}
           </>
         ) : (

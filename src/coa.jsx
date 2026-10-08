@@ -36,7 +36,7 @@ export function PublicCoa({ slug }) {
       {item && (
         <article className="panel">
           <h2>{item.name}</h2>
-          {item.verified && <p className="coa-flag">COA verified</p>}
+          {item.verified && <p className="coa-flag">COA Verified · {item.current?.purity} · {item.current?.tested}</p>}
           {current ? (
             <ul className="coa-meta">
               <li>Batch · {current.id}</li>
@@ -69,7 +69,7 @@ export function PublicCoa({ slug }) {
   );
 }
 
-export function CoaLibrary({ session }) {
+export function CoaLibrary({ session, onPrintLabel }) {
   const [items, setItems] = useState([]);
   const [mode, setMode] = useState("");
   const [slug, setSlug] = useState("");
@@ -270,7 +270,9 @@ export function CoaLibrary({ session }) {
           <article className="panel coa-row" key={item.slug}>
             <div>
               <h3>{item.name}</h3>
-              <p className={item.verified ? "coa-flag" : "tiny"}>{item.verified ? "COA verified" : "No certificate yet"}</p>
+              <p className={item.verified ? "coa-flag" : "tiny"}>
+                {item.verified ? `COA Verified · ${item.current?.purity || ""} · ${item.current?.tested || ""}` : "No certificate yet"}
+              </p>
               <ul className="coa-meta">
                 <li>Batch · {item.current?.id || "—"}</li>
                 <li>Purity · {item.current?.purity || "—"}</li>
@@ -281,6 +283,7 @@ export function CoaLibrary({ session }) {
               </button>
             </div>
             <div className="coa-actions">
+              <button className="btn slim" type="button" onClick={() => onPrintLabel?.(item.slug)} disabled={!item.current}>Print Label</button>
               <button className="btn slim" type="button" onClick={() => openBatch(item)}>Add New Batch</button>
               <button className="btn slim" type="button" onClick={() => openReplace(item)} disabled={!item.current}>Replace COA</button>
               <button className="btn slim" type="button" onClick={() => openEdit(item)}>Edit Product Info</button>

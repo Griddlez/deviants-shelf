@@ -124,7 +124,7 @@ function loadImage(src) {
   });
 }
 
-export function LabelMaker({ session }) {
+export function LabelMaker({ session, presetSlug }) {
   const proofRef = useRef(null);
   const [items, setItems] = useState([]);
   const [slug, setSlug] = useState("");
@@ -136,11 +136,15 @@ export function LabelMaker({ session }) {
   const [err, setErr] = useState("");
 
   useEffect(() => {
+    let stop = false;
     store.coaList(session.deskPin).then((rows) => {
+      if (stop) return;
       setItems(rows);
-      if (rows[0]) apply(rows[0]);
+      const pick = rows.find((row) => row.slug === presetSlug) || rows[0];
+      if (pick) apply(pick);
     }).catch((error) => setErr(error.message));
-  }, [session]);
+    return () => { stop = true; };
+  }, [session, presetSlug]);
 
   function apply(item) {
     const parts = splitSize(item.name);
