@@ -41,6 +41,9 @@ async function paint(canvas, { name, purity, batch, size, slug, proof }) {
   if (proof) {
     const silver = await loadImage("/art/label-silver.jpg");
     ctx.drawImage(silver, 0, 0, W, H);
+  } else {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, W, H);
   }
   const frame = await loadImage("/art/label-frame.png");
   const plate = document.createElement("canvas");
