@@ -29,9 +29,9 @@ const TONE = {
 };
 
 /* Card schools. Same plate geometry, different interior.
-   emberforge  Metabolic — basalt, ember, brass
+   emberforge  Metabolic — basalt, ember, brass. Includes CJC.
    verdant     Healing & Recovery — moss, emerald, silver leaf
-   astral      Cognitive — indigo, violet, gold
+   astral      Cognitive — indigo, violet, gold. Includes Epithalon.
    rosefire    Libido — velvet, magenta, rose gold
    ironwright  Solvents & Accessories — steel, cool white */
 const THEME = {
@@ -39,16 +39,16 @@ const THEME = {
   amq: "emberforge",
   mot: "emberforge",
   nad: "emberforge",
+  cjc: "emberforge",
   bpc: "verdant",
   tb5: "verdant",
   ghk: "verdant",
   kpv: "verdant",
   ara: "verdant",
-  epi: "verdant",
-  cjc: "verdant",
   sem: "astral",
   sel: "astral",
   pin: "astral",
+  epi: "astral",
   pt: "rosefire",
   bac: "ironwright",
   kit: "ironwright",
