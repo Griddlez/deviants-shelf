@@ -140,7 +140,6 @@
   pointer-events: none;
   user-select: none;
 }
-/* School scene, only the window behind the vial. The plate frame stays on top of the fade. */
 .product-card-scene {
   position: absolute;
   left: 14%;
@@ -176,7 +175,6 @@
   pointer-events: none;
   z-index: 4;
 }
-/* Trajan gold on the leather header. */
 .product-card-title {
   top: 9.6%;
   font-family: Cinzel, serif;
@@ -190,7 +188,6 @@
   color: transparent;
   filter: drop-shadow(0 0.35cqw 0 #3a2208);
 }
-/* Smaller cream line under the flavor name. */
 .product-card-compound {
   top: 17.1%;
   font-family: Cinzel, serif;
@@ -201,7 +198,6 @@
   text-shadow: 0 1px 0 #1a0e06;
   white-space: nowrap;
 }
-/* Purity line, with the dotted leaders from the plate. */
 .product-card-purity {
   top: 63.05%;
   display: flex;
@@ -220,7 +216,6 @@
   border-bottom: 0.45cqw dotted rgba(62, 36, 14, 0.7);
   transform: translateY(-0.15cqw);
 }
-/* Batch / price rows sit between the ruled lines. */
 .product-card-rows {
   position: absolute;
   left: 12%;
@@ -248,11 +243,10 @@
 }
 .product-card-rows button.on { color: #140a04; }
 .product-card-rows button.on span::before {
-  content: "\u25c6 ";
+  content: "◆ ";
   color: #7a5420;
   font-size: 0.72em;
 }
-/* Wooden plaque. The plate already says Add Potion, so the label stays invisible until the vial is gone. */
 .product-card-add {
   position: absolute;
   left: 20%;
@@ -276,7 +270,6 @@
   background: rgba(12, 7, 3, 0.72);
   cursor: not-allowed;
 }
-/* Italic caption under the plaque. A parchment band covers the filigree so the line stays readable. */
 .product-card-flavor {
   top: 88.6%;
   left: 11%;
@@ -305,7 +298,6 @@
   color: #121418;
   background: linear-gradient(90deg, rgba(152, 160, 168, 0) 0%, rgba(152, 160, 168, 0.97) 7%, rgba(152, 160, 168, 0.97) 93%, rgba(152, 160, 168, 0) 100%);
 }
-/* Shiny shield, same pixels as the template, lower right of the window. */
 .coa-shield {
   position: absolute;
   left: 68.16%;
@@ -316,7 +308,6 @@
   pointer-events: none;
   filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
 }
-/* Empty until a real photo is dropped in VIAL_PHOTOS. Then it covers the painted bottle. */
 .product-card-vial {
   position: absolute;
   left: 10%;
