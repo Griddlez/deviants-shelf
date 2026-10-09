@@ -58,15 +58,22 @@ const FEATURED = ["r3", "bpc", "cjc", "tb5", "pt", "bac"];
 
 /* Tarot cards for the hero window. Same box the vial outline used to sit in. */
 const HERO_CARDS = [
-  { id: "r3", src: "/art/tarot/triad.jpg", label: "Retatrutide, The Triad", tone: "ember" },
-  { id: "amq", src: "/art/tarot/unbound.jpg", label: "5-Amino-1MQ, The Unbound", tone: "ember" },
-  { id: "mot", src: "/art/tarot/engine.jpg", label: "MOTS-c, The Engine", tone: "ember" },
-  { id: "nad", src: "/art/tarot/eternal.jpg", label: "NAD+, The Eternal Flame", tone: "ember" },
-  { id: "bpc", src: "/art/tarot/mender.jpg", label: "BPC-157, The Mender", tone: "mend" },
-  { id: "tb5", src: "/art/tarot/swift.jpg", label: "TB-500, The Swift", tone: "mend" },
-  { id: "ghk", src: "/art/tarot/phoenix.jpg", label: "GHK-Cu, The Azure Phoenix", tone: "mend" },
-  { id: "sem", src: "/art/tarot/weaver.jpg", label: "Semax, The Weaver", tone: "mind" },
-  { id: "pt", src: "/art/tarot/spark.jpg", label: "PT-141, The Spark", tone: "flame" },
+  { id: "r3", src: "/art/tarot/embers-fast.jpg", label: "Ember's Fast", tone: "ember" },
+  { id: "amq", src: "/art/tarot/dantes-key.jpg", label: "Dante's Key", tone: "ember" },
+  { id: "mot", src: "/art/tarot/furnace-runner.jpg", label: "Furnace Runner", tone: "ember" },
+  { id: "nad", src: "/art/tarot/eternal-spark.jpg", label: "Eternal Spark", tone: "ember" },
+  { id: "cjc", src: "/art/tarot/knights-draft.jpg", label: "Knight's Draft", tone: "ember" },
+  { id: "bpc", src: "/art/tarot/menders-thread.jpg", label: "Mender's Thread", tone: "mend" },
+  { id: "tb5", src: "/art/tarot/brooks-renewal.jpg", label: "Brook's Renewal", tone: "mend" },
+  { id: "ara", src: "/art/tarot/pain-eaters-blessing.jpg", label: "Pain-Eater's Blessing", tone: "mend" },
+  { id: "kpv", src: "/art/tarot/norns-salve.jpg", label: "Norn's Salve", tone: "mend" },
+  { id: "ghk", src: "/art/tarot/copperleaf-dew.jpg", label: "Copperleaf Dew", tone: "mend" },
+  { id: "pin", src: "/art/tarot/dreamcurrent.jpg", label: "Dreamcurrent", tone: "mind" },
+  { id: "epi", src: "/art/tarot/twilight-weave.jpg", label: "Twilight Weave", tone: "mind" },
+  { id: "sel", src: "/art/tarot/serenity-bell.jpg", label: "Serenity Bell", tone: "mind" },
+  { id: "sem", src: "/art/tarot/dawn-sight.jpg", label: "Dawn Sight", tone: "mind" },
+  { id: "pt", src: "/art/tarot/embers-kiss.jpg", label: "Ember's Kiss", tone: "flame" },
+  { id: "kit", src: "/art/tarot/initiates-tools.jpg", label: "The Initiate's Tools", tone: "bench" },
 ];
 
 function HeroTarot({ onOpen }) {
