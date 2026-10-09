@@ -10,7 +10,7 @@ export const CONFIG = {
     chime: "$Brandon-Melton-44",
   },
   shipping: [
-    { id: "usps", label: "USPS", detail: "3–5 days", price: 12 },
+    { id: "usps", label: "USPS", detail: "3\u20135 days", price: 12 },
     { id: "fedex2", label: "FedEx 2 Day", detail: "2 Day Air", price: 20 },
     { id: "overnight", label: "FedEx Overnight", detail: "Overnight", price: 60 },
   ],
@@ -92,7 +92,7 @@ export const PRODUCTS = [
     code: "TB5",
     charge: "Wanderer's Salve",
     name: "TB-500",
-    blurb: "Thymosin β4 fragment.",
+    blurb: "Thymosin \u03b24 fragment.",
     sizes: [{ sku: "TB5-5", mg: "5 mg", vial: 45 }],
   },
   {
@@ -108,7 +108,7 @@ export const PRODUCTS = [
     code: "KPV",
     charge: "Cool Salve",
     name: "KPV",
-    blurb: "α-MSH fragment.",
+    blurb: "\u03b1-MSH fragment.",
     sizes: [{ sku: "KPV-10", mg: "10 mg", vial: 50, coa: { lab: "BTL Testing", batch: "KPV010-012604A", tested: "Apr 28, 2026", purity: "99.8%", file: "/coa/KPV-10.pdf" } }],
   },
   {
@@ -157,7 +157,7 @@ export const PRODUCTS = [
     charge: "Brightwire",
     name: "Semax",
     blurb: "ACTH fragment analog.",
-    sizes: [{ sku: "SEM-10", mg: "10 mg", vial: 40, coa: { lab: "BTL Testing", batch: "SMX010-012604A", tested: "Apr 28, 2026", purity: "99.8%", file: "/coa/SEM-10.pdf" } }],
+    sizes: [{ sku: "SEM-5", mg: "5 mg", vial: 40, coa: { lab: "BTL Testing", batch: "SMX010-012604A", tested: "Apr 28, 2026", purity: "99.8%", file: "/coa/SEM-10.pdf" } }],
   },
   {
     id: "nad",
@@ -191,7 +191,7 @@ export const PRODUCTS = [
     code: "BAC",
     charge: "Null Spring",
     name: "Bacteriostatic water",
-    blurb: "Null Spring — reconstitution water.",
+    blurb: "Null Spring \u2014 reconstitution water.",
     sizes: [{ sku: "BAC-10", mg: "10 ml", vial: 7 }],
   },
 
@@ -199,8 +199,8 @@ export const PRODUCTS = [
     id: "kit",
     code: "KIT",
     charge: "Beginners Alchemy Kit",
-    name: "BAC water · 10 syringes · 20 wipes",
-    blurb: "Bac water · 10 syringes · 20 wipes.",
+    name: "BAC water \u00b7 10 syringes \u00b7 20 wipes",
+    blurb: "Bac water \u00b7 10 syringes \u00b7 20 wipes.",
     sizes: [{ sku: "KIT-1", mg: "kit", vial: 15 }],
   },
 ];
