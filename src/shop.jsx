@@ -2,10 +2,6 @@ import { useEffect, useState } from "react";
 import { PRODUCTS } from "./data.js";
 import { FLAVOR, ROW_ORDER } from "./flavor.js";
 
-/* Drop a photo later by adding a line here, for example:
-   r3: "/art/vials/r3.jpg",
-   "r3-bottle": "/art/vials/r3-bottle.jpg",
-   The file itself goes in public/art/vials/. */
 export const VIAL_PHOTOS = {};
 
 const TONE = {
@@ -28,12 +24,6 @@ const TONE = {
   kit: "bench",
 };
 
-/* Card schools. Same plate geometry, different interior.
-   emberforge  Metabolic — basalt, ember, brass. Includes CJC.
-   verdant     Healing & Recovery — moss, emerald, silver leaf
-   astral      Cognitive — indigo, violet, gold. Includes Epithalon.
-   rosefire    Libido — velvet, magenta, rose gold
-   ironwright  Solvents & Accessories — steel, cool white */
 const THEME = {
   r3: "emberforge",
   amq: "emberforge",
@@ -56,7 +46,6 @@ const THEME = {
 
 const FEATURED = ["r3", "bpc", "cjc", "tb5", "pt", "bac"];
 
-/* Tarot cards for the hero window. Same box the vial outline used to sit in. */
 const HERO_CARDS = [
   { id: "r3", src: "/art/tarot/triad.jpg", label: "Retatrutide, The Triad", tone: "ember" },
   { id: "amq", src: "/art/tarot/unbound.jpg", label: "5-Amino-1MQ, The Unbound", tone: "ember" },
@@ -81,28 +70,14 @@ function HeroTarot({ onOpen }) {
   }, [paused]);
 
   const tone = HERO_CARDS[index].tone;
-
   const count = HERO_CARDS.length;
   const prev = (index - 1 + count) % count;
   const next = (index + 1) % count;
 
   return (
-    <div
-      className={`hero-tarot tone-${tone}`}
-      aria-roledescription="carousel"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
+    <div className={`hero-tarot tone-${tone}`} aria-roledescription="carousel" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
       {HERO_CARDS.map((card, n) => (
-        <button
-          key={card.id}
-          type="button"
-          className={n === index ? "on" : ""}
-          aria-label={card.label}
-          aria-hidden={n === index ? undefined : true}
-          tabIndex={n === index ? 0 : -1}
-          onClick={() => onOpen(card.id)}
-        >
+        <button key={card.id} type="button" className={n === index ? "on" : ""} aria-label={card.label} aria-hidden={n === index ? undefined : true} tabIndex={n === index ? 0 : -1} onClick={() => onOpen(card.id)}>
           {(n === index || n === prev || n === next) && <img src={card.src} alt="" decoding="async" />}
         </button>
       ))}
@@ -110,9 +85,7 @@ function HeroTarot({ onOpen }) {
   );
 }
 
-function money(n) {
-  return `$${n}`;
-}
+function money(n) { return `$${n}`; }
 
 function enrich(product) {
   const flavor = FLAVOR[product.id] || { row: "The shelf", note: "", line: product.blurb };
@@ -161,7 +134,6 @@ function purityLine(lot) {
   return `${String(lot.purity).replace(/\s*purity\s*/i, "")} Purity (HPLC Verified)`;
 }
 
-/* The shield is the real ornament cut from the card, not a redrawn icon. */
 export function CoaBadge({ show }) {
   if (!show) return null;
   return <img className="coa-shield" src="/art/card/badge.png" alt="COA Verified" />;
@@ -187,37 +159,22 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
 
   return (
     <article className={`product-card theme-${theme}`}>
-      {/* Same portrait plate for every school. Only the interior color, glow, metal, and texture change. */}
       <img className="product-card-plate" src={theme === "astral" ? "/art/card/plate3-astral.jpg" : `/art/card/plate2-${theme}.jpg`} alt="" decoding="async" />
       <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
-      {photoSrc ? (
-        <div className="product-card-vial has-photo">
-          <img src={photoSrc} alt="" />
-        </div>
-      ) : null}
+      {photoSrc ? (<div className="product-card-vial has-photo"><img src={photoSrc} alt="" /></div>) : null}
       <CoaBadge show={!!lot} />
       <p className="product-card-title" style={{ fontSize: titleSize(title) }}>{title}</p>
       {compound ? <p className="product-card-compound" style={{ fontSize: compound.length > 24 ? "2.45cqw" : compound.length > 16 ? "2.85cqw" : "3.3cqw" }}>{compound}</p> : null}
-      {purity ? <p className="product-card-purity">{purity}</p> : null}
+      {purity ? <p className="product-card-purity"><span>{purity}</span></p> : null}
       <div className={product.sizes.length < 2 ? "product-card-rows one" : "product-card-rows"}>
         {product.sizes.map((row) => (
-          <button
-            key={row.sku}
-            type="button"
-            className={row.sku === sku ? "on" : ""}
-            onClick={() => choose(row.sku)}
-          >
+          <button key={row.sku} type="button" className={row.sku === sku ? "on" : ""} onClick={() => choose(row.sku)}>
             <span>Batch: {row.sku}</span>
             <b>{money(row.vial)}</b>
           </button>
         ))}
       </div>
-      <button
-        className="product-card-add"
-        type="button"
-        disabled={soldOut}
-        onClick={() => onAdd(size, product)}
-      >
+      <button className="product-card-add" type="button" disabled={soldOut} onClick={() => onAdd(size, product)}>
         {soldOut ? "None on the shelf" : "Add Potion"}
       </button>
       <p className="product-card-flavor">{product.line}</p>
@@ -240,16 +197,7 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
     <section className="apothecary">
       <button className="back-link" type="button" onClick={onBack}>← Back to the shelf</button>
       <div className="product-top">
-        <ProductCard
-          product={product}
-          library={library}
-          stock={stock}
-          onOpen={() => {}}
-          onAdd={onAdd}
-          photo={VIAL_PHOTOS[product.id]}
-          sku={sku}
-          onSku={setSku}
-        />
+        <ProductCard product={product} library={library} stock={stock} onOpen={() => {}} onAdd={onAdd} photo={VIAL_PHOTOS[product.id]} sku={sku} onSku={setSku} />
         <div className="product-copy">
           <p className="potion-kicker">{product.row}</p>
           <h2>{product.charge || product.name}</h2>
@@ -260,7 +208,6 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
           )}
         </div>
       </div>
-
       <div className="rune-tabs">
         {["description", "ingredients", "coa", "usage"].map((key) => (
           <button key={key} type="button" className={tab === key ? "on" : ""} onClick={() => setTab(key)}>
@@ -284,7 +231,6 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
         )}
         {tab === "usage" && <p>Research use only. Not for human consumption. Handle, store, and log it the way your protocol requires.</p>}
       </div>
-
       <h3 className="band-title">Also on this row</h3>
       <div className="potion-grid">
         {others.map((item) => (
@@ -319,36 +265,18 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
   groups.sort((a, b) => ROW_ORDER.indexOf(a.row) - ROW_ORDER.indexOf(b.row));
 
   function add(size, product) {
-    onAdd({
-      sku: size.sku,
-      name: product.name,
-      charge: product.charge || product.name,
-      mg: size.mg,
-      price: size.vial,
-      qty: 1,
-    });
+    onAdd({ sku: size.sku, name: product.name, charge: product.charge || product.name, mg: size.mg, price: size.vial, qty: 1 });
   }
 
   if (open) {
     const others = shelf.filter((item) => item.row === open.row && item.id !== open.id).slice(0, 3);
     return (
-      <ProductView
-        product={open}
-        library={library}
-        stock={stock}
-        onAdd={add}
-        onBack={() => setOpenId("")}
-        onOpen={setOpenId}
-        admin={admin}
-        onPrintLabel={onPrintLabel}
-        others={others}
-      />
+      <ProductView product={open} library={library} stock={stock} onAdd={add} onBack={() => setOpenId("")} onOpen={setOpenId} admin={admin} onPrintLabel={onPrintLabel} others={others} />
     );
   }
 
   return (
     <section className="apothecary">
-      {/* Hero */}
       <div className="hero-frame">
         <div className="hero-copy">
           <p className="eyebrow">The Deviant's Shelf</p>
@@ -363,49 +291,30 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
           <HeroTarot onOpen={setOpenId} />
         </div>
       </div>
-
-      {/* Trust */}
       <ul className="trust-row">
         <li>COA verified</li>
         <li>Ships from the US within 24 hours</li>
         <li>Orders guaranteed</li>
         <li>Research use only</li>
       </ul>
-
-      {/* Featured */}
       <h3 id="featured" className="band-title">Featured on the shelf</h3>
       <div className="potion-grid">
         {featured.map((item) => (
           <ProductCard key={item.id} product={item} library={library} stock={stock} onOpen={setOpenId} onAdd={add} />
         ))}
       </div>
-
-      {/* Lore */}
       <div className="parchment-block lore">
         <h3>The shelf</h3>
         <p>A private apothecary for people who already know what they are looking for. Each vial keeps the name of the compound, the batch, and the certificate that belongs to it.</p>
       </div>
-
-      {/* Full shelf */}
       <div className="shelf-tools" id="shelf">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the shelf" />
         <button className="potion-add alt" type="button" onClick={() => cartCount && onBasket()}>
           {cartCount === 0 ? "Basket is empty" : cartCount === 1 ? "1 in the basket" : `${cartCount} in the basket`}
         </button>
-        <button
-          className="text-link"
-          type="button"
-          onClick={async () => {
-            try {
-              setNote("");
-              await onDownload();
-            } catch (error) {
-              setNote(error.message);
-            }
-          }}
-        >
-          Download the catalog
-        </button>
+        <button className="text-link" type="button" onClick={async () => {
+          try { setNote(""); await onDownload(); } catch (error) { setNote(error.message); }
+        }}>Download the catalog</button>
       </div>
       {note && <p className="err">{note}</p>}
       {groups.map((group) => (
@@ -419,7 +328,6 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
           </div>
         </div>
       ))}
-
       <footer className="stone-foot">
         <a href="#featured">Peptides</a>
         <a href="#shelf">The shelf</a>
