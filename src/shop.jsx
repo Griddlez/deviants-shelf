@@ -73,6 +73,7 @@ const HERO_CARDS = [
   { id: "sel", src: "/art/tarot/serenity-bell.jpg", label: "Serenity Bell", tone: "mind" },
   { id: "sem", src: "/art/tarot/dawn-sight.jpg", label: "Dawn Sight", tone: "mind" },
   { id: "pt", src: "/art/tarot/embers-kiss.jpg", label: "Ember's Kiss", tone: "flame" },
+  { id: "bac", src: "/art/tarot/clear-vessel.jpg", label: "Clear Vessel", tone: "bench" },
   { id: "kit", src: "/art/tarot/initiates-tools.jpg", label: "The Initiate's Tools", tone: "bench" },
 ];
 
