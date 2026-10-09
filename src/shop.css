@@ -24,23 +24,26 @@
 .hero-actions, .hero-copy { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .hero-copy { align-content: center; }
 .hero-vial { position: relative; min-height: 220px; overflow: hidden; display: grid; place-items: center; background: radial-gradient(circle, var(--glow, rgba(255, 150, 50, 0.2)), transparent 70%); }
-.hero-tarot { position: absolute; inset: 10px; display: grid; background: radial-gradient(circle, var(--glow, rgba(255, 150, 50, 0.22)), transparent 70%); }
+.hero-tarot { position: absolute; inset: 10px; display: grid; grid-template: 1fr / 1fr; min-width: 0; min-height: 0; overflow: hidden; background: radial-gradient(circle, var(--glow, rgba(255, 150, 50, 0.22)), transparent 70%); }
 .hero-tarot button {
   grid-area: 1 / 1;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   margin: 0;
   padding: 0;
   border: 0;
   background: none;
   cursor: pointer;
   opacity: 0;
+  overflow: hidden;
   transform: translateX(8%);
   transition: opacity 0.7s ease, transform 0.7s ease;
   pointer-events: none;
 }
 .hero-tarot button.on { opacity: 1; transform: none; pointer-events: auto; z-index: 1; }
-.hero-tarot img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.45)); }
+.hero-tarot img { width: 100%; height: 100%; object-fit: contain; object-position: center; filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.45)); }
 @media (prefers-reduced-motion: reduce) {
   .hero-tarot button { transition: none; transform: none; }
 }
@@ -381,8 +384,22 @@
 @media (max-width: 640px) {
   .hero-frame, .product-top { grid-template-columns: minmax(0, 1fr); }
   .hero-frame { padding: 14px; gap: 12px; }
-  .hero-vial { width: 100%; min-height: 0; aspect-ratio: 3 / 2; }
-  .hero-actions { width: 100%; }
-  .hero-actions .potion-add { flex: 1 1 140px; text-align: center; }
+  .hero-vial { width: 100%; min-height: 0; aspect-ratio: 558 / 1000; }
+  .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    width: 100%;
+  }
+  .hero-actions .potion-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 76px;
+    padding: 10px 8px;
+    line-height: 1.2;
+    box-sizing: border-box;
+  }
   .trust-row { gap: 8px 12px; font-size: 10px; letter-spacing: 0.04em; padding: 10px 8px; }
 }
