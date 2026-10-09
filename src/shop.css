@@ -248,7 +248,7 @@
 }
 .product-card-rows button.on { color: #140a04; }
 .product-card-rows button.on span::before {
-  content: "◆ ";
+  content: "\u25c6 ";
   color: #7a5420;
   font-size: 0.72em;
 }
@@ -276,17 +276,34 @@
   background: rgba(12, 7, 3, 0.72);
   cursor: not-allowed;
 }
-/* Italic line above the bottom filigree. */
+/* Italic caption under the plaque. A parchment band covers the filigree so the line stays readable. */
 .product-card-flavor {
-  top: 89.15%;
-  left: 12%;
-  right: 12%;
+  top: 88.6%;
+  left: 11%;
+  right: 11%;
+  z-index: 6;
+  padding: 0.55cqw 2.2cqw 0.7cqw;
   font-family: "Libre Baskerville", Georgia, serif;
   font-style: italic;
   font-weight: 400;
-  font-size: 3.15cqw;
-  color: #1a0e08;
-  line-height: 1.15;
+  font-size: 2.7cqw;
+  color: #140a04;
+  line-height: 1.22;
+  background: linear-gradient(90deg, rgba(206, 156, 86, 0) 0%, rgba(206, 156, 86, 0.97) 7%, rgba(206, 156, 86, 0.97) 93%, rgba(206, 156, 86, 0) 100%);
+}
+.theme-verdant .product-card-flavor {
+  background: linear-gradient(90deg, rgba(142, 174, 120, 0) 0%, rgba(142, 174, 120, 0.97) 7%, rgba(142, 174, 120, 0.97) 93%, rgba(142, 174, 120, 0) 100%);
+}
+.theme-astral .product-card-flavor {
+  color: #160e18;
+  background: linear-gradient(90deg, rgba(163, 150, 184, 0) 0%, rgba(163, 150, 184, 0.97) 7%, rgba(163, 150, 184, 0.97) 93%, rgba(163, 150, 184, 0) 100%);
+}
+.theme-rosefire .product-card-flavor {
+  background: linear-gradient(90deg, rgba(196, 146, 134, 0) 0%, rgba(196, 146, 134, 0.97) 7%, rgba(196, 146, 134, 0.97) 93%, rgba(196, 146, 134, 0) 100%);
+}
+.theme-ironwright .product-card-flavor {
+  color: #121418;
+  background: linear-gradient(90deg, rgba(152, 160, 168, 0) 0%, rgba(152, 160, 168, 0.97) 7%, rgba(152, 160, 168, 0.97) 93%, rgba(152, 160, 168, 0) 100%);
 }
 /* Shiny shield, same pixels as the template, lower right of the window. */
 .coa-shield {
