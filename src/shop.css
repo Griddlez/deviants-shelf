@@ -13,6 +13,8 @@
   gap: 24px;
   padding: 28px;
   margin-bottom: 18px;
+  min-width: 0;
+  max-width: 100%;
   background:
     radial-gradient(circle at 15% 80%, rgba(255, 140, 40, 0.28), transparent 28%),
     radial-gradient(circle at 80% 20%, rgba(90, 40, 160, 0.28), transparent 32%),
@@ -48,7 +50,7 @@
   background: #16110d; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; color: #e7d3b0;
 }
 .band-title { text-align: center; margin: 28px 0 12px; }
-.potion-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.potion-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; width: 100%; min-width: 0; }
 .potion-card {
   display: flex; flex-direction: column; gap: 8px; padding: 14px;
   background: linear-gradient(180deg, #22180f, #120e0b);
@@ -117,9 +119,12 @@
 .stone-foot a { color: #f0d7a2; text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; }
 .foot { background: #0c0907; border-top: 1px solid #c6a15a; }
 
+/* The portrait plate is the uploaded card. Type sits in the same bands the lettering was lifted from. */
 .product-card {
   position: relative;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   aspect-ratio: 1024 / 1536;
   container-type: inline-size;
   overflow: hidden;
@@ -139,6 +144,7 @@
   pointer-events: none;
   user-select: none;
 }
+/* School scene, only the window behind the vial. The plate frame stays on top of the fade. */
 .product-card-scene {
   position: absolute;
   left: 14%;
@@ -174,6 +180,7 @@
   pointer-events: none;
   z-index: 4;
 }
+/* Trajan gold on the leather header. */
 .product-card-title {
   top: 9.6%;
   font-family: Cinzel, serif;
@@ -187,6 +194,7 @@
   color: transparent;
   filter: drop-shadow(0 0.35cqw 0 #3a2208);
 }
+/* Smaller cream line under the flavor name. */
 .product-card-compound {
   top: 17.1%;
   font-family: Cinzel, serif;
@@ -197,6 +205,7 @@
   text-shadow: 0 1px 0 #1a0e06;
   white-space: nowrap;
 }
+/* Purity sits above the plate's dotted rule. The chip keeps that rule out of the letters. */
 .product-card-purity {
   top: 61.85%;
   display: flex;
@@ -224,6 +233,7 @@
   flex: 0 0 7cqw;
   border-bottom: 0.38cqw dotted rgba(62, 36, 14, 0.75);
 }
+/* Batch and price sit in the open bands between the rules, not on them. */
 .product-card-rows {
   position: absolute;
   left: 11%;
@@ -269,6 +279,7 @@
   color: #7a5420;
   font-size: 0.72em;
 }
+/* Wooden plaque. The plate already says Add Potion, so the label stays invisible until the vial is gone. */
 .product-card-add {
   position: absolute;
   left: 20%;
@@ -292,6 +303,7 @@
   background: rgba(12, 7, 3, 0.72);
   cursor: not-allowed;
 }
+/* Italic caption under the plaque. A parchment band covers the filigree so the line stays readable. */
 .product-card-flavor {
   top: 88.6%;
   left: 11%;
@@ -320,6 +332,7 @@
   color: #121418;
   background: linear-gradient(90deg, rgba(152, 160, 168, 0) 0%, rgba(152, 160, 168, 0.97) 7%, rgba(152, 160, 168, 0.97) 93%, rgba(152, 160, 168, 0) 100%);
 }
+/* Shiny shield, same pixels as the template, lower right of the window. */
 .coa-shield {
   position: absolute;
   left: 68.16%;
@@ -330,6 +343,7 @@
   pointer-events: none;
   filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
 }
+/* Empty until a real photo is dropped in VIAL_PHOTOS. Then it covers the painted bottle. */
 .product-card-vial {
   position: absolute;
   left: 10%;
@@ -365,5 +379,10 @@
   .potion-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 }
 @media (max-width: 640px) {
-  .hero-frame, .product-top { grid-template-columns: 1fr; }
+  .hero-frame, .product-top { grid-template-columns: minmax(0, 1fr); }
+  .hero-frame { padding: 14px; gap: 12px; }
+  .hero-vial { width: 100%; min-height: 0; aspect-ratio: 3 / 2; }
+  .hero-actions { width: 100%; }
+  .hero-actions .potion-add { flex: 1 1 140px; text-align: center; }
+  .trust-row { gap: 8px 12px; font-size: 10px; letter-spacing: 0.04em; padding: 10px 8px; }
 }
