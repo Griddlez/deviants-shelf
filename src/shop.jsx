@@ -220,7 +220,7 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
       >
         {soldOut ? "None on the shelf" : "Add Potion"}
       </button>
-      <p className="product-card-flavor" style={{ fontSize: (product.line || "").length > 48 ? "2.55cqw" : "3.15cqw" }}>{product.line}</p>
+      <p className="product-card-flavor">{product.line}</p>
     </article>
   );
 }
@@ -367,7 +367,8 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
       {/* Trust */}
       <ul className="trust-row">
         <li>COA verified</li>
-        <li>Ships from the US</li>
+        <li>Ships from the US within 24 hours</li>
+        <li>Orders guaranteed</li>
         <li>Research use only</li>
       </ul>
 
