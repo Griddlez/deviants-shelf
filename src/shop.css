@@ -117,7 +117,6 @@
 .stone-foot a { color: #f0d7a2; text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; }
 .foot { background: #0c0907; border-top: 1px solid #c6a15a; }
 
-/* The portrait plate is the uploaded card. Type sits in the same bands the lettering was lifted from. */
 .product-card {
   position: relative;
   width: 100%;
@@ -199,37 +198,46 @@
   white-space: nowrap;
 }
 .product-card-purity {
-  top: 63.05%;
+  top: 61.85%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.4cqw;
+  gap: 1.6cqw;
   font-family: "Libre Baskerville", Georgia, serif;
-  font-size: 2.85cqw;
+  font-size: 2.7cqw;
+  line-height: 1;
   color: #2c180c;
   white-space: nowrap;
 }
+.product-card-purity span {
+  background: #e0a959;
+  padding: 0.2cqw 0.7cqw;
+}
+.theme-verdant .product-card-purity span { background: #a0ba7d; }
+.theme-astral .product-card-purity span { background: #b7a7cb; color: #160e18; }
+.theme-rosefire .product-card-purity span { background: #e0a499; }
+.theme-ironwright .product-card-purity span { background: #a8afb7; color: #121418; }
 .product-card-purity::before,
 .product-card-purity::after {
   content: "";
-  width: 9cqw;
-  border-bottom: 0.45cqw dotted rgba(62, 36, 14, 0.7);
-  transform: translateY(-0.15cqw);
+  width: 7cqw;
+  flex: 0 0 7cqw;
+  border-bottom: 0.38cqw dotted rgba(62, 36, 14, 0.75);
 }
 .product-card-rows {
   position: absolute;
-  left: 12%;
-  right: 13.5%;
-  top: 68.5%;
+  left: 11%;
+  right: 12%;
+  top: 68.15%;
   z-index: 5;
   display: grid;
-  gap: 1.55cqw;
+  gap: 4.35cqw;
 }
-.product-card-rows.one { top: 71.4%; }
+.product-card-rows.one { top: 68.15%; }
 .product-card-rows button {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   width: 100%;
   padding: 0;
@@ -238,12 +246,26 @@
   cursor: pointer;
   font-family: "Libre Baskerville", Georgia, serif;
   font-weight: 700;
-  font-size: 3.15cqw;
+  font-size: 3.05cqw;
+  line-height: 1;
   color: #2a160c;
 }
+.product-card-rows button span,
+.product-card-rows button b {
+  background: #d19c58;
+  padding: 0.25cqw 0.45cqw;
+}
+.theme-verdant .product-card-rows button span,
+.theme-verdant .product-card-rows button b { background: #94ab77; }
+.theme-astral .product-card-rows button span,
+.theme-astral .product-card-rows button b { background: #aa9bba; color: #160e18; }
+.theme-rosefire .product-card-rows button span,
+.theme-rosefire .product-card-rows button b { background: #cf968b; }
+.theme-ironwright .product-card-rows button span,
+.theme-ironwright .product-card-rows button b { background: #9fa4aa; color: #121418; }
 .product-card-rows button.on { color: #140a04; }
 .product-card-rows button.on span::before {
-  content: "◆ ";
+  content: "\u25c6 ";
   color: #7a5420;
   font-size: 0.72em;
 }
