@@ -54,6 +54,27 @@ const THEME = {
   kit: "ironwright",
 };
 
+/* Ink on the blank panel. Light ink for dark parchment, dark ink for pale parchment. */
+const CARD_INK = {
+  r3: "light",
+  amq: "light",
+  mot: "light",
+  nad: "light",
+  cjc: "light",
+  bpc: "light",
+  tb5: "dark",
+  ara: "light",
+  kpv: "dark",
+  ghk: "dark",
+  pin: "dark",
+  epi: "light",
+  sel: "light",
+  sem: "light",
+  pt: "light",
+  bac: "dark",
+  kit: "light",
+};
+
 const FEATURED = ["r3", "bpc", "cjc", "tb5", "pt", "bac"];
 
 /* Tarot cards for the hero window. Same box the vial outline used to sit in. */
@@ -194,41 +215,32 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
   }
 
   return (
-    <article className={`product-card theme-${theme}`}>
-      {/* Same portrait plate for every school. Only the interior color, glow, metal, and texture change. */}
-      <img className="product-card-plate" src={theme === "astral" ? "/art/card/plate3-astral.jpg" : `/art/card/plate2-${theme}.jpg`} alt="" decoding="async" />
+    <article className={`product-card theme-${theme} face ink-${CARD_INK[product.id] || "light"}`}>
+      <img className="product-card-plate" src={`/art/cards/${product.id}.jpg`} alt="" decoding="async" />
       <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
-      {photoSrc ? (
-        <div className="product-card-vial has-photo">
-          <img src={photoSrc} alt="" />
+      <div className="product-card-well">
+        <div className={product.sizes.length < 2 ? "product-card-rows one" : "product-card-rows"}>
+          {product.sizes.map((row) => (
+            <button
+              key={row.sku}
+              type="button"
+              className={row.sku === sku ? "on" : ""}
+              onClick={() => choose(row.sku)}
+            >
+              <span>{row.mg === "kit" ? "Kit" : row.mg}</span>
+              <b>{money(row.vial)}</b>
+            </button>
+          ))}
         </div>
-      ) : null}
-      <CoaBadge show={!!lot} />
-      <p className="product-card-title" style={{ fontSize: titleSize(title) }}>{title}</p>
-      {compound ? <p className="product-card-compound" style={{ fontSize: compound.length > 24 ? "2.45cqw" : compound.length > 16 ? "2.85cqw" : "3.3cqw" }}>{compound}</p> : null}
-      {purity ? <p className="product-card-purity"><span>{purity}</span></p> : null}
-      <div className={product.sizes.length < 2 ? "product-card-rows one" : "product-card-rows"}>
-        {product.sizes.map((row) => (
-          <button
-            key={row.sku}
-            type="button"
-            className={row.sku === sku ? "on" : ""}
-            onClick={() => choose(row.sku)}
-          >
-            <span>Batch: {row.sku}</span>
-            <b>{money(row.vial)}</b>
-          </button>
-        ))}
+        <button
+          className="product-card-add"
+          type="button"
+          disabled={soldOut}
+          onClick={() => onAdd(size, product)}
+        >
+          {soldOut ? "None on the shelf" : "Add Potion"}
+        </button>
       </div>
-      <button
-        className="product-card-add"
-        type="button"
-        disabled={soldOut}
-        onClick={() => onAdd(size, product)}
-      >
-        {soldOut ? "None on the shelf" : "Add Potion"}
-      </button>
-      <p className="product-card-flavor">{product.line}</p>
     </article>
   );
 }

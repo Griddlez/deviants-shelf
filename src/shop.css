@@ -128,7 +128,7 @@
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  aspect-ratio: 1024 / 1536;
+  aspect-ratio: 768 / 1376;
   container-type: inline-size;
   overflow: hidden;
   filter: drop-shadow(0 16px 22px var(--plate-glow, rgba(0, 0, 0, 0.45)));
@@ -402,4 +402,71 @@
     box-sizing: border-box;
   }
   .trust-row { gap: 8px 12px; font-size: 10px; letter-spacing: 0.04em; padding: 10px 8px; }
+}
+
+/* New illustrated faces. Title and scene are painted. Controls sit in the blank panel. */
+.product-card.face .product-card-open {
+  height: 60%;
+}
+.product-card-well {
+  position: absolute;
+  left: 13%;
+  right: 13%;
+  top: 65.2%;
+  height: 27.2%;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5cqw;
+}
+.product-card.face .product-card-rows {
+  position: static;
+  left: auto;
+  right: auto;
+  top: auto;
+  gap: 1.1cqw;
+}
+.product-card.face .product-card-rows button {
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  font-size: 3.4cqw;
+  font-weight: 600;
+}
+.product-card.face .product-card-rows button span,
+.product-card.face .product-card-rows button b {
+  background: none;
+  padding: 0;
+}
+.product-card.face .product-card-add {
+  position: static;
+  left: auto;
+  right: auto;
+  top: auto;
+  height: auto;
+  padding: 1.15cqw 0;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  font-family: Cinzel, serif;
+  font-size: 3.2cqw;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.product-card.face.ink-light,
+.product-card.face.ink-light .product-card-rows button,
+.product-card.face.ink-light .product-card-add {
+  color: #f4ead2;
+}
+.product-card.face.ink-dark,
+.product-card.face.ink-dark .product-card-rows button,
+.product-card.face.ink-dark .product-card-add {
+  color: #1c140c;
+}
+.product-card.face .product-card-rows button.on span::before {
+  color: currentColor;
+}
+.product-card.face .product-card-add:disabled {
+  color: inherit;
+  opacity: 0.55;
+  background: transparent;
 }
