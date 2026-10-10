@@ -340,13 +340,13 @@
 /* Shiny shield, same pixels as the template, lower right of the window. */
 .coa-shield {
   position: absolute;
-  left: 68.16%;
-  top: 47.14%;
-  width: 23.34%;
+  left: 69%;
+  top: 39.5%;
+  width: 22%;
   height: auto;
-  z-index: 3;
+  z-index: 4;
   pointer-events: none;
-  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
 }
 /* Empty until a real photo is dropped in VIAL_PHOTOS. Then it covers the painted bottle. */
 .product-card-vial {

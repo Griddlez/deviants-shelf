@@ -209,7 +209,7 @@ function purityLine(lot) {
 /* The shield is the real ornament cut from the card, not a redrawn icon. */
 export function CoaBadge({ show }) {
   if (!show) return null;
-  return <img className="coa-shield" src="/art/card/badge.png" alt="COA Verified" />;
+  return <img className="coa-shield" src="/art/card/badge.webp" alt="COA Verified" />;
 }
 
 export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku: skuProp, onSku }) {
@@ -233,6 +233,7 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
   return (
     <article className={`product-card theme-${theme} face ink-${CARD_INK[product.id] || "light"}`}>
       <img className="product-card-plate" src={`/art/cards/${product.id}.webp`} alt="" decoding="async" />
+      <CoaBadge show={!!lot} />
       <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
       <div className="product-card-well">
         {product.line ? <p className="product-card-blurb">{product.line}</p> : null}
