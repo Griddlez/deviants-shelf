@@ -216,8 +216,7 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
 
   return (
     <article className={`product-card theme-${theme} face ink-${CARD_INK[product.id] || "light"}`}>
-      <img className="product-card-plate" src={`/art/cards/${product.id}.jpg`} alt="" decoding="async" />
-      <img className="product-card-frame" src="/art/cards/frame.png" alt="" decoding="async" />
+      <img className="product-card-plate" src={`/art/cards/${product.id}.webp`} alt="" decoding="async" />
       <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
       <div className="product-card-well">
         {product.line ? <p className="product-card-blurb">{product.line}</p> : null}

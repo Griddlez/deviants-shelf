@@ -147,15 +147,6 @@
   pointer-events: none;
   user-select: none;
 }
-.product-card-frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  pointer-events: none;
-  z-index: 4;
-}
 /* School scene, only the window behind the vial. The plate frame stays on top of the fade. */
 .product-card-scene {
   position: absolute;
