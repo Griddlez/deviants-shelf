@@ -54,6 +54,37 @@
   background: #16110d; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; color: #e7d3b0;
 }
 .band-title { text-align: center; margin: 28px 0 12px; }
+.realm-break {
+  position: relative;
+  margin: 26px 0 14px;
+  padding: 16px 8% 14px;
+  text-align: center;
+  background: linear-gradient(90deg, transparent, rgba(10, 7, 4, 0.78) 8%, rgba(10, 7, 4, 0.9) 50%, rgba(10, 7, 4, 0.78) 92%, transparent);
+}
+.realm-break::before,
+.realm-break::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #8a6730 12%, #f0d7a2 50%, #8a6730 88%, transparent);
+  box-shadow: 0 0 10px rgba(224, 176, 90, 0.35);
+}
+.realm-break::before { top: 0; }
+.realm-break::after { bottom: 0; }
+.realm-break .band-title {
+  margin: 0 0 4px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: clamp(15px, 4vw, 26px);
+}
+.realm-break .row-note { margin: 0; text-align: center; }
+.realm-break.theme-emberforge { box-shadow: inset 0 0 28px rgba(180, 50, 8, 0.35); }
+.realm-break.theme-verdant { box-shadow: inset 0 0 28px rgba(16, 110, 55, 0.38); }
+.realm-break.theme-astral { box-shadow: inset 0 0 28px rgba(70, 40, 160, 0.4); }
+.realm-break.theme-rosefire { box-shadow: inset 0 0 28px rgba(150, 30, 70, 0.38); }
+.realm-break.theme-ironwright { box-shadow: inset 0 0 28px rgba(120, 140, 160, 0.32); }
 .potion-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; width: 100%; min-width: 0; }
 .potion-card {
   display: flex; flex-direction: column; gap: 8px; padding: 14px;

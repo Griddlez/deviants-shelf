@@ -466,8 +466,10 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
       {note && <p className="err">{note}</p>}
       {groups.map((group) => (
         <div key={group.row}>
-          <h3 className="band-title" id={group.row === "Ironwright Utility" ? "ironwright" : undefined}>{group.row}</h3>
-          {group.note && <p className="row-note">{group.note}</p>}
+          <div className={`realm-break theme-${THEME[group.items[0]?.id] || "emberforge"}`} id={group.row === "Ironwright Utility" ? "ironwright" : undefined}>
+            <h3 className="band-title">{group.row}</h3>
+            {group.note && <p className="row-note">{group.note}</p>}
+          </div>
           <div className="potion-grid">
             {group.items.map((item) => (
               <ProductCard key={item.id} product={item} library={library} stock={stock} onOpen={setOpenId} onAdd={add} />
