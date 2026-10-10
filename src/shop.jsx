@@ -76,11 +76,11 @@ const CARD_INK = {
 };
 
 const ADD_BUTTON = {
-  emberforge: "/art/buttons/ember.webp",
-  verdant: "/art/buttons/verdant.webp",
-  astral: "/art/buttons/astral.webp",
-  rosefire: "/art/buttons/rose.webp",
-  ironwright: "/art/buttons/iron.webp",
+  emberforge: "/art/buttons/ember.webp?v=3",
+  verdant: "/art/buttons/verdant.webp?v=3",
+  astral: "/art/buttons/astral.webp?v=3",
+  rosefire: "/art/buttons/rose.webp?v=3",
+  ironwright: "/art/buttons/iron.webp?v=3",
 };
 
 const FEATURED = ["r3", "bpc", "cjc", "tb5", "pt", "bac"];
