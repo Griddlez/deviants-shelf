@@ -15,7 +15,7 @@ html, body, #root { margin: 0; min-height: 100%; max-width: 100%; }
 body {
   color: var(--text);
   font-family: "Source Sans 3", system-ui, sans-serif;
-  background: #0c0704 url("/art/shop.jpg") center / cover no-repeat fixed;
+  background: #0c0704 url("/art/shop.jpg?v=2") center / cover no-repeat fixed;
   overflow-x: clip;
 }
 body::before {
@@ -24,8 +24,8 @@ body::before {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at center, rgba(12, 7, 4, 0.18), rgba(6, 3, 2, 0.72) 78%),
-    linear-gradient(180deg, rgba(8, 4, 2, 0.35), rgba(8, 4, 2, 0.2) 30%, rgba(8, 4, 2, 0.55));
+    radial-gradient(ellipse at center, rgba(12, 7, 4, 0.05), rgba(6, 3, 2, 0.48) 84%),
+    linear-gradient(180deg, rgba(8, 4, 2, 0.22), rgba(8, 4, 2, 0.04) 42%, rgba(8, 4, 2, 0.4));
 }
 #root { position: relative; z-index: 1; }
 h1, h2, h3, .shop { font-family: Cinzel, serif; }
