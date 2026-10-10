@@ -420,23 +420,11 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
         </div>
       </div>
 
-      {/* Trust */}
-      <ul className="trust-row">
-        <li>COA verified</li>
-        <li>Ships from the US within 24 hours</li>
-        <li>Orders guaranteed</li>
-        <li>Research use only</li>
-      </ul>
-
-      {/* Featured */}
-      <h3 id="featured" className="band-title">Featured on the shelf</h3>
-      <div className="potion-grid">
-        {featured.map((item) => (
-          <ProductCard key={item.id} product={item} library={library} stock={stock} onOpen={setOpenId} onAdd={add} />
-        ))}
+      <div className="parchment-block lore">
+        <h3>The Shelf</h3>
+        <p>A vault of crafted elixirs for seasoned alchemists. Every vial carries its lineage — name, batch, and seal — bound to its rightful bearer.</p>
       </div>
 
-      {/* Full shelf */}
       <div className="shelf-tools" id="shelf">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the shelf" />
         <button className="potion-add alt" type="button" onClick={() => cartCount && onBasket()}>
@@ -459,10 +447,22 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
       </div>
       {note && <p className="err">{note}</p>}
 
-      <div className="parchment-block lore">
-        <h3>The Shelf</h3>
-        <p>A vault of crafted elixirs for seasoned alchemists. Every vial carries its lineage — name, batch, and seal — bound to its rightful bearer.</p>
+      {/* Trust */}
+      <ul className="trust-row">
+        <li>COA verified</li>
+        <li>Ships from the US within 24 hours</li>
+        <li>Orders guaranteed</li>
+        <li>Research use only</li>
+      </ul>
+
+      {/* Featured */}
+      <h3 id="featured" className="band-title">Featured on the shelf</h3>
+      <div className="potion-grid">
+        {featured.map((item) => (
+          <ProductCard key={item.id} product={item} library={library} stock={stock} onOpen={setOpenId} onAdd={add} />
+        ))}
       </div>
+
       {groups.map((group) => (
         <div key={group.row}>
           <div className={`realm-break theme-${THEME[group.items[0]?.id] || "emberforge"}`} id={group.row === "Ironwright Utility" ? "ironwright" : undefined}>
