@@ -83,6 +83,14 @@ const ADD_BUTTON = {
   ironwright: "/art/buttons/iron.webp?v=3",
 };
 
+const SIZE_PILL = {
+  emberforge: "/art/pills/ember.webp?v=1",
+  verdant: "/art/pills/verdant.webp?v=1",
+  astral: "/art/pills/astral.webp?v=1",
+  rosefire: "/art/pills/rose.webp?v=1",
+  ironwright: "/art/pills/iron.webp?v=1",
+};
+
 const FEATURED = ["r3", "bpc", "cjc", "tb5", "pt", "bac"];
 
 /* Tarot cards for the hero window. Same box the vial outline used to sit in. */
@@ -238,8 +246,8 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
                 className={row.sku === sku ? "on" : ""}
                 onClick={() => choose(row.sku)}
               >
-                <span>{row.mg === "kit" ? "Kit" : row.mg}</span>
-                <b>{money(row.vial)}</b>
+                <img src={SIZE_PILL[theme] || SIZE_PILL.emberforge} alt="" />
+                <span>{row.mg === "kit" ? "Kit" : row.mg} — {money(row.vial)}</span>
               </button>
             ))}
           </div>

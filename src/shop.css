@@ -464,18 +464,53 @@
   left: auto;
   right: auto;
   top: auto;
-  gap: 1.1cqw;
+  width: 88%;
+  align-self: center;
+  gap: 0.55cqw;
 }
 .product-card.face .product-card-rows button {
-  font-family: "Source Sans 3", system-ui, sans-serif;
-  font-size: 3.4cqw;
-  font-weight: 600;
-}
-.product-card.face .product-card-rows button span,
-.product-card.face .product-card-rows button b {
-  background: none;
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 0;
   padding: 0;
+  background: none;
+  border: 0;
+  line-height: 0;
+  font-family: Cinzel, serif;
+  filter: brightness(0.86);
 }
+.product-card.face .product-card-rows button.on {
+  filter: brightness(1.08);
+}
+.product-card.face .product-card-rows button img {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+.product-card.face .product-card-rows button span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  padding: 0 8%;
+  font-weight: 600;
+  font-size: 3.15cqw;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  white-space: nowrap;
+  color: #f4efe4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+.product-card.theme-emberforge.face .product-card-rows button span { color: #ffc27a; }
+.product-card.theme-verdant.face .product-card-rows button span { color: #e7fff4; }
+.product-card.theme-astral.face .product-card-rows button span { color: #f3f6ff; }
+.product-card.theme-rosefire.face .product-card-rows button span { color: #f3c7b4; }
+.product-card.theme-ironwright.face .product-card-rows button span { color: #f3f4f6; }
+.product-card.face .product-card-rows button.on span::before { content: none; }
 .product-card.face .product-card-add {
   position: static;
   left: auto;
