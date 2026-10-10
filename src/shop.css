@@ -437,12 +437,15 @@
     font-size: 12px;
     -webkit-line-clamp: 3;
   }
+  .product-card-note {
+    font-size: 11px;
+  }
 }
 .product-card-note {
   margin: 0;
   text-align: center;
   font-family: "Source Sans 3", system-ui, sans-serif;
-  font-size: 2.15cqw;
+  font-size: clamp(13px, 3.8cqw, 16px);
   letter-spacing: 0.02em;
   line-height: 1.2;
 }
