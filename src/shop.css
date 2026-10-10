@@ -442,7 +442,7 @@
   margin: 0;
   text-align: center;
   font-family: "Source Sans 3", system-ui, sans-serif;
-  font-size: clamp(7.5px, 3.6cqw, 13px);
+  font-size: clamp(5.25px, 2.52cqw, 9.1px);
   letter-spacing: 0.01em;
   line-height: 1.25;
   flex-shrink: 0;
