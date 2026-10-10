@@ -344,9 +344,26 @@
   top: 39.5%;
   width: 22%;
   height: auto;
-  z-index: 4;
-  pointer-events: none;
+  z-index: 6;
+  display: block;
+  pointer-events: auto;
+  cursor: pointer;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+  transition: transform 0.14s ease, filter 0.14s ease;
+}
+.coa-shield img {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+.coa-shield:hover {
+  filter: brightness(1.12) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
+  transform: translateY(-0.3cqw);
+}
+.coa-shield:active {
+  filter: brightness(0.9);
+  transform: translateY(0.2cqw) scale(0.97);
 }
 /* Empty until a real photo is dropped in VIAL_PHOTOS. Then it covers the painted bottle. */
 .product-card-vial {
