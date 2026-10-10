@@ -425,6 +425,10 @@
   box-sizing: border-box;
   overflow: hidden;
 }
+.product-card[data-card="tb5"] .product-card-well {
+  top: 65.2%;
+  bottom: 10.4%;
+}
 .product-card-blurb {
   margin: 0;
   font-family: "Libre Baskerville", Georgia, serif;

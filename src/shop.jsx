@@ -231,8 +231,8 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
   }
 
   return (
-    <article className={`product-card theme-${theme} face ink-${CARD_INK[product.id] || "light"}`}>
-      <img className="product-card-plate" src={`/art/cards/${product.id}.webp`} alt="" decoding="async" />
+    <article className={`product-card theme-${theme} face ink-${CARD_INK[product.id] || "light"}`} data-card={product.id}>
+      <img className="product-card-plate" src={`/art/cards/${product.id}.webp${product.id === "tb5" ? "?v=2" : ""}`} alt="" decoding="async" />
       <CoaBadge show={!!lot} />
       <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
       <div className="product-card-well">
