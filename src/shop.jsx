@@ -260,6 +260,10 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
       ? { id: size.coa.batch, purity: size.coa.purity, tested: size.coa.tested, href: size.coa.file, page: "", slug: "" }
       : null;
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [product.id]);
+
   return (
     <section className="apothecary">
       <button className="back-link" type="button" onClick={onBack}>← Back to the shelf</button>
@@ -309,7 +313,7 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
         {tab === "usage" && <p>Research use only. Not for human consumption. Handle, store, and log it the way your protocol requires.</p>}
       </div>
 
-      <h3 className="band-title">Also on this row</h3>
+      <h3 className="band-title">Also in this Realm</h3>
       <div className="potion-grid">
         {others.map((item) => (
           <ProductCard key={item.id} product={item} library={library} stock={stock} onOpen={onOpen} onAdd={onAdd} />
