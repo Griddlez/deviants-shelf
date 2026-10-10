@@ -414,7 +414,7 @@
   position: absolute;
   left: 13%;
   right: 13%;
-  top: 63.6%;
+  top: 67%;
   bottom: 7.2%;
   height: auto;
   z-index: 5;
@@ -426,7 +426,7 @@
   overflow: hidden;
 }
 .product-card[data-card="tb5"] .product-card-well {
-  top: 65.2%;
+  top: 67%;
   bottom: 10.4%;
 }
 .product-card-blurb {
