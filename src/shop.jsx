@@ -239,17 +239,20 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
         {purity ? <p className="product-card-note">{lot?.id ? `Batch ${lot.id} · ` : ""}{purity}</p> : null}
         <div className="product-card-buy">
           <div className={product.sizes.length < 2 ? "product-card-rows one" : "product-card-rows"}>
-            {product.sizes.map((row) => (
-              <button
-                key={row.sku}
-                type="button"
-                className={row.sku === sku ? "on" : ""}
-                onClick={() => choose(row.sku)}
-              >
-                <img src={SIZE_PILL[theme] || SIZE_PILL.emberforge} alt="" />
-                <span>{row.mg === "kit" ? "Kit" : row.mg} — {money(row.vial)}</span>
-              </button>
-            ))}
+            {product.sizes.map((row) => {
+              const label = `${row.mg === "kit" ? "Kit" : row.mg} — ${money(row.vial)}`;
+              return (
+                <button
+                  key={row.sku}
+                  type="button"
+                  className={`${row.sku === sku ? "on" : ""}${label.length > 16 ? " long" : ""}`}
+                  onClick={() => choose(row.sku)}
+                >
+                  <img src={SIZE_PILL[theme] || SIZE_PILL.emberforge} alt="" />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
           <button
             className="product-card-add"
