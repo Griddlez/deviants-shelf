@@ -429,7 +429,7 @@
   margin: 0;
   font-family: "Libre Baskerville", Georgia, serif;
   font-style: italic;
-  font-size: clamp(12.5px, 3.5cqw, 15.5px);
+  font-size: clamp(8px, 4.4cqw, 15px);
   line-height: 1.3;
   text-align: center;
   display: -webkit-box;
@@ -437,20 +437,11 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-@container (max-width: 240px) {
-  .product-card-blurb {
-    font-size: 12px;
-    -webkit-line-clamp: 3;
-  }
-  .product-card-note {
-    font-size: 11px;
-  }
-}
 .product-card-note {
   margin: 0;
   text-align: center;
   font-family: "Source Sans 3", system-ui, sans-serif;
-  font-size: clamp(11px, 2.7cqw, 13.5px);
+  font-size: clamp(7.5px, 3.6cqw, 13px);
   letter-spacing: 0.01em;
   line-height: 1.25;
 }
@@ -467,12 +458,12 @@
   top: auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  width: 100%;
-  align-self: stretch;
+  width: 88%;
+  align-self: center;
   gap: 1.1cqw;
 }
 .product-card.face .product-card-rows.one {
-  grid-template-columns: minmax(0, 78%);
+  grid-template-columns: minmax(0, 50%);
   justify-content: center;
 }
 .product-card.face .product-card-rows button {
@@ -505,7 +496,7 @@
   background: none;
   padding: 0 7%;
   font-weight: 700;
-  font-size: 2.35cqw;
+  font-size: 3.5cqw;
   letter-spacing: 0.01em;
   line-height: 1;
   white-space: nowrap;
@@ -513,7 +504,7 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
 }
 .product-card.face .product-card-rows.one button span {
-  font-size: 3cqw;
+  font-size: 4.4cqw;
 }
 .product-card.theme-emberforge.face .product-card-rows button span { color: #ffc27a; }
 .product-card.theme-verdant.face .product-card-rows button span { color: #e7fff4; }
