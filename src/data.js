@@ -198,7 +198,7 @@ export const PRODUCTS = [
   {
     id: "kit",
     code: "KIT",
-    charge: "Ironwright Starter Kit",
+    charge: "Beginner's Alchemy Kit",
     name: "BAC water · 10 syringes · 20 wipes",
     blurb: "Bac water · 10 syringes · 20 wipes.",
     sizes: [{ sku: "KIT-1", mg: "kit", vial: 15 }],
