@@ -438,8 +438,8 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
 
       {/* Lore */}
       <div className="parchment-block lore">
-        <h3>The shelf</h3>
-        <p>A private apothecary for people who already know what they are looking for. Each vial keeps the name of the compound, the batch, and the certificate that belongs to it.</p>
+        <h3>The Shelf</h3>
+        <p>A vault of crafted elixirs for seasoned alchemists. Every vial carries its lineage — name, batch, and seal — bound to its rightful bearer.</p>
       </div>
 
       {/* Full shelf */}

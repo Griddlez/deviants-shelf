@@ -1,6 +1,6 @@
 export const CONFIG = {
   shopName: "The Deviant's Shelf",
-  tagline: "A small apothecary for people who already know where to look.",
+  tagline: "A vault of crafted elixirs for seasoned alchemists. Every vial carries its lineage — name, batch, and seal — bound to its rightful bearer.",
   receiptHours: 24,
   pay: {
     note: "No payment is taken in the app. Send the exact order total, then attach the receipt on Active Orders.",
