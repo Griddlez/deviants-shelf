@@ -77,10 +77,10 @@ const CARD_INK = {
 
 const ADD_BUTTON = {
   emberforge: "/art/buttons/ember.webp?v=3",
-  verdant: "/art/buttons/verdant.webp?v=3",
+  verdant: "/art/buttons/verdant.webp?v=4",
   astral: "/art/buttons/astral.webp?v=3",
   rosefire: "/art/buttons/rose.webp?v=3",
-  ironwright: "/art/buttons/iron.webp?v=3",
+  ironwright: "/art/buttons/iron.webp?v=4",
 };
 
 const SIZE_PILL = {

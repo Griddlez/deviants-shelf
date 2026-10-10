@@ -465,15 +465,21 @@
   left: auto;
   right: auto;
   top: auto;
-  width: 88%;
-  align-self: center;
-  gap: 0.55cqw;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  align-self: stretch;
+  gap: 1.1cqw;
+}
+.product-card.face .product-card-rows.one {
+  grid-template-columns: minmax(0, 78%);
+  justify-content: center;
 }
 .product-card.face .product-card-rows button {
   position: relative;
   display: block;
   width: 100%;
-  height: 8.6cqw;
+  height: auto;
   margin: 0;
   padding: 0;
   background: none;
@@ -486,9 +492,7 @@
 }
 .product-card.face .product-card-rows button img {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
+  height: auto;
   display: block;
   pointer-events: none;
 }
@@ -499,14 +503,17 @@
   align-items: center;
   justify-content: center;
   background: none;
-  padding: 0 10%;
+  padding: 0 7%;
   font-weight: 700;
-  font-size: 2.7cqw;
-  letter-spacing: 0.02em;
+  font-size: 2.35cqw;
+  letter-spacing: 0.01em;
   line-height: 1;
   white-space: nowrap;
   color: #f4efe4;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+}
+.product-card.face .product-card-rows.one button span {
+  font-size: 3cqw;
 }
 .product-card.theme-emberforge.face .product-card-rows button span { color: #ffc27a; }
 .product-card.theme-verdant.face .product-card-rows button span { color: #e7fff4; }
@@ -519,11 +526,10 @@
   left: auto;
   right: auto;
   top: auto;
-  width: 78%;
+  width: 72%;
   height: auto;
-  max-height: 11cqw;
   align-self: center;
-  margin: 0.2cqw auto 0;
+  margin: 0.3cqw auto 0;
   padding: 0;
   border: 0;
   background: none;
@@ -531,8 +537,7 @@
 }
 .product-card.face .product-card-add img {
   width: 100%;
-  max-height: 11cqw;
-  object-fit: contain;
+  height: auto;
   display: block;
   pointer-events: none;
 }
