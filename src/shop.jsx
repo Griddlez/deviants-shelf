@@ -436,12 +436,6 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
         ))}
       </div>
 
-      {/* Lore */}
-      <div className="parchment-block lore">
-        <h3>The Shelf</h3>
-        <p>A vault of crafted elixirs for seasoned alchemists. Every vial carries its lineage — name, batch, and seal — bound to its rightful bearer.</p>
-      </div>
-
       {/* Full shelf */}
       <div className="shelf-tools" id="shelf">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the shelf" />
@@ -464,6 +458,11 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
         </button>
       </div>
       {note && <p className="err">{note}</p>}
+
+      <div className="parchment-block lore">
+        <h3>The Shelf</h3>
+        <p>A vault of crafted elixirs for seasoned alchemists. Every vial carries its lineage — name, batch, and seal — bound to its rightful bearer.</p>
+      </div>
       {groups.map((group) => (
         <div key={group.row}>
           <div className={`realm-break theme-${THEME[group.items[0]?.id] || "emberforge"}`} id={group.row === "Ironwright Utility" ? "ironwright" : undefined}>
