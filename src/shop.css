@@ -131,6 +131,7 @@
   aspect-ratio: 768 / 1376;
   container-type: inline-size;
   overflow: hidden;
+  border-radius: 3.8% / 1.8%;
   filter: drop-shadow(0 16px 22px var(--plate-glow, rgba(0, 0, 0, 0.45)));
 }
 .theme-emberforge { --plate-glow: rgba(150, 40, 8, 0.55); }
