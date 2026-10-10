@@ -424,13 +424,19 @@
   margin: 0;
   font-family: "Libre Baskerville", Georgia, serif;
   font-style: italic;
-  font-size: 2.45cqw;
-  line-height: 1.25;
+  font-size: clamp(14px, 4.6cqw, 18px);
+  line-height: 1.28;
   text-align: center;
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+@container (max-width: 240px) {
+  .product-card-blurb {
+    font-size: 12px;
+    -webkit-line-clamp: 3;
+  }
 }
 .product-card-note {
   margin: 0;
