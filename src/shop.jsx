@@ -75,6 +75,14 @@ const CARD_INK = {
   kit: "light",
 };
 
+const ADD_BUTTON = {
+  emberforge: "/art/buttons/ember.webp",
+  verdant: "/art/buttons/verdant.webp",
+  astral: "/art/buttons/astral.webp",
+  rosefire: "/art/buttons/rose.webp",
+  ironwright: "/art/buttons/iron.webp",
+};
+
 const FEATURED = ["r3", "bpc", "cjc", "tb5", "pt", "bac"];
 
 /* Tarot cards for the hero window. Same box the vial outline used to sit in. */
@@ -239,9 +247,10 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
             className="product-card-add"
             type="button"
             disabled={soldOut}
+            aria-label={soldOut ? "None on the shelf" : "Add Potion"}
             onClick={() => onAdd(size, product)}
           >
-            {soldOut ? "None on the shelf" : "Add Potion"}
+            <img src={ADD_BUTTON[theme] || ADD_BUTTON.emberforge} alt="" />
           </button>
         </div>
       </div>

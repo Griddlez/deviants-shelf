@@ -482,14 +482,16 @@
   right: auto;
   top: auto;
   height: auto;
-  padding: 1.15cqw 0;
-  color: inherit;
-  background: transparent;
-  border: 1px solid currentColor;
-  font-family: Cinzel, serif;
-  font-size: 3.2cqw;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  padding: 0;
+  border: 0;
+  background: none;
+  line-height: 0;
+}
+.product-card.face .product-card-add img {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
 }
 .product-card.face.ink-light,
 .product-card.face.ink-light .product-card-rows button,
@@ -505,7 +507,6 @@
   color: currentColor;
 }
 .product-card.face .product-card-add:disabled {
-  color: inherit;
-  opacity: 0.55;
-  background: transparent;
+  opacity: 0.45;
+  background: none;
 }
