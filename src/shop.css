@@ -429,11 +429,12 @@
   margin: 0;
   font-family: "Libre Baskerville", Georgia, serif;
   font-style: italic;
-  font-size: clamp(7px, 3.05cqw, 12px);
-  line-height: 1.2;
+  font-size: clamp(6.5px, 2.75cqw, 11.5px);
+  line-height: 1.28;
   text-align: center;
+  flex-shrink: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -444,11 +445,13 @@
   font-size: clamp(7.5px, 3.6cqw, 13px);
   letter-spacing: 0.01em;
   line-height: 1.25;
+  flex-shrink: 0;
 }
 .product-card-buy {
   margin-top: auto;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   gap: 0.9cqw;
 }
 .product-card.face .product-card-rows {
@@ -467,7 +470,7 @@
   justify-content: center;
 }
 .product-card.face .product-card-rows.one:has(button.long) {
-  grid-template-columns: minmax(0, 84%);
+  grid-template-columns: minmax(0, 62%);
 }
 .product-card.face .product-card-rows button {
   position: relative;
@@ -511,7 +514,7 @@
 }
 .product-card.face .product-card-rows button.long span,
 .product-card.face .product-card-rows.one button.long span {
-  font-size: 3.05cqw;
+  font-size: 2.65cqw;
   letter-spacing: 0;
   padding: 0 5%;
 }
