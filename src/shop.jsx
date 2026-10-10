@@ -84,10 +84,10 @@ const ADD_BUTTON = {
 };
 
 const SIZE_PILL = {
-  emberforge: "/art/pills/ember.webp?v=1",
+  emberforge: "/art/pills/ember.webp?v=2",
   verdant: "/art/pills/verdant.webp?v=1",
   astral: "/art/pills/astral.webp?v=1",
-  rosefire: "/art/pills/rose.webp?v=1",
+  rosefire: "/art/pills/rose.webp?v=2",
   ironwright: "/art/pills/iron.webp?v=1",
 };
 
