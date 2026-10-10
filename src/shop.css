@@ -410,15 +410,41 @@
 }
 .product-card-well {
   position: absolute;
-  left: 13%;
-  right: 13%;
-  top: 65.2%;
-  height: 27.2%;
+  left: 12%;
+  right: 12%;
+  top: 64.6%;
+  height: 28.4%;
   z-index: 5;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 1.5cqw;
+  justify-content: flex-start;
+  gap: 0.7cqw;
+}
+.product-card-blurb {
+  margin: 0;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-style: italic;
+  font-size: 2.45cqw;
+  line-height: 1.25;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.product-card-note {
+  margin: 0;
+  text-align: center;
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  font-size: 2.15cqw;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+.product-card-buy {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9cqw;
 }
 .product-card.face .product-card-rows {
   position: static;

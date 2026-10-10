@@ -219,27 +219,31 @@ export function ProductCard({ product, library, stock, onOpen, onAdd, photo, sku
       <img className="product-card-plate" src={`/art/cards/${product.id}.jpg`} alt="" decoding="async" />
       <button className="product-card-open" type="button" onClick={() => onOpen(product.id)} aria-label={`Open ${title}`} />
       <div className="product-card-well">
-        <div className={product.sizes.length < 2 ? "product-card-rows one" : "product-card-rows"}>
-          {product.sizes.map((row) => (
-            <button
-              key={row.sku}
-              type="button"
-              className={row.sku === sku ? "on" : ""}
-              onClick={() => choose(row.sku)}
-            >
-              <span>{row.mg === "kit" ? "Kit" : row.mg}</span>
-              <b>{money(row.vial)}</b>
-            </button>
-          ))}
+        {product.line ? <p className="product-card-blurb">{product.line}</p> : null}
+        {purity ? <p className="product-card-note">{lot?.id ? `Batch ${lot.id} · ` : ""}{purity}</p> : null}
+        <div className="product-card-buy">
+          <div className={product.sizes.length < 2 ? "product-card-rows one" : "product-card-rows"}>
+            {product.sizes.map((row) => (
+              <button
+                key={row.sku}
+                type="button"
+                className={row.sku === sku ? "on" : ""}
+                onClick={() => choose(row.sku)}
+              >
+                <span>{row.mg === "kit" ? "Kit" : row.mg}</span>
+                <b>{money(row.vial)}</b>
+              </button>
+            ))}
+          </div>
+          <button
+            className="product-card-add"
+            type="button"
+            disabled={soldOut}
+            onClick={() => onAdd(size, product)}
+          >
+            {soldOut ? "None on the shelf" : "Add Potion"}
+          </button>
         </div>
-        <button
-          className="product-card-add"
-          type="button"
-          disabled={soldOut}
-          onClick={() => onAdd(size, product)}
-        >
-          {soldOut ? "None on the shelf" : "Add Potion"}
-        </button>
       </div>
     </article>
   );
