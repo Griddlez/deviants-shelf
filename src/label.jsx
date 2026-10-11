@@ -125,8 +125,8 @@ async function paint(canvas, { name, flavor, purity, batch, size, slug, path, pr
   ctx.textAlign = "center";
   const left = Math.round(dx + (plain ? 0.14 : 0.11) * dw);
   const rightText = plain ? Math.round(dx + 0.86 * dw) : Math.round(qx0 - 8);
-  const top = Math.round(dy + 0.40 * dh);
-  const bottom = Math.round(Math.min(H - 6, dy + 0.82 * dh));
+  const top = Math.round(dy + 0.36 * dh);
+  const bottom = Math.round(Math.min(H - 4, dy + 0.88 * dh));
   const column = Math.max(40, rightText - left);
   const mid = (left + rightText) / 2;
   const maxH = Math.max(40, bottom - top);
@@ -134,14 +134,14 @@ async function paint(canvas, { name, flavor, purity, batch, size, slug, path, pr
   const sizeText = size === "kit" ? "Kit" : (size || "");
   const batchText = `Batch #${batch || "—"}  •  ${sizeText || "—"} Vial`;
   const lines = [
-    flavor ? { text: flavor, style: "700 SIZEpx Cinzel, serif", scale: 0.78, gap: 2 } : null,
-    { text: name || "Product", style: "700 SIZEpx Cinzel, serif", scale: 1, gap: 5 },
-    !plain && pure ? { text: pure, style: "italic SIZEpx 'Times New Roman', serif", scale: 0.58, gap: 4 } : null,
+    flavor ? { text: flavor, style: "700 SIZEpx Cinzel, serif", scale: 0.7, gap: 1 } : null,
+    { text: name || "Product", style: "700 SIZEpx Cinzel, serif", scale: 1, gap: 3 },
+    !plain && pure ? { text: pure, style: "italic SIZEpx 'Times New Roman', serif", scale: 0.64, gap: 2 } : null,
     plain
-      ? (sizeText ? { text: sizeText, style: "bold SIZEpx 'Times New Roman', serif", scale: 0.62, gap: 8 } : null)
-      : { text: batchText, style: "bold SIZEpx 'Times New Roman', serif", scale: 0.58, gap: 8 },
-    { text: "Research Use Only", style: "italic SIZEpx 'Times New Roman', serif", scale: 0.48, gap: 2 },
-    { text: "Not for Human Consumption", style: "italic SIZEpx 'Times New Roman', serif", scale: 0.48, gap: 0 },
+      ? (sizeText ? { text: sizeText, style: "bold SIZEpx 'Times New Roman', serif", scale: 0.68, gap: 4 } : null)
+      : { text: batchText, style: "bold SIZEpx 'Times New Roman', serif", scale: 0.64, gap: 4 },
+    { text: "Research Use Only", style: "italic SIZEpx 'Times New Roman', serif", scale: 0.5, gap: 1 },
+    { text: "Not for Human Consumption", style: "italic SIZEpx 'Times New Roman', serif", scale: 0.5, gap: 0 },
   ].filter(Boolean);
   let base = 34;
   let sizes = lines.map((line) => Math.max(8, Math.round(base * line.scale)));
