@@ -16,7 +16,7 @@ const THEME_BY_ID = {
 
 const FRAMES = {
   emberforge: { src: "/art/labels/ember.jpg", qr: [0.655, 0.368, 0.889, 0.800] },
-  verdant: { src: "/art/labels/verdant.jpg", qr: [0.664, 0.377, 0.880, 0.787] },
+  verdant: { src: "/art/labels/verdant.jpg", qr: [0.656, 0.368, 0.894, 0.800] },
   astral: { src: "/art/labels/astral.jpg", qr: [0.675, 0.355, 0.893, 0.768] },
   rosefire: { src: "/art/labels/rose.jpg", qr: [0.636, 0.362, 0.869, 0.789] },
   ironwright: { src: "/art/labels/iron.jpg", qr: [0.60, 0.38, 0.86, 0.76] },
@@ -96,16 +96,17 @@ async function paint(canvas, { name, purity, batch, size, slug, proof, theme }) 
   const url = `HTTPS://THEDEVIANTSSHELF.COM/C/${String(slug || "").toUpperCase()}`;
   const qr = QRCode.create(url, { errorCorrectionLevel: "H" });
   const n = qr.modules.size;
-  const pad = 4;
-  const avail = Math.min(qx1 - qx0, qy1 - qy0) - pad * 2;
-  const mod = Math.max(2, Math.floor(avail / n));
-  const drawn = n * mod;
-  const qrX = qx0 + (qx1 - qx0 - drawn) / 2;
-  const qrY = qy0 + (qy1 - qy0 - drawn) / 2;
+  const pad = 3;
+  const side = Math.min(qx1 - qx0, qy1 - qy0) - pad * 2;
+  const mod = side / n;
+  const qrX = qx0 + (qx1 - qx0 - side) / 2;
+  const qrY = qy0 + (qy1 - qy0 - side) / 2;
   ctx.fillStyle = "#000";
   for (let y = 0; y < n; y += 1) {
     for (let x = 0; x < n; x += 1) {
-      if (qr.modules.get(x, y)) ctx.fillRect(qrX + x * mod, qrY + y * mod, mod, mod);
+      if (qr.modules.get(x, y)) {
+        ctx.fillRect(Math.round(qrX + x * mod), Math.round(qrY + y * mod), Math.ceil(mod), Math.ceil(mod));
+      }
     }
   }
 
