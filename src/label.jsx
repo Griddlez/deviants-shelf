@@ -72,7 +72,7 @@ function schoolFor(item) {
   return (product && THEME_BY_ID[product.id]) || "emberforge";
 }
 
-async function paint(canvas, { name, purity, batch, size, slug, path, proof, theme, plain }) {
+async function paint(canvas, { name, flavor, purity, batch, size, slug, path, proof, theme, plain }) {
   const frameSpec = FRAMES[theme] || FRAMES.emberforge;
   const ctx = canvas.getContext("2d");
   canvas.width = W;
@@ -134,6 +134,7 @@ async function paint(canvas, { name, purity, batch, size, slug, path, proof, the
   const sizeText = size === "kit" ? "Kit" : (size || "");
   const batchText = `Batch #${batch || "—"}  •  ${sizeText || "—"} Vial`;
   const lines = [
+    flavor ? { text: flavor, style: "700 SIZEpx Cinzel, serif", scale: 0.78, gap: 2 } : null,
     { text: name || "Product", style: "700 SIZEpx Cinzel, serif", scale: 1, gap: 5 },
     !plain && pure ? { text: pure, style: "italic SIZEpx 'Times New Roman', serif", scale: 0.58, gap: 4 } : null,
     plain
@@ -217,13 +218,15 @@ export function LabelMaker({ session, presetSlug }) {
     if (!canvas || !slug) return;
     const row = items.find((item) => item.slug === slug);
     const path = row?.shortUrl || `/c/${slug}`;
-    paint(canvas, { name, purity, batch, size, slug, path, proof: true, theme, plain: PLAIN.has(productId) }).catch((error) => setErr(error.message));
+    const flavor = productId === "r3" ? "Ember's Fast" : "";
+    paint(canvas, { name, flavor, purity, batch, size, slug, path, proof: true, theme, plain: PLAIN.has(productId) }).catch((error) => setErr(error.message));
   }, [name, purity, batch, size, slug, theme, productId, items]);
 
   async function download() {
     const canvas = document.createElement("canvas");
     const path = current?.shortUrl || `/c/${slug}`;
-    await paint(canvas, { name, purity, batch, size, slug, path, proof: false, theme, plain: PLAIN.has(productId) });
+    const flavor = productId === "r3" ? "Ember's Fast" : "";
+    await paint(canvas, { name, flavor, purity, batch, size, slug, path, proof: false, theme, plain: PLAIN.has(productId) });
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
     a.download = `${slug || "label"}-niimbot.png`;
