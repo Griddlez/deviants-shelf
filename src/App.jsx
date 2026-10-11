@@ -515,6 +515,7 @@ function Gate({ onIn }) {
 
 function Catalog({ cart, onAdd, onBasket, stock, onDownload, admin, onPrintLabel }) {
   const [library, setLibrary] = useState({});
+  const initialId = (window.location.pathname.match(/^\/p\/([a-z0-9-]+)\/?$/i) || [])[1]?.toLowerCase() || "";
   useEffect(() => {
     let stop = false;
     const pull = () => store.coaIndex().then((rows) => {
@@ -529,6 +530,7 @@ function Catalog({ cart, onAdd, onBasket, stock, onDownload, admin, onPrintLabel
   }, []);
   return (
     <ShopFront
+      initialId={initialId}
       library={library}
       stock={stock}
       cartCount={cart.reduce((n, line) => n + line.qty, 0)}

@@ -67,12 +67,19 @@ function productFor(item) {
   return null;
 }
 
+function flavorFor(product, name) {
+  const charge = String(product?.charge || "").trim();
+  if (!charge) return "";
+  if (charge.toLowerCase() === String(name || "").trim().toLowerCase()) return "";
+  return charge;
+}
+
 function schoolFor(item) {
   const product = productFor(item);
   return (product && THEME_BY_ID[product.id]) || "emberforge";
 }
 
-async function paint(canvas, { name, flavor, purity, batch, size, slug, path, proof, theme, plain }) {
+async function paint(canvas, { name, flavor, purity, batch, size, slug, path, proof, theme, plain, certified }) {
   const frameSpec = FRAMES[theme] || FRAMES.emberforge;
   const ctx = canvas.getContext("2d");
   canvas.width = W;
@@ -100,21 +107,19 @@ async function paint(canvas, { name, flavor, purity, batch, size, slug, path, pr
   const qy0 = dy + fy0 * dh;
   const qx1 = dx + fx1 * dw;
   const qy1 = dy + fy1 * dh;
-  if (!plain) {
-    const url = `https://thedeviantsshelf.com${path.startsWith("/") ? path : `/c/${path}`}`;
-    const qr = QRCode.create(url, { errorCorrectionLevel: "H" });
-    const n = qr.modules.size;
-    const pad = 3;
-    const side = Math.min(qx1 - qx0, qy1 - qy0) - pad * 2;
-    const mod = side / n;
-    const qrX = qx0 + (qx1 - qx0 - side) / 2;
-    const qrY = qy0 + (qy1 - qy0 - side) / 2;
-    ctx.fillStyle = "#000";
-    for (let y = 0; y < n; y += 1) {
-      for (let x = 0; x < n; x += 1) {
-        if (qr.modules.get(x, y)) {
-          ctx.fillRect(Math.round(qrX + x * mod), Math.round(qrY + y * mod), Math.ceil(mod), Math.ceil(mod));
-        }
+  const url = `https://thedeviantsshelf.com${path.startsWith("/") ? path : `/c/${path}`}`;
+  const qr = QRCode.create(url, { errorCorrectionLevel: "H" });
+  const n = qr.modules.size;
+  const pad = 3;
+  const side = Math.min(qx1 - qx0, qy1 - qy0) - pad * 2;
+  const mod = side / n;
+  const qrX = qx0 + (qx1 - qx0 - side) / 2;
+  const qrY = qy0 + (qy1 - qy0 - side) / 2;
+  ctx.fillStyle = "#000";
+  for (let y = 0; y < n; y += 1) {
+    for (let x = 0; x < n; x += 1) {
+      if (qr.modules.get(x, y)) {
+        ctx.fillRect(Math.round(qrX + x * mod), Math.round(qrY + y * mod), Math.ceil(mod), Math.ceil(mod));
       }
     }
   }
@@ -130,16 +135,16 @@ async function paint(canvas, { name, flavor, purity, batch, size, slug, path, pr
   const column = Math.max(40, rightText - left);
   const mid = (left + rightText) / 2;
   const maxH = Math.max(40, bottom - top);
-  const pure = plain ? "" : purityLine(purity);
+  const pure = certified ? purityLine(purity) : "";
   const sizeText = size === "kit" ? "Kit" : (size || "");
   const batchText = `Batch #${batch || "—"}  •  ${sizeText || "—"} Vial`;
   const lines = [
     flavor ? { text: flavor, style: "700 SIZEpx Cinzel, serif", scale: 0.7, gap: 1 } : null,
     { text: name || "Product", style: "700 SIZEpx Cinzel, serif", scale: 1, gap: 3 },
-    !plain && pure ? { text: pure, style: "italic SIZEpx 'Times New Roman', serif", scale: 0.64, gap: 2 } : null,
-    plain
-      ? (sizeText ? { text: sizeText, style: "bold SIZEpx 'Times New Roman', serif", scale: 0.68, gap: 4 } : null)
-      : { text: batchText, style: "bold SIZEpx 'Times New Roman', serif", scale: 0.64, gap: 4 },
+    pure ? { text: pure, style: "italic SIZEpx 'Times New Roman', serif", scale: 0.64, gap: 2 } : null,
+    certified
+      ? { text: batchText, style: "bold SIZEpx 'Times New Roman', serif", scale: 0.64, gap: 4 }
+      : (sizeText ? { text: sizeText, style: "bold SIZEpx 'Times New Roman', serif", scale: 0.68, gap: 4 } : null),
     { text: "Research Use Only", style: "italic SIZEpx 'Times New Roman', serif", scale: 0.5, gap: 1 },
     { text: "Not for Human Consumption", style: "italic SIZEpx 'Times New Roman', serif", scale: 0.5, gap: 0 },
   ].filter(Boolean);
@@ -217,16 +222,18 @@ export function LabelMaker({ session, presetSlug }) {
     const canvas = proofRef.current;
     if (!canvas || !slug) return;
     const row = items.find((item) => item.slug === slug);
-    const path = row?.shortUrl || `/c/${slug}`;
-    const flavor = productId === "r3" ? "Ember's Fast" : "";
-    paint(canvas, { name, flavor, purity, batch, size, slug, path, proof: true, theme, plain: PLAIN.has(productId) }).catch((error) => setErr(error.message));
+    const flavor = flavorFor(productFor({ slug, name, productId }), name);
+    const certified = Boolean(row?.current);
+    const path = certified ? (row?.shortUrl || `/c/${slug}`) : `/p/${productId || slug}`;
+    paint(canvas, { name, flavor, purity, batch, size, slug, path, proof: true, theme, plain: false, certified }).catch((error) => setErr(error.message));
   }, [name, purity, batch, size, slug, theme, productId, items]);
 
   async function download() {
     const canvas = document.createElement("canvas");
-    const path = current?.shortUrl || `/c/${slug}`;
-    const flavor = productId === "r3" ? "Ember's Fast" : "";
-    await paint(canvas, { name, flavor, purity, batch, size, slug, path, proof: false, theme, plain: PLAIN.has(productId) });
+    const certified = Boolean(current?.current);
+    const path = certified ? (current?.shortUrl || `/c/${slug}`) : `/p/${productId || slug}`;
+    const flavor = flavorFor(productFor({ slug, name, productId }), name);
+    await paint(canvas, { name, flavor, purity, batch, size, slug, path, proof: false, theme, plain: false, certified });
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
     a.download = `${slug || "label"}-niimbot.png`;
@@ -234,7 +241,8 @@ export function LabelMaker({ session, presetSlug }) {
   }
 
   const current = items.find((item) => item.slug === slug);
-  const plain = PLAIN.has(productId);
+  const certified = Boolean(current?.current);
+  const productLink = `${window.location.origin}/p/${productId || slug}`;
   const options = [
     ...items,
     ...PRODUCTS
@@ -262,7 +270,7 @@ export function LabelMaker({ session, presetSlug }) {
         </select>
         <label>Product name</label>
         <input value={name} onChange={(e) => setName(e.target.value)} />
-        {!plain && (
+        {certified && (
           <>
             <label>Purity %</label>
             <input value={purity} onChange={(e) => setPurity(e.target.value)} />
@@ -272,11 +280,10 @@ export function LabelMaker({ session, presetSlug }) {
         )}
         <label>Vial size</label>
         <input value={size} onChange={(e) => setSize(e.target.value)} />
-        {!plain && <p className="tiny">Date of analysis · {tested || "—"} · This stays on the COA page the code opens.</p>}
-        {!plain && <p className="tiny">{current ? `${window.location.origin}${current.shortUrl}` : "Pick a product that has a short link."}</p>}
-        {!plain && current && !current.current && <p className="err">This product has no current certificate yet. Add a batch in the COA Library first.</p>}
+        {certified && <p className="tiny">Date of analysis · {tested || "—"} · The code opens the certificate.</p>}
+        <p className="tiny">{certified && current?.shortUrl ? `${window.location.origin}${current.shortUrl}` : productLink}</p>
         <canvas ref={proofRef} className="label-proof" width={W} height={H} />
-        <button className="btn gold" type="button" onClick={download} disabled={!slug || (!plain && !current?.current)}>Download Niimbot PNG</button>
+        <button className="btn gold" type="button" onClick={download} disabled={!slug}>Download Niimbot PNG</button>
       </div>
     </section>
   );

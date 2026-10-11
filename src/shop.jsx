@@ -351,10 +351,13 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
   );
 }
 
-export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownload, admin, onPrintLabel }) {
-  const [openId, setOpenId] = useState("");
+export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownload, admin, onPrintLabel, initialId }) {
+  const [openId, setOpenId] = useState(initialId || "");
   const [q, setQ] = useState("");
   const [note, setNote] = useState("");
+  useEffect(() => {
+    if (initialId) setOpenId(initialId);
+  }, [initialId]);
   const shelf = PRODUCTS.map(enrich);
   const open = shelf.find((item) => item.id === openId);
   const featured = FEATURED.map((id) => shelf.find((item) => item.id === id)).filter(Boolean);
