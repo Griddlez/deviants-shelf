@@ -72,7 +72,7 @@ function schoolFor(item) {
   return (product && THEME_BY_ID[product.id]) || "emberforge";
 }
 
-async function paint(canvas, { name, purity, batch, size, slug, proof, theme, plain }) {
+async function paint(canvas, { name, purity, batch, size, slug, path, proof, theme, plain }) {
   const frameSpec = FRAMES[theme] || FRAMES.emberforge;
   const ctx = canvas.getContext("2d");
   canvas.width = W;
@@ -104,7 +104,7 @@ async function paint(canvas, { name, purity, batch, size, slug, proof, theme, pl
   const qx1 = dx + fx1 * dw;
   const qy1 = dy + fy1 * dh;
   if (!plain) {
-    const url = `HTTPS://THEDEVIANTSSHELF.COM/C/${String(slug || "").toUpperCase()}`;
+    const url = `https://thedeviantsshelf.com${path.startsWith("/") ? path : `/c/${path}`}`;
     const qr = QRCode.create(url, { errorCorrectionLevel: "H" });
     const n = qr.modules.size;
     const pad = 3;
@@ -218,12 +218,15 @@ export function LabelMaker({ session, presetSlug }) {
   useEffect(() => {
     const canvas = proofRef.current;
     if (!canvas || !slug) return;
-    paint(canvas, { name, purity, batch, size, slug, proof: true, theme, plain: PLAIN.has(productId) }).catch((error) => setErr(error.message));
-  }, [name, purity, batch, size, slug, theme, productId]);
+    const row = items.find((item) => item.slug === slug);
+    const path = row?.shortUrl || `/c/${slug}`;
+    paint(canvas, { name, purity, batch, size, slug, path, proof: true, theme, plain: PLAIN.has(productId) }).catch((error) => setErr(error.message));
+  }, [name, purity, batch, size, slug, theme, productId, items]);
 
   async function download() {
     const canvas = document.createElement("canvas");
-    await paint(canvas, { name, purity, batch, size, slug, proof: false, theme, plain: PLAIN.has(productId) });
+    const path = current?.shortUrl || `/c/${slug}`;
+    await paint(canvas, { name, purity, batch, size, slug, path, proof: false, theme, plain: PLAIN.has(productId) });
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
     a.download = `${slug || "label"}-niimbot.png`;

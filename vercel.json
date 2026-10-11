@@ -1,7 +1,8 @@
 {
   "rewrites": [
     { "source": "/invite/(.*)", "destination": "/index.html" },
-    { "source": "/c/(.*)", "destination": "/index.html" }
+    { "source": "/c/(.*)", "destination": "/index.html" },
+    { "source": "/C/(.*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/catalog.js": {
