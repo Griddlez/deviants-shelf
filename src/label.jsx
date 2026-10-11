@@ -17,9 +17,9 @@ const THEME_BY_ID = {
 const FRAMES = {
   emberforge: { src: "/art/labels/ember.jpg", qr: [0.655, 0.368, 0.889, 0.800] },
   verdant: { src: "/art/labels/verdant.jpg", qr: [0.656, 0.368, 0.894, 0.800] },
-  astral: { src: "/art/labels/astral.jpg", qr: [0.675, 0.355, 0.893, 0.768], fit: "contain" },
-  rosefire: { src: "/art/labels/rose.jpg", qr: [0.636, 0.362, 0.869, 0.789], fit: "contain" },
-  ironwright: { src: "/art/labels/iron.jpg", qr: [0.60, 0.38, 0.86, 0.76], fit: "contain" },
+  astral: { src: "/art/labels/astral.jpg", qr: [0.675, 0.355, 0.893, 0.768] },
+  rosefire: { src: "/art/labels/rose.jpg", qr: [0.636, 0.362, 0.869, 0.789] },
+  ironwright: { src: "/art/labels/iron.jpg", qr: [0.60, 0.38, 0.86, 0.76] },
 };
 
 const PLAIN = new Set(["bac", "kit"]);
@@ -79,23 +79,20 @@ async function paint(canvas, { name, purity, batch, size, slug, path, proof, the
   canvas.height = H;
   ctx.clearRect(0, 0, W, H);
   const frame = await loadImage(frameSpec.src);
-  const scale = frameSpec.fit === "contain"
-    ? Math.min(W / frame.width, H / frame.height)
-    : Math.max(W / frame.width, H / frame.height);
-  const dw = frame.width * scale;
-  const dh = frame.height * scale;
-  const dx = (W - dw) / 2;
-  const dy = (H - dh) / 2;
+  const dx = 0;
+  const dy = 0;
+  const dw = W;
+  const dh = H;
   if (proof) {
     const silver = await loadImage("/art/label-silver.jpg");
     ctx.drawImage(silver, 0, 0, W, H);
     ctx.globalCompositeOperation = "multiply";
-    ctx.drawImage(frame, dx, dy, dw, dh);
+    ctx.drawImage(frame, 0, 0, W, H);
     ctx.globalCompositeOperation = "source-over";
   } else {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, W, H);
-    ctx.drawImage(frame, dx, dy, dw, dh);
+    ctx.drawImage(frame, 0, 0, W, H);
   }
 
   const [fx0, fy0, fx1, fy1] = frameSpec.qr;
