@@ -4,7 +4,7 @@ import * as store from "./store.js";
 import { PRODUCTS } from "./data.js";
 
 const W = 472;
-const H = 263;
+const H = 236;
 
 const THEME_BY_ID = {
   r3: "emberforge", amq: "emberforge", mot: "emberforge", nad: "emberforge", cjc: "emberforge",
@@ -46,17 +46,6 @@ function purityLine(purity) {
   return `${shown} Purity (HPLC Verified)`;
 }
 
-function fit(ctx, text, font, max) {
-  let size = font.size;
-  while (size > font.min) {
-    ctx.font = font.style.replace("SIZE", String(size));
-    if (ctx.measureText(text).width <= max) return size;
-    size -= 1;
-  }
-  ctx.font = font.style.replace("SIZE", String(font.min));
-  return font.min;
-}
-
 function schoolFor(item) {
   if (!item) return "emberforge";
   const slug = String(item.slug || "").toLowerCase();
@@ -82,29 +71,37 @@ async function paint(canvas, { name, purity, batch, size, slug, proof, theme }) 
   canvas.height = H;
   ctx.clearRect(0, 0, W, H);
   const frame = await loadImage(frameSpec.src);
+  const scale = Math.max(W / frame.width, H / frame.height);
+  const dw = frame.width * scale;
+  const dh = frame.height * scale;
+  const dx = (W - dw) / 2;
+  const dy = (H - dh) / 2;
   if (proof) {
     const silver = await loadImage("/art/label-silver.jpg");
     ctx.drawImage(silver, 0, 0, W, H);
     ctx.globalCompositeOperation = "multiply";
-    ctx.drawImage(frame, 0, 0, W, H);
+    ctx.drawImage(frame, dx, dy, dw, dh);
     ctx.globalCompositeOperation = "source-over";
   } else {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, W, H);
-    ctx.drawImage(frame, 0, 0, W, H);
+    ctx.drawImage(frame, dx, dy, dw, dh);
   }
 
-  const [qx0, qy0, qx1, qy1] = frameSpec.qr;
+  const [fx0, fy0, fx1, fy1] = frameSpec.qr;
+  const qx0 = dx + fx0 * dw;
+  const qy0 = dy + fy0 * dh;
+  const qx1 = dx + fx1 * dw;
+  const qy1 = dy + fy1 * dh;
   const url = `HTTPS://THEDEVIANTSSHELF.COM/C/${String(slug || "").toUpperCase()}`;
   const qr = QRCode.create(url, { errorCorrectionLevel: "H" });
   const n = qr.modules.size;
-  const boxW = (qx1 - qx0) * W;
-  const boxH = (qy1 - qy0) * H;
-  const inner = Math.min(boxW, boxH) * 0.84;
-  const mod = Math.max(2, Math.floor(inner / n));
+  const pad = 4;
+  const avail = Math.min(qx1 - qx0, qy1 - qy0) - pad * 2;
+  const mod = Math.max(2, Math.floor(avail / n));
   const drawn = n * mod;
-  const qrX = qx0 * W + (boxW - drawn) / 2;
-  const qrY = qy0 * H + (boxH - drawn) / 2;
+  const qrX = qx0 + (qx1 - qx0 - drawn) / 2;
+  const qrY = qy0 + (qy1 - qy0 - drawn) / 2;
   ctx.fillStyle = "#000";
   for (let y = 0; y < n; y += 1) {
     for (let x = 0; x < n; x += 1) {
@@ -116,38 +113,43 @@ async function paint(canvas, { name, purity, batch, size, slug, proof, theme }) 
   ctx.fillStyle = "#000";
   ctx.textBaseline = "top";
   ctx.textAlign = "center";
-  const left = Math.round(0.12 * W);
-  const rightText = Math.round((qx0 - 0.03) * W);
-  const top = Math.round(0.43 * H);
-  const bottom = Math.round(0.80 * H);
+  const left = Math.round(dx + 0.11 * dw);
+  const rightText = Math.round(qx0 - 8);
+  const top = Math.round(dy + 0.40 * dh);
+  const bottom = Math.round(Math.min(H - 6, dy + 0.84 * dh));
   const column = Math.max(40, rightText - left);
   const mid = (left + rightText) / 2;
-  const nameSize = fit(ctx, name || "Product", { size: 20, min: 11, style: "700 SIZEpx Cinzel, serif" }, column);
+  const maxH = Math.max(40, bottom - top);
   const pure = purityLine(purity);
   const batchText = `Batch #${batch || "—"}  •  ${size || "—"} Vial`;
-  const subSize = pure
-    ? fit(ctx, pure, { size: 12, min: 8, style: "italic SIZEpx 'Times New Roman', serif" }, column - 8)
-    : 0;
-  const batchSize = fit(ctx, batchText, { size: 13, min: 8, style: "bold SIZEpx 'Times New Roman', serif" }, column);
-  const block = nameSize + 6 + (pure ? subSize + 6 : 0) + batchSize;
-  const researchTop = bottom - 26;
-  let y = top + Math.max(0, (researchTop - 6 - top - block) / 2);
-
-  ctx.font = `700 ${nameSize}px Cinzel, serif`;
-  ctx.fillText(name || "Product", mid, y);
-  y += nameSize + 6;
-  if (pure) {
-    ctx.font = `italic ${subSize}px 'Times New Roman', serif`;
-    ctx.fillText(pure, mid, y);
-    y += subSize + 6;
+  const lines = [
+    { text: name || "Product", style: "700 SIZEpx Cinzel, serif", scale: 1, gap: 5 },
+    pure ? { text: pure, style: "italic SIZEpx 'Times New Roman', serif", scale: 0.58, gap: 4 } : null,
+    { text: batchText, style: "bold SIZEpx 'Times New Roman', serif", scale: 0.58, gap: 8 },
+    { text: "Research Use Only", style: "italic SIZEpx 'Times New Roman', serif", scale: 0.48, gap: 2 },
+    { text: "Not for Human Consumption", style: "italic SIZEpx 'Times New Roman', serif", scale: 0.48, gap: 0 },
+  ].filter(Boolean);
+  let base = 34;
+  let sizes = lines.map((line) => Math.max(8, Math.round(base * line.scale)));
+  while (base > 8) {
+    sizes = lines.map((line) => Math.max(8, Math.round(base * line.scale)));
+    let h = 0;
+    let wide = false;
+    lines.forEach((line, i) => {
+      ctx.font = line.style.replace("SIZE", String(sizes[i]));
+      if (ctx.measureText(line.text).width > column) wide = true;
+      h += sizes[i] + line.gap;
+    });
+    if (!wide && h <= maxH) break;
+    base -= 1;
   }
-  ctx.font = `bold ${batchSize}px 'Times New Roman', serif`;
-  ctx.fillText(batchText, mid, y);
-
-  ["Research Use Only", "Not for Human Consumption"].forEach((line, i) => {
-    const lineSize = fit(ctx, line, { size: 11, min: 8, style: "italic SIZEpx 'Times New Roman', serif" }, column);
-    ctx.font = `italic ${lineSize}px 'Times New Roman', serif`;
-    ctx.fillText(line, mid, researchTop + i * 13);
+  let block = 0;
+  lines.forEach((line, i) => { block += sizes[i] + line.gap; });
+  let y = top + Math.max(0, (maxH - block) / 2);
+  lines.forEach((line, i) => {
+    ctx.font = line.style.replace("SIZE", String(sizes[i]));
+    ctx.fillText(line.text, mid, y);
+    y += sizes[i] + line.gap;
   });
 }
 
@@ -214,7 +216,7 @@ export function LabelMaker({ session, presetSlug }) {
   return (
     <section className="wrap">
       <h2>Label Generator</h2>
-      <p className="muted">School plate for the Niimbot, 40 × 22 mm at 300 dpi. The rainbow is the tape. The name, batch, and code sit in the open field. Print the downloaded file, not a screenshot of this preview.</p>
+      <p className="muted">40×20 mm plate for the Niimbot, 300 dpi. The rainbow is the tape. Print the downloaded file, not a screenshot of this preview.</p>
       {err && <p className="err">{err}</p>}
       <div className="panel label-desk">
         <label>Product</label>
