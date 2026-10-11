@@ -115,6 +115,7 @@
 .coa-history { list-style: none; padding: 0; }
 .coa-history li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid rgba(228, 194, 122, 0.25); }
 .label-desk { display: grid; gap: 8px; max-width: 720px; }
+.label-proof { width: 100%; height: auto; background: #111; }
 .coa-badge { color: #9af6f1; border: 1px solid rgba(154, 246, 241, 0.45); border-radius: 99px; padding: 2px 8px; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; }
 .lot-line { margin: 4px 0 0; color: var(--muted, #b7a88a); font-size: 13px; }
 .lot-line a { color: #e4c27a; }
