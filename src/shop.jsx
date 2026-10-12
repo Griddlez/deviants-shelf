@@ -91,6 +91,47 @@ const SIZE_PILL = {
   ironwright: "/art/pills/iron.webp?v=1",
 };
 
+const FRAME = {
+  emberforge: "/art/frames/emberforge.webp",
+  verdant: "/art/frames/verdant.webp",
+  astral: "/art/frames/astral.webp",
+  rosefire: "/art/frames/rosefire.webp",
+  ironwright: "/art/frames/ironwright.webp",
+};
+
+const TABLE = {
+  emberforge: "/art/tables/emberforge.webp",
+  verdant: "/art/tables/verdant.webp",
+  astral: "/art/tables/astral.webp",
+  rosefire: "/art/tables/rosefire.webp",
+  ironwright: "/art/tables/ironwright.webp",
+};
+
+/* Item-page photos only. The shelf cards keep their painted plates.
+   A size without its own shot borrows the other size of the same vial. */
+const VIAL_PHOTO = {
+  "R3-5": "/art/vials/R3-5.webp",
+  "R3-20": "/art/vials/R3-5.webp",
+  "AMQ-50": "/art/vials/AMQ-50.webp",
+  "BPC-5": "/art/vials/BPC-5.webp",
+  "BPC-10": "/art/vials/BPC-5.webp",
+  "TB5-5": "/art/vials/TB5-5.webp",
+  "MOT-20": "/art/vials/MOT-20.webp",
+  "KPV-10": "/art/vials/KPV-10.webp",
+  "ARA-10": "/art/vials/ARA-10.webp",
+  "CJC-5-5": "/art/vials/CJC-5-5.webp",
+  "PIN-10": "/art/vials/PIN-10.webp",
+  "EPI-10": "/art/vials/EPI-10.webp",
+  "SEL-5": "/art/vials/SEL-5.webp",
+  "SEM-5": "/art/vials/SEM-5.webp",
+  "NAD-100": "/art/vials/NAD-100.webp",
+  "NAD-500": "/art/vials/NAD-500.webp",
+  "PT-10": "/art/vials/PT-10.webp",
+  "BAC-10": "/art/vials/BAC-10.webp",
+  "GHK-100": "/art/vials/GHK-100.webp",
+  "KIT-1": "/art/vials/KIT-1.webp",
+};
+
 const FEATURED = ["r3", "bpc", "cjc", "tb5", "pt", "bac"];
 
 /* Tarot cards for the hero window. Same box the vial outline used to sit in. */
@@ -287,6 +328,11 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
     : size.coa?.batch
       ? { id: size.coa.batch, purity: size.coa.purity, tested: size.coa.tested, href: size.coa.file, page: "", slug: "" }
       : null;
+  const theme = THEME[product.id] || "emberforge";
+  const tarot = HERO_CARDS.find((card) => card.id === product.id);
+  const photo = VIAL_PHOTO[size.sku] || "";
+  const soldOut = !inStock(stock, size.sku);
+  const title = product.charge || product.name;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -295,25 +341,57 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
   return (
     <section className="apothecary">
       <button className="back-link" type="button" onClick={onBack}>← Back to the shelf</button>
-      <div className="product-top">
-        <ProductCard
-          product={product}
-          library={library}
-          stock={stock}
-          onOpen={() => {}}
-          onAdd={onAdd}
-          photo={VIAL_PHOTOS[product.id]}
-          sku={sku}
-          onSku={setSku}
-        />
-        <div className="product-copy">
-          <p className="potion-kicker">{product.row}</p>
-          <h2>{product.charge || product.name}</h2>
-          {product.charge && product.charge !== product.name && <p className="compound">{product.name}</p>}
-          <p className="potion-line">{product.line}</p>
-          {admin && live?.slug && (
-            <button className="text-link" type="button" onClick={() => onPrintLabel(live.slug)}>Print label</button>
-          )}
+      <div className="item-stage">
+        <div className="item-tarot">
+          <img src={tarot.src} alt={title} />
+        </div>
+        <div className="item-side">
+          {photo ? (
+            <div className={`item-vial theme-${theme}`}>
+              <img className="item-vial-photo" src={photo} alt="" />
+              <img className="item-vial-frame" src={FRAME[theme]} alt="" />
+              <CoaBadge lot={lot} />
+            </div>
+          ) : null}
+          <div className={`item-table theme-${theme}`}>
+            <img className="item-table-plate" src={TABLE[theme]} alt="" />
+            <div className="item-table-well">
+              <div className={product.sizes.length < 2 ? "item-rows one" : "item-rows"}>
+                {product.sizes.map((row) => {
+                  const label = `${row.mg === "kit" ? "Kit" : row.mg} — ${money(row.vial)}`;
+                  return (
+                    <button
+                      key={row.sku}
+                      type="button"
+                      className={`${row.sku === sku ? "on" : ""}${label.length > 16 ? " long" : ""}`}
+                      onClick={() => setSku(row.sku)}
+                    >
+                      <img src={SIZE_PILL[theme]} alt="" />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                className="item-add"
+                type="button"
+                disabled={soldOut}
+                aria-label={soldOut ? "None on the shelf" : "Add Potion"}
+                onClick={() => onAdd(size, product)}
+              >
+                <img src={ADD_BUTTON[theme]} alt="" />
+              </button>
+            </div>
+          </div>
+          <div className="product-copy">
+            <p className="potion-kicker">{product.row}</p>
+            <h2>{title}</h2>
+            {product.charge && product.charge !== product.name && <p className="compound">{product.name}</p>}
+            <p className="potion-line">{product.line}</p>
+            {admin && live?.slug && (
+              <button className="text-link" type="button" onClick={() => onPrintLabel(live.slug)}>Print label</button>
+            )}
+          </div>
         </div>
       </div>
 
