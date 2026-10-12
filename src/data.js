@@ -11,8 +11,8 @@ export const CONFIG = {
   },
   shipping: [
     { id: "usps", label: "USPS", detail: "3–5 days", price: 12 },
-    { id: "fedex2", label: "FedEx 2 Day", detail: "2 Day Air", price: 20 },
-    { id: "overnight", label: "FedEx Overnight", detail: "Overnight", price: 60 },
+    { id: "ups2", label: "UPS 2nd Day Air", detail: "2 business days", price: 20 },
+    { id: "upsnight", label: "UPS Next Day Air", detail: "Overnight", price: 60 },
   ],
 };
 

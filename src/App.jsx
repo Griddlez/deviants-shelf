@@ -57,14 +57,18 @@ function money(n) {
 }
 
 function guessCarrier(order) {
-  if (order.carrier === "fedex" || order.carrier === "usps") return order.carrier;
-  if (order.shipping?.id === "fedex2" || order.shipping?.id === "overnight") return "fedex";
+  if (order.carrier === "ups" || order.carrier === "fedex" || order.carrier === "usps") return order.carrier;
+  const id = order.shipping?.id;
+  if (id === "ups2" || id === "upsnight") return "ups";
+  if (id === "fedex2" || id === "overnight") return "fedex";
   return "usps";
 }
 
 function trackHref(order) {
   const n = encodeURIComponent(String(order.tracking || "").trim());
-  if (guessCarrier(order) === "fedex") return `https://www.fedex.com/fedextrack/?trknbr=${n}`;
+  const carrier = guessCarrier(order);
+  if (carrier === "ups") return `https://www.ups.com/track?tracknum=${n}`;
+  if (carrier === "fedex") return `https://www.fedex.com/fedextrack/?trknbr=${n}`;
   return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}`;
 }
 
@@ -1277,7 +1281,7 @@ function DeskTicket({ order, session, onChange, patchOrder }) {
           </label>
           <div className="row-btns">
             <button type="button" className={carrier === "usps" ? "btn slim picked" : "btn slim"} onClick={() => setCarrier("usps")}>USPS</button>
-            <button type="button" className={carrier === "fedex" ? "btn slim picked" : "btn slim"} onClick={() => setCarrier("fedex")}>FedEx</button>
+            <button type="button" className={carrier === "ups" ? "btn slim picked" : "btn slim"} onClick={() => setCarrier("ups")}>UPS</button>
           </div>
           <p className="tiny">The link opens the carrier you pick here, not the one they paid for.</p>
         </>

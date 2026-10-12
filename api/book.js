@@ -762,7 +762,7 @@ export default async function handler(req, res) {
       if (body.status === "sent") {
         const tracking = String(body.tracking || "").trim().slice(0, 40);
         if (!tracking) throw new Error("Type the tracking number.");
-        const carrier = body.carrier === "fedex" ? "fedex" : "usps";
+        const carrier = body.carrier === "ups" ? "ups" : body.carrier === "fedex" ? "fedex" : "usps";
         order.tracking = tracking;
         order.carrier = carrier;
       }
