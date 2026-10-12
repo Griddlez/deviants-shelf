@@ -141,7 +141,7 @@ function deskLetter(kind, order) {
 function trackHref(order) {
   const n = encodeURIComponent(String(order.tracking || "").trim());
   const id = order.shipping?.id;
-  const carrier = order.carrier || (id === "ups2" || id === "upsnight" ? "ups" : id === "fedex2" || id === "overnight" ? "fedex" : "usps");
+  const carrier = order.carrier || (id === "upsground" || id === "ups2" || id === "upsnight" ? "ups" : id === "fedex2" || id === "overnight" ? "fedex" : "usps");
   if (carrier === "ups") return `https://www.ups.com/track?tracknum=${n}`;
   if (carrier === "fedex") return `https://www.fedex.com/fedextrack/?trknbr=${n}`;
   return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}`;

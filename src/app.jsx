@@ -11,7 +11,7 @@ function money(n) {
 function guessCarrier(order) {
   if (order.carrier === "ups" || order.carrier === "fedex" || order.carrier === "usps") return order.carrier;
   const id = order.shipping?.id;
-  if (id === "ups2" || id === "upsnight") return "ups";
+  if (id === "upsground" || id === "ups2" || id === "upsnight") return "ups";
   if (id === "fedex2" || id === "overnight") return "fedex";
   return "usps";
 }
