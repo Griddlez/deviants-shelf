@@ -222,7 +222,7 @@ export default function App() {
           Active Orders{live.length ? ` (${live.length})` : ""}
         </button>
         <button className={tab === "history" ? "on" : ""} onClick={() => setTab("history")}>History</button>
-        <button className={tab === "account" ? "on" : ""} onClick={() => setTab("account")}>Card</button>
+        <button className={tab === "account" ? "on" : ""} onClick={() => setTab("account")}>Account</button>
         {session.admin && (
           <button className={tab === "admin" ? "on" : ""} onClick={() => setTab("admin")}>Desk</button>
         )}
@@ -1140,7 +1140,7 @@ function AccountCard({ session, onSaved }) {
   if (session.admin) {
     return (
       <section className="wrap">
-        <h2>Your card</h2>
+        <h2>Account</h2>
         <p className="muted">Account 0 is the desk. Member email and PIN are saved on a member card, not this door.</p>
       </section>
     );
@@ -1170,7 +1170,7 @@ function AccountCard({ session, onSaved }) {
 
   return (
     <section className="wrap">
-      <h2>Your card</h2>
+      <h2>Account</h2>
       <p className="muted">No. {session.account} · {session.name}</p>
       <form className="panel" onSubmit={save}>
         <label>Email for order notes</label>
