@@ -128,7 +128,7 @@ const VIAL_PHOTO = {
   "NAD-500": "/art/vials/NAD-500.webp",
   "PT-10": "/art/vials/PT-10.webp",
   "BAC-10": "/art/vials/BAC-10.webp",
-  "GHK-100": "/art/vials/GHK-100.webp",
+  "GHK-100": "/art/vials/GHK-100.webp?v=2",
   "KIT-1": "/art/vials/KIT-1.webp",
 };
 
