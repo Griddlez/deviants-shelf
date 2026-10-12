@@ -218,17 +218,17 @@ async function bookPay() {
 }
 
 const SOCIALS = [
-  ["Facebook", "https://www.facebook.com/share/1EXpYgJv4W/", `${SITE}/art/social/facebook.png`],
-  ["Instagram", "https://www.instagram.com/the_deviants_shelf/", `${SITE}/art/social/instagram.png`],
-  ["X", "https://x.com/DeviantsShelf", `${SITE}/art/social/x.png`],
-  ["Discord", "https://discord.gg/fGspu7HD7", `${SITE}/art/social/discord.png`],
+  ["Facebook", "https://www.facebook.com/share/1EXpYgJv4W/", `${SITE}/art/social/facebook.png?v=2`],
+  ["Instagram", "https://www.instagram.com/the_deviants_shelf/", `${SITE}/art/social/instagram.png?v=2`],
+  ["X", "https://x.com/DeviantsShelf", `${SITE}/art/social/x.png?v=2`],
+  ["Discord", "https://discord.gg/fGspu7HD7", `${SITE}/art/social/discord.png?v=2`],
 ];
 
 function welcomeHtml() {
   const icons = SOCIALS.map(([label, href, src]) => `
     <td style="padding:0 8px;">
       <a href="${href}" style="text-decoration:none;">
-        <img src="${src}" width="44" height="44" alt="${label}" style="display:block;border:0;width:44px;height:44px;">
+        <img src="${src}" width="52" height="52" alt="${label}" style="display:block;border:0;width:52px;height:52px;">
       </a>
     </td>`).join("");
   return `<!doctype html>
