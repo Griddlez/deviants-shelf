@@ -61,7 +61,7 @@ export function ShelfOffer() {
     <div className="offer-shade" role="presentation" onClick={close}>
       <div className="offer-card" role="dialog" aria-modal="true" aria-label="Unlock the shelf" onClick={(event) => event.stopPropagation()}>
         <button className="offer-x" type="button" onClick={close} aria-label="Close">×</button>
-        <img src="/art/offer-gate.jpg" alt="" />
+        <img src="/art/offer-gate.webp?v=3" alt="" />
         {code ? (
           <div className="offer-done">
             <p>The letter is on its way.</p>
@@ -74,12 +74,12 @@ export function ShelfOffer() {
               type="email"
               required
               autoComplete="email"
-              placeholder="Enter your email address..."
+              placeholder="Email address"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               aria-label="Email address"
             />
-            <button type="submit" disabled={busy}>{busy ? "…" : "Claim 10% off"}</button>
+            <button type="submit" disabled={busy}>{busy ? "…" : "CLAIM 10% OFF"}</button>
           </form>
         )}
         {err && <p className="offer-err">{err}</p>}
