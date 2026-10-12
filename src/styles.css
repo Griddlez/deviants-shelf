@@ -112,47 +112,52 @@ button, input { font: inherit; }
 }
 .offer-form {
   position: absolute;
-  left: 14%;
-  right: 13.5%;
-  top: 61.5%;
-  height: 9.6%;
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-  box-sizing: border-box;
-  padding: 4px 5px;
-  background: #100e0c;
-  border-radius: 16px;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
 }
 .offer-form input {
-  flex: 1.15;
-  min-width: 0;
+  position: absolute;
+  left: 14.2%;
+  top: 62.6%;
+  width: 39.5%;
+  height: 7.4%;
   margin: 0;
-  padding: 0 14px;
-  border: 1px solid #2c2824;
-  border-radius: 16px;
-  background: #14110f;
-  color: #f4ead6;
-  font-family: "Source Sans 3", system-ui, sans-serif;
-  font-size: clamp(13px, 1.5vw, 17px);
+  padding: 0 1.2% 0 2%;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #ece6dc;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-style: italic;
+  font-size: clamp(12px, 1.55vw, 18px);
+  text-align: center;
   outline: none;
 }
-.offer-form input::placeholder { color: #8d847a; }
-.offer-form button {
-  flex: 0.72;
-  margin: 0;
-  border: 0;
-  cursor: pointer;
-  background: linear-gradient(180deg, #f2c7a0 0%, #c47b46 48%, #8a4c28 100%);
-  color: #3a2414;
-  font-family: Cinzel, serif;
-  font-weight: 700;
-  font-size: clamp(9px, 2.6vw, 14px);
-  letter-spacing: 0.02em;
-  clip-path: polygon(4% 0, 100% 0, 96% 100%, 0 100%);
-  padding: 0 8px 0 14px;
-  white-space: nowrap;
+.offer-form input:focus,
+.offer-form input:not(:placeholder-shown) {
+  background: #17161b;
 }
+.offer-form input::placeholder { color: transparent; }
+.offer-form button {
+  position: absolute;
+  left: 54.2%;
+  top: 61.4%;
+  width: 36.6%;
+  height: 10.4%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+}
+.offer-form button:hover { background: rgba(255, 220, 176, 0.14); }
+.offer-form button:active { background: rgba(0, 0, 0, 0.18); }
+.offer-form button:disabled { cursor: wait; }
 .offer-done {
   position: absolute;
   left: 16%;

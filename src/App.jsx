@@ -791,7 +791,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced, usual }) {
           )}
           <div className="codebox">
             <h3 className="label">Discount code</h3>
-            <p className="tiny">Two codes at most.</p>
+            <p className="tiny">Two codes at most. WELCOME10 works once, and only on the email the letter was sent to.</p>
             <div className="row-btns">
               <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Code" autoComplete="off" />
               <button className="btn slim" type="button" onClick={addCode}>Apply</button>

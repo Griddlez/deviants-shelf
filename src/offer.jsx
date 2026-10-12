@@ -4,6 +4,16 @@ const CLAIMED = "shelf-welcome";
 const LATER = "shelf-welcome-later";
 const WAIT = 45_000;
 
+function alreadyClaimed() {
+  if (localStorage.getItem(CLAIMED)) return true;
+  return document.cookie.split(";").some((part) => part.trim().startsWith("shelf-welcome="));
+}
+
+function rememberClaim() {
+  localStorage.setItem(CLAIMED, "1");
+  document.cookie = "shelf-welcome=1; max-age=31536000; path=/; samesite=lax";
+}
+
 export function ShelfOffer() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -12,11 +22,13 @@ export function ShelfOffer() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    if (localStorage.getItem(CLAIMED) || sessionStorage.getItem(LATER)) return undefined;
+    if (alreadyClaimed() || sessionStorage.getItem(LATER)) return undefined;
     const started = Number(sessionStorage.getItem("shelf-welcome-at") || 0) || Date.now();
     sessionStorage.setItem("shelf-welcome-at", String(started));
     const left = Math.max(0, WAIT - (Date.now() - started));
-    const timer = setTimeout(() => setOpen(true), left);
+    const timer = setTimeout(() => {
+      if (!alreadyClaimed()) setOpen(true);
+    }, left);
     return () => clearTimeout(timer);
   }, []);
 
@@ -27,6 +39,7 @@ export function ShelfOffer() {
 
   async function claim(event) {
     event.preventDefault();
+    if (busy) return;
     setBusy(true);
     setErr("");
     try {
@@ -37,6 +50,7 @@ export function ShelfOffer() {
       });
       const data = await saved.json().catch(() => ({}));
       if (!saved.ok) throw new Error(data.error || "The shelf could not take that address.");
+      rememberClaim();
       if (!data.already) {
         const sent = await fetch("/api/mail", {
           method: "POST",
@@ -46,7 +60,6 @@ export function ShelfOffer() {
         const note = await sent.json().catch(() => ({}));
         if (!sent.ok) throw new Error(note.error || "The letter could not be sent.");
       }
-      localStorage.setItem(CLAIMED, "1");
       setCode(data.code || "WELCOME10");
     } catch (error) {
       setErr(error.message);
@@ -66,7 +79,7 @@ export function ShelfOffer() {
           <div className="offer-done">
             <p>The letter is on its way.</p>
             <p>Your mark is <b>{code}</b></p>
-            <p>It takes 10% off the first order.</p>
+            <p>It works on one purchase.</p>
           </div>
         ) : (
           <form className="offer-form" onSubmit={claim}>
@@ -74,12 +87,12 @@ export function ShelfOffer() {
               type="email"
               required
               autoComplete="email"
-              placeholder="Email address"
+              placeholder=" "
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               aria-label="Email address"
             />
-            <button type="submit" disabled={busy}>{busy ? "…" : "CLAIM 10% OFF"}</button>
+            <button type="submit" disabled={busy} aria-label="Claim 10% off" />
           </form>
         )}
         {err && <p className="offer-err">{err}</p>}

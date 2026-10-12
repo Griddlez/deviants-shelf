@@ -109,7 +109,10 @@ function mergeSubscribers(latest, incoming) {
     if (!email) continue;
     const prev = map.get(email);
     if (!prev) map.set(email, { ...row, email });
-    else map.set(email, { ...prev, ...row, email, at: Math.min(Number(prev.at) || Number(row.at) || 0, Number(row.at) || Number(prev.at) || 0) });
+    else {
+      const used = prev.used || row.used || "";
+      map.set(email, { ...prev, ...row, email, used, at: Math.min(Number(prev.at) || Number(row.at) || 0, Number(row.at) || Number(prev.at) || 0) });
+    }
   }
   return [...map.values()].sort((a, b) => (a.at || 0) - (b.at || 0));
 }
@@ -725,6 +728,18 @@ export default async function handler(req, res) {
       const sub = fullItems.reduce((n, line) => n + line.price * line.qty, 0);
       const quote = quoteOrder(sub, String(incoming.shipping?.id || ""), incoming.codes);
       if (quote.error) throw new Error(quote.error);
+      const contactEmail = String(contact.email || person.email || "").trim().toLowerCase();
+      if ((quote.codes || []).includes("WELCOME10")) {
+        const welcome = (book.subscribers || []).find((row) => row.email === contactEmail);
+        const spent = welcome?.used || (book.orders || []).some((order) =>
+          order.status !== "expired" &&
+          (order.codes || []).includes("WELCOME10") &&
+          String(order.contact?.email || "").trim().toLowerCase() === contactEmail
+        );
+        if (!welcome) throw new Error("WELCOME10 only works on the email the letter was sent to.");
+        if (spent) throw new Error("WELCOME10 can only be used on one purchase.");
+        welcome.used = id;
+      }
       const shipMeta = CONFIG.shipping.find((row) => row.id === incoming.shipping?.id);
       const full = {
         id,
