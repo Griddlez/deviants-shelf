@@ -195,7 +195,10 @@ export default function App() {
   const live = visible.filter((o) => o.status !== "history" && o.status !== "expired");
   const past = visible.filter((o) => o.status === "history" || o.status === "expired");
 
+  const basketCount = cart.reduce((n, line) => n + line.qty, 0);
+
   return (
+    <>
     <div className="app">
       <header className="top">
         <div className="brand">
@@ -314,6 +317,12 @@ export default function App() {
         <span>Research use only. Nothing here is a medicine.</span>
       </footer>
     </div>
+    {tab !== "order" && (
+      <button className="basket-dock" type="button" onClick={() => { setTab("order"); setFlow({ step: "ship" }); }}>
+        {basketCount === 0 ? "Basket is empty" : basketCount === 1 ? "1 in the basket" : `${basketCount} in the basket`}
+      </button>
+    )}
+    </>
   );
 }
 
