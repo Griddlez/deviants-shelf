@@ -237,7 +237,7 @@ function welcomeHtml() {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#1a120c;padding:18px 8px 28px;">
     <tr><td align="center">
       <img src="${SITE}/art/welcome-letter.jpg" width="640" alt="Your passage into The Deviant's Shelf" style="display:block;width:100%;max-width:640px;height:auto;border:0;">
-      <p style="margin:16px 0 8px;color:#e4c27a;font-family:Georgia,serif;font-size:16px;">Your mark for 10% off the first order: <b>WELCOME10</b></p>
+      <p style="margin:16px 0 8px;color:#e4c27a;font-family:Georgia,serif;font-size:16px;">Your mark for 10% off: <b>WELCOME10</b></p>
       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px auto 0;"><tr>${icons}</tr></table>
     </td></tr>
   </table>

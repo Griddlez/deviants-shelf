@@ -21,7 +21,7 @@ const CODE_BOOK = {
   "F&F30": { kind: "percent", amount: 30, label: "Friends and family" },
   HNDLVR: { kind: "ship", label: "Hand delivery" },
   "4DAKNG": { kind: "percent", amount: 10, label: "Military" },
-  WELCOME10: { kind: "percent", amount: 10, label: "First order" },
+  WELCOME10: { kind: "percent", amount: 10, label: "Welcome" },
 };
 
 export function quoteOrder(sub, shipId, rawCodes) {

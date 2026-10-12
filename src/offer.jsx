@@ -79,7 +79,6 @@ export function ShelfOffer() {
           <div className="offer-done">
             <p>The letter is on its way.</p>
             <p>Your mark is <b>{code}</b></p>
-            <p>It works on one purchase.</p>
           </div>
         ) : (
           <form className="offer-form" onSubmit={claim}>
