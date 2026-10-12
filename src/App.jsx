@@ -53,7 +53,8 @@ function OrderPath({ at }) {
 }
 
 function money(n) {
-  return `$${Number(n).toFixed(0)}`;
+  const value = Number(n) || 0;
+  return `$${Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2)}`;
 }
 
 function guessCarrier(order) {

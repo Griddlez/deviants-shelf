@@ -13,7 +13,8 @@ function esc(value) {
 }
 
 function money(n) {
-  return `$${Number(n || 0).toFixed(0)}`;
+  const value = Number(n) || 0;
+  return `$${Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2)}`;
 }
 
 function payRows(pay) {
