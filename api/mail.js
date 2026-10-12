@@ -217,6 +217,34 @@ async function bookPay() {
   }
 }
 
+const SOCIALS = [
+  ["Facebook", "https://www.facebook.com/share/1EXpYgJv4W/", `${SITE}/art/social/facebook.png`],
+  ["Instagram", "https://www.instagram.com/the_deviants_shelf/", `${SITE}/art/social/instagram.png`],
+  ["X", "https://x.com/DeviantsShelf", `${SITE}/art/social/x.png`],
+  ["Discord", "https://discord.gg/fGspu7HD7", `${SITE}/art/social/discord.png`],
+];
+
+function welcomeHtml() {
+  const icons = SOCIALS.map(([label, href, src]) => `
+    <td style="padding:0 8px;">
+      <a href="${href}" style="text-decoration:none;">
+        <img src="${src}" width="44" height="44" alt="${label}" style="display:block;border:0;width:44px;height:44px;">
+      </a>
+    </td>`).join("");
+  return `<!doctype html>
+<html>
+<body style="margin:0;background:#1a120c;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#1a120c;padding:18px 8px 28px;">
+    <tr><td align="center">
+      <img src="${SITE}/art/welcome-letter.jpg" width="640" alt="Your passage into The Deviant's Shelf" style="display:block;width:100%;max-width:640px;height:auto;border:0;">
+      <p style="margin:16px 0 8px;color:#e4c27a;font-family:Georgia,serif;font-size:16px;">Your mark for 10% off the first order: <b>WELCOME10</b></p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px auto 0;"><tr>${icons}</tr></table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Use POST." });
@@ -227,6 +255,32 @@ export default async function handler(req, res) {
     return;
   }
   const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+  if (body.kind === "welcome") {
+    const to = String(body.email || "").trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      res.status(400).json({ error: "That email does not look right." });
+      return;
+    }
+    try {
+      const transport = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
+      });
+      await transport.sendMail({
+        from: `The Deviant's Shelf <${FROM}>`,
+        to,
+        replyTo: FROM,
+        subject: "Your Passage Into The Deviant’s Shelf",
+        html: welcomeHtml(),
+      });
+      res.status(200).json({ ok: true });
+    } catch {
+      res.status(502).json({ error: "The letter could not be sent." });
+    }
+    return;
+  }
   const order = { ...(body.order || {}) };
   const stored = await bookPay();
   const handles = ["venmo", "cashApp", "chime"];

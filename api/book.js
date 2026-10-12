@@ -17,6 +17,7 @@ export async function readBook() {
   if (!data.stock || typeof data.stock !== "object") data.stock = {};
   if (!data.pay || typeof data.pay !== "object") data.pay = {};
   if (!Array.isArray(data.coaLibrary)) data.coaLibrary = [];
+  if (!Array.isArray(data.subscribers)) data.subscribers = [];
   return data;
 }
 
@@ -97,7 +98,20 @@ function mergeBook(latest, incoming) {
     pay: incoming.pay && Object.keys(incoming.pay).length ? incoming.pay : (latest.pay || {}),
     coaLibrary: mergeCoa(latest, incoming),
     coaSeeded: Boolean(latest.coaSeeded || incoming.coaSeeded),
+    subscribers: mergeSubscribers(latest, incoming),
   };
+}
+
+function mergeSubscribers(latest, incoming) {
+  const map = new Map();
+  for (const row of [...(latest.subscribers || []), ...(incoming.subscribers || [])]) {
+    const email = String(row?.email || "").trim().toLowerCase();
+    if (!email) continue;
+    const prev = map.get(email);
+    if (!prev) map.set(email, { ...row, email });
+    else map.set(email, { ...prev, ...row, email, at: Math.min(Number(prev.at) || Number(row.at) || 0, Number(row.at) || Number(prev.at) || 0) });
+  }
+  return [...map.values()].sort((a, b) => (a.at || 0) - (b.at || 0));
 }
 
 function mergeCoa(latest, incoming) {
@@ -527,6 +541,22 @@ export default async function handler(req, res) {
   }
   const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
   try {
+    if (body.action === "subscribe") {
+      const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        res.status(400).json({ error: "That email does not look right." });
+        return;
+      }
+      const book = await readBook();
+      const already = (book.subscribers || []).some((row) => row.email === email);
+      if (!already) {
+        book.subscribers = book.subscribers || [];
+        book.subscribers.push({ email, at: Date.now(), code: "WELCOME10" });
+        await writeBook(book);
+      }
+      res.status(200).json({ ok: true, code: "WELCOME10", already });
+      return;
+    }
     if (body.action === "cut") {
       if (!deskOk(body.deskPin)) {
         res.status(401).json({ error: "That desk PIN is not right." });
@@ -561,6 +591,7 @@ export default async function handler(req, res) {
       res.status(200).json({
         url: `https://thedeviantsshelf.com/invite/link/${book.door}`,
         members,
+        subscribers: (book.subscribers || []).map((row) => ({ email: row.email, at: row.at || 0 })),
         invites: book.invites.map((c) => ({
           account: c.account,
           pin: c.pin,

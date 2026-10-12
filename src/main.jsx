@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
+import { ShelfOffer } from "./offer.jsx";
 import "./styles.css";
 import "./age.css";
 import "./shop.css";
@@ -8,5 +9,6 @@ import "./shop.css";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <App />
+    <ShelfOffer />
   </React.StrictMode>
 );

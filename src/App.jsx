@@ -1387,8 +1387,10 @@ function labelStatus(s) {
 
 function AdminDesk({ session, stock, pay, onStock, onPay }) {
   const [members, setMembers] = useState([]);
+  const [subscribers, setSubscribers] = useState([]);
   const [link, setLink] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copiedMail, setCopiedMail] = useState(false);
   const [err, setErr] = useState("");
 
   useEffect(() => {
@@ -1399,6 +1401,7 @@ function AdminDesk({ session, stock, pay, onStock, onPay }) {
     store.deskBook(session.deskPin).then((data) => {
       setLink(data.url || "");
       setMembers(data.members || []);
+      setSubscribers(data.subscribers || []);
     }).catch((e) => setErr(e.message));
   }, [session]);
 
@@ -1430,6 +1433,29 @@ function AdminDesk({ session, stock, pay, onStock, onPay }) {
           ))}
         </div>
       )}
+      <div className="panel">
+        <h3>Mailing list</h3>
+        <p className="tiny">{subscribers.length ? `${subscribers.length} on the list` : "No one has claimed the letter yet."}</p>
+        {subscribers.map((row) => (
+          <p key={row.email} className="tiny">{row.email}{row.at ? ` · ${new Date(row.at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : ""}</p>
+        ))}
+        {subscribers.length > 0 && (
+          <button
+            className="btn slim"
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(subscribers.map((row) => row.email).join("\n"));
+                setCopiedMail(true);
+              } catch {
+                setCopiedMail(false);
+              }
+            }}
+          >
+            {copiedMail ? "Copied" : "Copy addresses"}
+          </button>
+        )}
+      </div>
       <p className="muted">Open tickets are on Active Orders. They update on their own.</p>
       <ShelfPay session={session} pay={pay} onPay={onPay} />
       <ShelfStock session={session} stock={stock} onStock={onStock} />
