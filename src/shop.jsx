@@ -132,7 +132,7 @@ const VIAL_PHOTO = {
   "KIT-1": "/art/vials/KIT-1.webp",
 };
 
-const FEATURED = ["r3", "bpc", "cjc", "tb5", "pt", "bac"];
+const FEATURED = ["r3", "sem", "bpc"];
 
 /* Tarot cards for the hero window. Same box the vial outline used to sit in. */
 const HERO_CARDS = [
