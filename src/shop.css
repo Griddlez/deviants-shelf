@@ -838,7 +838,10 @@
   transform: none;
   cursor: default;
 }
-.item-copy { margin-top: 18px; text-align: center; }
+.item-copy { margin-top: 22px; text-align: center; }
+.item-copy.realm-break { padding: 18px 7% 16px; }
+.item-copy.realm-break h2 { margin: 2px 0 4px; }
+.item-copy .potion-line { margin: 8px auto 0; max-width: 44rem; }
 
 @media (max-width: 800px) {
   .item-stage { grid-template-columns: minmax(0, 1fr); }

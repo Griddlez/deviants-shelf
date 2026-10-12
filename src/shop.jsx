@@ -202,7 +202,7 @@ function money(n) {
 
 function enrich(product) {
   const flavor = FLAVOR[product.id] || { row: "The shelf", note: "", line: product.blurb };
-  return { ...product, row: flavor.row, note: flavor.note, line: flavor.line || product.blurb, tone: TONE[product.id] || "ember" };
+  return { ...product, row: flavor.row, note: flavor.note, line: flavor.line || product.blurb, desc: flavor.desc || product.blurb, tone: TONE[product.id] || "ember" };
 }
 
 function lotFor(product, library) {
@@ -387,7 +387,7 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
           </div>
         </div>
       </div>
-      <div className="product-copy item-copy">
+      <div className={`product-copy item-copy realm-break theme-${theme}`}>
             <p className="potion-kicker">{product.row}</p>
             <h2>{title}</h2>
             {product.charge && product.charge !== product.name && <p className="compound">{product.name}</p>}
@@ -405,7 +405,7 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
         ))}
       </div>
       <div className="parchment-block">
-        {tab === "description" && <p>{product.blurb} {product.line}</p>}
+        {tab === "description" && <p>{product.desc}</p>}
         {tab === "ingredients" && (
           <p>{product.name}{size.mg !== "kit" ? `, ${size.mg} lyophilized vial` : ""}. Research material only. No fillers are listed on the certificate.</p>
         )}
