@@ -652,9 +652,9 @@
 /* Item page: tarot, framed vial, then the school table. The shelf grid is untouched. */
 .item-stage {
   display: grid;
-  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
-  gap: 22px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
   margin-top: 12px;
 }
 .item-tarot img {
@@ -664,13 +664,47 @@
   border-radius: 3.2% / 1.6%;
   filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.5));
 }
-.item-side { min-width: 0; }
+.item-side {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+.item-fit {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.6%;
+}
 .item-vial {
   position: relative;
-  width: min(100%, 340px);
-  margin: 0 auto;
+  height: 66%;
+  width: auto;
+  max-width: 70%;
   aspect-ratio: 900 / 1613;
+  margin: 0;
+  flex: 0 0 auto;
 }
+.item-table {
+  position: relative;
+  height: 29%;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  flex: 0 0 auto;
+  container-type: inline-size;
+  aspect-ratio: 2.12 / 1;
+  --well-x: 11%;
+  --well-t: 28%;
+  --well-b: 26%;
+}
+.item-table.theme-emberforge { aspect-ratio: 1400 / 666; --well-t: 31%; --well-b: 29%; --well-x: 12%; }
+.item-table.theme-verdant { aspect-ratio: 1400 / 613; --well-t: 28%; --well-b: 27%; }
+.item-table.theme-astral { aspect-ratio: 1400 / 597; --well-t: 26%; --well-b: 28%; }
+.item-table.theme-rosefire { aspect-ratio: 1400 / 724; --well-t: 30%; --well-b: 32%; --well-x: 14%; }
+.item-table.theme-ironwright { aspect-ratio: 1400 / 671; --well-t: 22%; --well-b: 22%; --well-x: 10%; }
 .item-vial-photo {
   position: absolute;
   left: var(--hl);
@@ -702,23 +736,10 @@
   width: 20%;
   z-index: 4;
 }
-.item-table {
-  position: relative;
-  width: 100%;
-  margin-top: 8px;
-  container-type: inline-size;
-  --well-x: 9%;
-  --well-t: 26%;
-  --well-b: 24%;
-}
-.item-table.theme-emberforge { --well-t: 30%; --well-b: 28%; --well-x: 10%; }
-.item-table.theme-verdant { --well-t: 27%; --well-b: 26%; }
-.item-table.theme-astral { --well-t: 24%; --well-b: 28%; }
-.item-table.theme-rosefire { --well-t: 28%; --well-b: 32%; --well-x: 12%; }
-.item-table.theme-ironwright { --well-t: 20%; --well-b: 20%; --well-x: 8%; }
 .item-table-plate {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: fill;
   display: block;
   pointer-events: none;
   user-select: none;
@@ -733,18 +754,19 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 1.5cqw;
+  gap: 6%;
   z-index: 2;
 }
 .item-rows {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  width: 100%;
-  gap: 1.8cqw;
+  width: 92%;
+  gap: 4%;
 }
 .item-rows.one {
-  grid-template-columns: minmax(0, 58%);
+  grid-template-columns: minmax(0, 54%);
   justify-content: center;
+  width: 100%;
 }
 .item-rows button,
 .item-add {
@@ -761,7 +783,7 @@
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.14s ease, filter 0.14s ease;
 }
-.item-add { width: 62%; }
+.item-add { width: 56%; }
 .item-rows button:hover,
 .item-add:hover {
   filter: brightness(1.16);
@@ -794,15 +816,15 @@
   justify-content: center;
   padding: 0 8%;
   font-weight: 700;
-  font-size: 2.15cqw;
+  font-size: clamp(11px, 3.1cqw, 16px);
   letter-spacing: 0.01em;
   line-height: 1;
   white-space: nowrap;
   color: #f4efe4;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
 }
-.item-rows.one button span { font-size: 2.5cqw; }
-.item-rows button.long span { font-size: 1.55cqw; letter-spacing: 0; padding: 0 6%; }
+.item-rows.one button span { font-size: clamp(12px, 3.6cqw, 18px); }
+.item-rows button.long span { font-size: clamp(9px, 2.35cqw, 13px); letter-spacing: 0; padding: 0 6%; }
 .item-table.theme-emberforge .item-rows button span { color: #ffc27a; }
 .item-table.theme-verdant .item-rows button span { color: #e7fff4; }
 .item-table.theme-astral .item-rows button span { color: #f3f6ff; }
@@ -816,12 +838,16 @@
   transform: none;
   cursor: default;
 }
-.item-side .product-copy { margin-top: 14px; }
+.item-copy { margin-top: 18px; text-align: center; }
 
 @media (max-width: 800px) {
   .item-stage { grid-template-columns: minmax(0, 1fr); }
   .item-tarot { width: min(100%, 300px); margin: 0 auto; }
-  .item-vial { width: min(78%, 280px); }
+  .item-side { height: auto; }
+  .item-fit { position: static; gap: 12px; }
+  .item-vial { height: auto; width: min(70%, 240px); max-width: none; }
+  .item-table { height: auto; width: 100%; max-width: 100%; aspect-ratio: auto; }
+  .item-table-plate { height: auto; }
   .item-rows button span { font-size: 3.1cqw; }
   .item-rows.one button span { font-size: 3.4cqw; }
   .item-rows button.long span { font-size: 2.3cqw; }

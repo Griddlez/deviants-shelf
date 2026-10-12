@@ -346,44 +346,48 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
           <img src={tarot.src} alt={title} />
         </div>
         <div className="item-side">
-          {photo ? (
-            <div className={`item-vial theme-${theme}`}>
-              <img className="item-vial-photo" src={photo} alt="" />
-              <img className="item-vial-frame" src={FRAME[theme]} alt="" />
-              <CoaBadge lot={lot} />
-            </div>
-          ) : null}
-          <div className={`item-table theme-${theme}`}>
-            <img className="item-table-plate" src={TABLE[theme]} alt="" />
-            <div className="item-table-well">
-              <div className={product.sizes.length < 2 ? "item-rows one" : "item-rows"}>
-                {product.sizes.map((row) => {
-                  const label = `${row.mg === "kit" ? "Kit" : row.mg} — ${money(row.vial)}`;
-                  return (
-                    <button
-                      key={row.sku}
-                      type="button"
-                      className={`${row.sku === sku ? "on" : ""}${label.length > 16 ? " long" : ""}`}
-                      onClick={() => setSku(row.sku)}
-                    >
-                      <img src={SIZE_PILL[theme]} alt="" />
-                      <span>{label}</span>
-                    </button>
-                  );
-                })}
+          <div className="item-fit">
+            {photo ? (
+              <div className={`item-vial theme-${theme}`}>
+                <img className="item-vial-photo" src={photo} alt="" />
+                <img className="item-vial-frame" src={FRAME[theme]} alt="" />
+                <CoaBadge lot={lot} />
               </div>
-              <button
-                className="item-add"
-                type="button"
-                disabled={soldOut}
-                aria-label={soldOut ? "None on the shelf" : "Add Potion"}
-                onClick={() => onAdd(size, product)}
-              >
-                <img src={ADD_BUTTON[theme]} alt="" />
-              </button>
+            ) : null}
+            <div className={`item-table theme-${theme}`}>
+              <img className="item-table-plate" src={TABLE[theme]} alt="" />
+              <div className="item-table-well">
+                <div className={product.sizes.length < 2 ? "item-rows one" : "item-rows"}>
+                  {product.sizes.map((row) => {
+                    const label = `${row.mg === "kit" ? "Kit" : row.mg} — ${money(row.vial)}`;
+                    return (
+                      <button
+                        key={row.sku}
+                        type="button"
+                        className={`${row.sku === sku ? "on" : ""}${label.length > 16 ? " long" : ""}`}
+                        onClick={() => setSku(row.sku)}
+                      >
+                        <img src={SIZE_PILL[theme]} alt="" />
+                        <span>{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  className="item-add"
+                  type="button"
+                  disabled={soldOut}
+                  aria-label={soldOut ? "None on the shelf" : "Add Potion"}
+                  onClick={() => onAdd(size, product)}
+                >
+                  <img src={ADD_BUTTON[theme]} alt="" />
+                </button>
+              </div>
             </div>
           </div>
-          <div className="product-copy">
+        </div>
+      </div>
+      <div className="product-copy item-copy">
             <p className="potion-kicker">{product.row}</p>
             <h2>{title}</h2>
             {product.charge && product.charge !== product.name && <p className="compound">{product.name}</p>}
@@ -391,8 +395,6 @@ function ProductView({ product, library, stock, onAdd, onBack, onOpen, admin, on
             {admin && live?.slug && (
               <button className="text-link" type="button" onClick={() => onPrintLabel(live.slug)}>Print label</button>
             )}
-          </div>
-        </div>
       </div>
 
       <div className="rune-tabs">
