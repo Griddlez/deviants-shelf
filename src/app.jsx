@@ -712,6 +712,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
               </button>
             ))}
           </div>
+          <p className="warn">UPS Next Day Air purchases must be placed by 2pm Eastern to make the overnight cutoff.</p>
           {!!templates.length && (
             <div className="row-btns">
               {templates.map((item) => (
@@ -756,6 +757,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced }) {
             {codeErr && <p className="err">{codeErr}</p>}
           </div>
           <div className="line"><span>Shipping · {quote.hand ? "Hand delivery" : ship.label}</span><b>{money(quote.shipPrice)}</b></div>
+          {!quote.hand && ship.note && <p className="warn">{ship.note}</p>}
           <div className="line total"><span>Total</span><b>{money(total)}</b></div>
           <div className="row-btns">
             <button className="btn" onClick={() => setStep("ship")}>Back</button>
