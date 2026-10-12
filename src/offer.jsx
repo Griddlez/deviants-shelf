@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 const CLAIMED = "shelf-welcome";
 const LATER = "shelf-welcome-later";
-const WAIT = 90_000;
+const WAIT = 45_000;
 
 export function ShelfOffer() {
   const [open, setOpen] = useState(false);
