@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/invite/(.*)", "destination": "/index.html" },
+    { "source": "/i/(.*)", "destination": "/index.html" },
     { "source": "/c/(.*)", "destination": "/index.html" },
     { "source": "/C/(.*)", "destination": "/index.html" },
     { "source": "/p/(.*)", "destination": "/index.html" }

@@ -335,7 +335,7 @@ function inviteFromUrl() {
 }
 
 function doorFromUrl() {
-  const path = window.location.pathname.match(/^\/invite\/link\/([A-Za-z0-9]+)$/);
+  const path = window.location.pathname.match(/^\/(?:i|invite\/link)\/([A-Za-z0-9]+)$/);
   if (path) return path[1];
   return new URLSearchParams(window.location.search).get("invite") || "";
 }

@@ -363,6 +363,32 @@ function makeToken() {
   return out;
 }
 
+function makeShort() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  let out = "";
+  for (const byte of bytes) out += alphabet[byte % alphabet.length];
+  return out;
+}
+
+function ensureDoor(book) {
+  let dirty = false;
+  if (!book.door) {
+    book.door = makeToken();
+    dirty = true;
+  }
+  if (!book.gate) {
+    book.gate = makeShort();
+    dirty = true;
+  }
+  return dirty;
+}
+
+function doorOk(book, token) {
+  const given = String(token || "");
+  return Boolean(given && (given === book.door || given === book.gate));
+}
+
 function nextNumber(book) {
   let n = book.next || 1;
   while (book.used.includes(n) || n === 0) n += 1;
@@ -584,15 +610,12 @@ export default async function handler(req, res) {
         return;
       }
       const book = await readBook();
-      if (!book.door) {
-        book.door = makeToken();
-        await writeBook(book);
-      }
+      if (ensureDoor(book)) await writeBook(book);
       const members = Object.values(book.people)
         .sort((a, b) => a.account - b.account)
         .map((person) => ({ account: person.account, name: person.name, pin: person.pin, email: person.email || "" }));
       res.status(200).json({
-        url: `https://thedeviantsshelf.com/invite/link/${book.door}`,
+        url: `https://thedeviantsshelf.com/i/${book.gate}`,
         members,
         subscribers: (book.subscribers || []).map((row) => ({ email: row.email, at: row.at || 0 })),
         invites: book.invites.map((c) => ({
@@ -609,7 +632,7 @@ export default async function handler(req, res) {
       if (!display) throw new Error("Type the name on the invitation.");
       if (!passwordOk(pinClean)) throw new Error("Use a password of at least 4 characters.");
       const book = await readBook();
-      if (!book.door || book.door !== String(body.token || "")) throw new Error("This invite is not valid.");
+      if (!doorOk(book, body.token)) throw new Error("This invite is not valid.");
       if (book.people[display]) throw new Error("That name is already on an invitation. Sign in, or use a different name.");
       const n = nextNumber(book);
       book.used.push(n);
