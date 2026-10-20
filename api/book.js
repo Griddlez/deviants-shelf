@@ -22,10 +22,32 @@ export async function readBook() {
 }
 
 async function writeBook(book) {
+  const delta = book.stockDelta || null;
+  const stockSet = book.stockSet || null;
   let pending = book;
   for (let attempt = 0; attempt < 8; attempt++) {
     const latest = await readBook();
+    const applied = new Set(latest.appliedDeltas || []);
+    if (!latest.stock || typeof latest.stock !== "object") latest.stock = {};
+    if (stockSet?.id && !applied.has(stockSet.id)) {
+      if (stockSet.qty === null) delete latest.stock[stockSet.sku];
+      else latest.stock[stockSet.sku] = stockSet.qty;
+      applied.add(stockSet.id);
+    }
+    latest.appliedDeltas = [...applied].slice(-40);
     await pullRemembered(latest);
+    if (delta?.id && !(latest.orders || []).some((order) => order.placeToken === delta.id)) {
+      const pendingOrder = (pending.orders || []).find((order) => order.placeToken === delta.id);
+      if (pendingOrder) latest.orders.unshift(pendingOrder);
+    }
+    for (const order of latest.orders || []) {
+      if (!order?.placeToken || applied.has(order.placeToken) || !order.stockNeed) continue;
+      for (const [sku, qty] of Object.entries(order.stockNeed)) {
+        if (typeof latest.stock[sku] === "number") latest.stock[sku] = Math.max(0, latest.stock[sku] - qty);
+      }
+      applied.add(order.placeToken);
+    }
+    latest.appliedDeltas = [...applied].slice(-40);
     const merged = mergeBook(latest, pending);
     restoreLostOrder(merged);
     restoreLaura(merged);
@@ -49,8 +71,9 @@ async function writeBook(book) {
 }
 
 async function rememberOrder(order) {
-  if (!order?.id) return;
-  await put(`orders/${order.id}.json`, JSON.stringify(order), {
+  if (!order?.id && !order?.placeToken) return;
+  const key = order.placeToken ? `orders/t-${order.placeToken}.json` : `orders/${order.id}.json`;
+  await put(key, JSON.stringify(order), {
     access: "private",
     addRandomSuffix: false,
     allowOverwrite: true,
@@ -65,11 +88,12 @@ async function pullRemembered(book) {
     const found = await list({ prefix: "orders/", limit: 1000 });
     for (const blob of found.blobs || []) {
       const id = Number(String(blob.pathname).match(/(\d+)\.json$/)?.[1]);
-      if (!id || book.orders.some((row) => Number(row.id) === id)) continue;
       const result = await get(blob.pathname, { access: "private" });
       if (!result) continue;
       const order = JSON.parse(await new Response(result.stream).text());
-      if (!order?.id) continue;
+      if (!order?.id && !order?.placeToken) continue;
+      if (order.placeToken && book.orders.some((row) => row.placeToken === order.placeToken)) continue;
+      if (id && book.orders.some((row) => Number(row.id) === id)) continue;
       book.orders.unshift(order);
       changed = true;
     }
@@ -106,10 +130,7 @@ function preferOrder(older, newer) {
 }
 
 function mergeBook(latest, incoming) {
-  const byId = new Map();
-  for (const order of latest.orders || []) byId.set(order.id, order);
-  for (const order of incoming.orders || []) byId.set(order.id, preferOrder(byId.get(order.id), order));
-  const orders = [...byId.values()].sort((a, b) => Number(b.id) - Number(a.id));
+  const orders = foldOrders(latest.orders || [], incoming.orders || []);
   const people = { ...(latest.people || {}) };
   for (const [name, person] of Object.entries(incoming.people || {})) {
     people[name] = { ...(people[name] || {}), ...person };
@@ -131,13 +152,36 @@ function mergeBook(latest, incoming) {
     invites,
     next: Math.max(Number(latest.next) || 0, Number(incoming.next) || 0),
     nextOrder: Math.max(Number(latest.nextOrder) || 0, Number(incoming.nextOrder) || 0, maxId + 1),
-    stock: { ...(latest.stock || {}), ...(incoming.stock || {}) },
+    stock: { ...(incoming.stock || {}), ...(latest.stock || {}) },
+    appliedDeltas: [...new Set([...(latest.appliedDeltas || []), ...(incoming.appliedDeltas || [])])].slice(-40),
     sheetSeen: { ...(latest.sheetSeen || {}), ...(incoming.sheetSeen || {}) },
     pay: incoming.pay && Object.keys(incoming.pay).length ? incoming.pay : (latest.pay || {}),
     coaLibrary: mergeCoa(latest, incoming),
     coaSeeded: Boolean(latest.coaSeeded || incoming.coaSeeded),
     subscribers: mergeSubscribers(latest, incoming),
+    stockDelta: undefined,
+    stockSet: undefined,
   };
+}
+
+function foldOrders(latestOrders, incomingOrders) {
+  const byId = new Map();
+  let maxId = 1000;
+  for (const order of [...latestOrders, ...incomingOrders]) maxId = Math.max(maxId, Number(order?.id) || 0);
+  for (const order of [...latestOrders, ...incomingOrders]) {
+    if (!order) continue;
+    let next = order;
+    let id = Number(next.id);
+    let prev = byId.get(id);
+    if (prev && prev.placeToken && next.placeToken && prev.placeToken !== next.placeToken) {
+      maxId += 1;
+      id = maxId;
+      next = { ...next, id };
+      prev = undefined;
+    }
+    byId.set(id, preferOrder(prev, next));
+  }
+  return [...byId.values()].sort((a, b) => Number(b.id) - Number(a.id));
 }
 
 function mergeSubscribers(latest, incoming) {
@@ -826,9 +870,11 @@ export default async function handler(req, res) {
       const id = Math.max(Number(book.nextOrder) || 1001, maxId + 1);
       book.nextOrder = id + 1;
       const contact = incoming.contact || {};
+      const placeToken = crypto.randomUUID();
       const fullItems = items.map((line) => ({
         sku: String(line.sku || "").slice(0, 40),
         name: String(line.name || "").slice(0, 80),
+        charge: String(line.charge || "").slice(0, 80),
         mg: String(line.mg || "").slice(0, 40),
         price: Number(line.price) || 0,
         qty: Math.max(1, Math.min(20, Number(line.qty) || 1)),
@@ -876,7 +922,10 @@ export default async function handler(req, res) {
         total: quote.total,
         placedAt: Date.now(),
         receipts: [],
+        placeToken,
+        stockNeed: need,
       };
+      book.stockDelta = { id: placeToken, need };
       book.orders.unshift(full);
       for (const [sku, qty] of Object.entries(need)) {
         if (typeof book.stock[sku] === "number") book.stock[sku] -= qty;
@@ -884,7 +933,9 @@ export default async function handler(req, res) {
       person.cart = [];
       await rememberOrder(full);
       await writeBook(book);
-      res.status(200).json(publicOrder(full));
+      const savedBook = await readBook();
+      const saved = (savedBook.orders || []).find((row) => row.placeToken === placeToken) || full;
+      res.status(200).json(publicOrder(saved));
       return;
     }
     if (body.action === "orders") {
@@ -1005,8 +1056,13 @@ export default async function handler(req, res) {
       if (!book.stock) book.stock = {};
       const sku = String(body.sku || "").slice(0, 40);
       if (!sku) throw new Error("Pick a product.");
-      if (body.qty === "" || body.qty === null || body.qty === undefined) delete book.stock[sku];
-      else book.stock[sku] = Math.max(0, Math.min(999, Number(body.qty) || 0));
+      if (body.qty === "" || body.qty === null || body.qty === undefined) {
+        delete book.stock[sku];
+        book.stockSet = { id: crypto.randomUUID(), sku, qty: null };
+      } else {
+        book.stock[sku] = Math.max(0, Math.min(999, Number(body.qty) || 0));
+        book.stockSet = { id: crypto.randomUUID(), sku, qty: book.stock[sku] };
+      }
       await writeBook(book);
       res.status(200).json({ stock: book.stock });
       return;
