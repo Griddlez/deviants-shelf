@@ -1,4 +1,4 @@
-import { get, put } from "@vercel/blob";
+import { get, list, put } from "@vercel/blob";
 import { CONFIG, quoteOrder } from "../src/data.js";
 
 const EMPTY = { next: 2, used: [0, 1], people: {}, invites: [] };
@@ -23,11 +23,25 @@ export async function readBook() {
 
 async function writeBook(book) {
   let pending = book;
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < 8; attempt++) {
     const latest = await readBook();
+    await pullRemembered(latest);
     const merged = mergeBook(latest, pending);
     restoreLostOrder(merged);
-    merged.rev = (Number(latest.rev) || 0) + 1;
+    restoreLaura(merged);
+    const baseRev = Number(latest.rev) || 0;
+    const again = await readBook();
+    if ((Number(again.rev) || 0) !== baseRev) {
+      pending = mergeBook(again, merged);
+      continue;
+    }
+    const must = new Map();
+    for (const order of [...(again.orders || []), ...(latest.orders || []), ...(merged.orders || [])]) {
+      const id = Number(order.id);
+      must.set(id, preferOrder(must.get(id), order));
+    }
+    merged.orders = [...must.values()].sort((a, b) => Number(b.id) - Number(a.id));
+    merged.rev = baseRev + 1;
     await put("ledger.json", JSON.stringify(merged), {
       access: "private",
       addRandomSuffix: false,
@@ -35,11 +49,41 @@ async function writeBook(book) {
       contentType: "application/json",
     });
     const check = await readBook();
-    const revOk = Number(check.rev) === Number(merged.rev);
-    const kept = (merged.orders || []).every((order) => (check.orders || []).some((row) => row.id === order.id));
-    if (revOk && kept && hasDanniOrders(check)) return;
+    const missing = merged.orders.some((order) => !(check.orders || []).some((row) => Number(row.id) === Number(order.id)));
+    if (!missing && Number(check.rev) === merged.rev && hasDanniOrders(check)) return;
     pending = mergeBook(check, merged);
   }
+}
+
+async function rememberOrder(order) {
+  if (!order?.id) return;
+  await put(`orders/${order.id}.json`, JSON.stringify(order), {
+    access: "private",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: "application/json",
+  });
+}
+
+async function pullRemembered(book) {
+  if (!Array.isArray(book.orders)) book.orders = [];
+  let changed = false;
+  try {
+    const found = await list({ prefix: "orders/", limit: 1000 });
+    for (const blob of found.blobs || []) {
+      const id = Number(String(blob.pathname).match(/(\d+)\.json$/)?.[1]);
+      if (!id || book.orders.some((row) => Number(row.id) === id)) continue;
+      const result = await get(blob.pathname, { access: "private" });
+      if (!result) continue;
+      const order = JSON.parse(await new Response(result.stream).text());
+      if (!order?.id) continue;
+      book.orders.unshift(order);
+      changed = true;
+    }
+  } catch {
+    return changed;
+  }
+  return changed;
 }
 
 const STATUS_RANK = { unpaid: 1, review: 2, processing: 3, shipped: 4, sent: 5, history: 6, expired: 6 };
@@ -345,6 +389,40 @@ function restoreLostOrder(book) {
     changed = true;
   }
   return changed;
+}
+
+function restoreLaura(book) {
+  if (!Array.isArray(book.orders)) book.orders = [];
+  if (book.orders.some((order) => Number(order.id) === 1004)) return false;
+  const person = Object.values(book.people || {}).find((row) => String(row.account) === "40")
+    || book.people?.["Laura Wilson"]
+    || null;
+  const address = person?.address || {};
+  book.orders.unshift({
+    id: 1004,
+    status: "unpaid",
+    account: "40",
+    accountName: person?.name || "Laura Wilson",
+    items: [{ sku: "R3-5", name: "Retatrutide", charge: "Ember's Fast", mg: "5 mg", price: 45, qty: 1 }],
+    shipping: { id: "upsground", label: "UPS Ground", detail: "1–5 business days", price: 14.99 },
+    codes: [],
+    discount: 0,
+    contact: {
+      fullName: address.fullName || "Laura Wilson",
+      line1: address.line1 || "",
+      line2: address.line2 || "",
+      city: address.city || "",
+      state: address.state || "",
+      zip: address.zip || "",
+      email: person?.email || "laura.leigh76@hotmail.com",
+    },
+    sub: 45,
+    total: 59.99,
+    placedAt: Date.parse("2026-10-20T23:19:00Z"),
+    receipts: [],
+  });
+  if ((Number(book.nextOrder) || 0) <= 1004) book.nextOrder = 1005;
+  return true;
 }
 
 function cleanPin(pin) {
@@ -798,13 +876,16 @@ export default async function handler(req, res) {
         if (typeof book.stock[sku] === "number") book.stock[sku] -= qty;
       }
       person.cart = [];
+      await rememberOrder(full);
       await writeBook(book);
       res.status(200).json(publicOrder(full));
       return;
     }
     if (body.action === "orders") {
       const book = await readBook();
-      const dirty = sweep(book) || await pullSheet(book);
+      let dirty = sweep(book) || await pullSheet(book);
+      dirty = restoreLaura(book) || dirty;
+      dirty = await pullRemembered(book) || dirty;
       if (dirty) await writeBook(book);
       let list = book.orders;
       if (restoreLostOrder(book)) await writeBook(book);
@@ -837,6 +918,7 @@ export default async function handler(req, res) {
         order.carrier = carrier;
       }
       order.status = body.status;
+      await rememberOrder(order);
       await writeBook(book);
       res.status(200).json(publicOrder(order));
       return;
@@ -863,6 +945,7 @@ export default async function handler(req, res) {
       });
       order.receipts.push({ name: String(body.fileName || "receipt").slice(0, 80), at: Date.now(), path });
       order.status = "review";
+      await rememberOrder(order);
       await writeBook(book);
       res.status(200).json(publicOrder(order));
       return;
