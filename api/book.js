@@ -29,19 +29,10 @@ async function writeBook(book) {
     const merged = mergeBook(latest, pending);
     restoreLostOrder(merged);
     restoreLaura(merged);
-    const baseRev = Number(latest.rev) || 0;
-    const again = await readBook();
-    if ((Number(again.rev) || 0) !== baseRev) {
-      pending = mergeBook(again, merged);
-      continue;
-    }
-    const must = new Map();
-    for (const order of [...(again.orders || []), ...(latest.orders || []), ...(merged.orders || [])]) {
-      const id = Number(order.id);
-      must.set(id, preferOrder(must.get(id), order));
-    }
-    merged.orders = [...must.values()].sort((a, b) => Number(b.id) - Number(a.id));
-    merged.rev = baseRev + 1;
+    await pullRemembered(merged);
+    merged.rev = (Number(latest.rev) || 0) + 1;
+    merged.writeStamp = `${Date.now()}-${attempt}`;
+    await Promise.all((merged.orders || []).map((order) => rememberOrder(order)));
     await put("ledger.json", JSON.stringify(merged), {
       access: "private",
       addRandomSuffix: false,
@@ -49,8 +40,10 @@ async function writeBook(book) {
       contentType: "application/json",
     });
     const check = await readBook();
-    const missing = merged.orders.some((order) => !(check.orders || []).some((row) => Number(row.id) === Number(order.id)));
-    if (!missing && Number(check.rev) === merged.rev && hasDanniOrders(check)) return;
+    await pullRemembered(check);
+    const lost = (merged.orders || []).some((order) => !(check.orders || []).some((row) => Number(row.id) === Number(order.id)));
+    const extra = (check.orders || []).some((order) => !(merged.orders || []).some((row) => Number(row.id) === Number(order.id)));
+    if (check.writeStamp === merged.writeStamp && !lost && !extra && hasDanniOrders(check)) return;
     pending = mergeBook(check, merged);
   }
 }
@@ -393,19 +386,21 @@ function restoreLostOrder(book) {
 
 function restoreLaura(book) {
   if (!Array.isArray(book.orders)) book.orders = [];
-  if (book.orders.some((order) => Number(order.id) === 1004)) return false;
   const person = Object.values(book.people || {}).find((row) => String(row.account) === "40")
     || book.people?.["Laura Wilson"]
     || null;
   const address = person?.address || {};
-  book.orders.unshift({
+  const correct = {
     id: 1004,
     status: "unpaid",
     account: "40",
     accountName: person?.name || "Laura Wilson",
-    items: [{ sku: "R3-5", name: "Retatrutide", charge: "Ember's Fast", mg: "5 mg", price: 45, qty: 1 }],
-    shipping: { id: "upsground", label: "UPS Ground", detail: "1–5 business days", price: 14.99 },
-    codes: [],
+    items: [
+      { sku: "R3-5", name: "Retatrutide", charge: "Ember's Fast", mg: "5 mg", price: 45, qty: 1 },
+      { sku: "KIT-1", name: "BAC water · 10 syringes · 20 wipes", charge: "Beginner's Alchemy Kit", mg: "kit", price: 15, qty: 1 },
+    ],
+    shipping: { id: "usps", label: "Hand delivery", detail: "No shipping fee", price: 0 },
+    codes: ["HNDLVR"],
     discount: 0,
     contact: {
       fullName: address.fullName || "Laura Wilson",
@@ -416,12 +411,23 @@ function restoreLaura(book) {
       zip: address.zip || "",
       email: person?.email || "laura.leigh76@hotmail.com",
     },
-    sub: 45,
-    total: 59.99,
+    sub: 60,
+    total: 60,
     placedAt: Date.parse("2026-10-20T23:19:00Z"),
     receipts: [],
-  });
-  if ((Number(book.nextOrder) || 0) <= 1004) book.nextOrder = 1005;
+  };
+  const existing = book.orders.find((order) => Number(order.id) === 1004);
+  if (!existing) {
+    book.orders.unshift(correct);
+    if ((Number(book.nextOrder) || 0) <= 1004) book.nextOrder = 1005;
+    return true;
+  }
+  const hasKit = (existing.items || []).some((line) => line.sku === "KIT-1");
+  const hand = existing.shipping?.price === 0 && (existing.codes || []).includes("HNDLVR");
+  if (hasKit && hand) return false;
+  if ((existing.receipts || []).length || (existing.status !== "unpaid" && existing.status !== "expired")) return false;
+  const placedAt = existing.placedAt || correct.placedAt;
+  Object.assign(existing, correct, { placedAt, receipts: existing.receipts || [], status: existing.status === "expired" ? "unpaid" : existing.status });
   return true;
 }
 
