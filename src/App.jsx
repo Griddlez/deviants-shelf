@@ -177,7 +177,7 @@ export default function App() {
       setStock(data.stock || {});
       setPay(data.pay || {});
     } catch {
-      setOrders([]);
+      /* keep the list already on screen */
     }
   }
 
@@ -193,7 +193,7 @@ export default function App() {
   const visible = session.admin
     ? orders
     : orders.filter((o) => String(o.account) === String(session.account));
-  const live = visible.filter((o) => o.status !== "history" && o.status !== "expired");
+  const live = visible.filter((o) => o.status !== "history");
   const past = visible.filter((o) => o.status === "history" || o.status === "expired");
 
   const basketCount = cart.reduce((n, line) => n + line.qty, 0);
@@ -261,7 +261,7 @@ export default function App() {
         <OrderList
           tick={tick}
           title="Active Orders"
-          subtitle={session.admin ? "Every open ticket. Change the status here. This list updates on its own." : "Orders in the queue or on the way."}
+          subtitle={session.admin ? "Every open ticket, including ones past the payment window. Change the status here." : "Orders in the queue or on the way."}
           orders={live}
           session={session}
           onChange={refresh}

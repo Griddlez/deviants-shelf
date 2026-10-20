@@ -35,9 +35,10 @@ async function writeBook(book) {
       contentType: "application/json",
     });
     const check = await readBook();
-    const kept = (pending.orders || []).every((order) => (check.orders || []).some((row) => row.id === order.id));
-    if (kept && hasDanniOrders(check)) return;
-    pending = merged;
+    const revOk = Number(check.rev) === Number(merged.rev);
+    const kept = (merged.orders || []).every((order) => (check.orders || []).some((row) => row.id === order.id));
+    if (revOk && kept && hasDanniOrders(check)) return;
+    pending = mergeBook(check, merged);
   }
 }
 
@@ -297,7 +298,7 @@ function restoreLostOrder(book) {
   const contact = danniContact(person);
   let changed = false;
   const kitTicket = book.orders.find((order) => Number(order.id) === 1002 && (order.items || []).some((line) => line.sku === "KIT-1"));
-  if (kitTicket) {
+  if (kitTicket && !book.orders.some((order) => order !== kitTicket && Number(order.id) === 1003)) {
     kitTicket.id = 1003;
     changed = true;
   }
