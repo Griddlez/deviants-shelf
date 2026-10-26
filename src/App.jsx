@@ -327,8 +327,10 @@ export default function App() {
             <img src="/art/social/tiktok.svg" alt="" />
           </a>
         </nav>
-        <button className="ghost" onClick={() => { store.clearSession(); refresh(); }}>Sign out</button>
-        <span>Research use only. Nothing here is a medicine.</span>
+        <div className="foot-row">
+          <button className="ghost" onClick={() => { store.clearSession(); refresh(); }}>Sign out</button>
+          <span>Research use only. Nothing here is a medicine.</span>
+        </div>
       </footer>
     </div>
     {tab !== "order" && (
