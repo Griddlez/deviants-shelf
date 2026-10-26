@@ -20,7 +20,7 @@ export const CONFIG = {
 const CODE_BOOK = {
   "F&F30": { kind: "percent", amount: 30, label: "Friends and family" },
   HNDLVR: { kind: "ship", label: "Hand delivery" },
-  DEVIANTSHIP: { kind: "freeship", label: "Free shipping", until: "2027-01-01T05:00:00.000Z" },
+  DEVIANTSHIP: { kind: "freeship", label: "Free shipping", until: "2027-01-01T05:00:00.000Z", ships: ["usps", "upsground"] },
   "4DAKNG": { kind: "percent", amount: 10, label: "Military" },
   WELCOME10: { kind: "percent", amount: 10, label: "Welcome" },
 };
@@ -51,7 +51,10 @@ export function quoteOrder(sub, shipId, rawCodes) {
     labels.push(row.label);
     if (row.kind === "percent") percent += row.amount;
     if (row.kind === "ship") hand = true;
-    if (row.kind === "freeship") freeShip = true;
+    if (row.kind === "freeship") {
+      if (row.ships && !row.ships.includes(shipId)) return { error: "DEVIANTSHIP only covers USPS and UPS Ground." };
+      freeShip = true;
+    }
   }
   const base = Math.max(0, Number(sub) || 0);
   const discount = Math.round((base * percent) / 100);

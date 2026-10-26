@@ -804,12 +804,13 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced, usual }) {
             ))}
             {codeErr && <p className="err">{codeErr}</p>}
           </div>
-          <div className="line"><span>Shipping · {quote.hand ? "Hand delivery" : ship.label}{quote.freeShip ? " · free" : ""}</span><b>{money(quote.shipPrice)}</b></div>
+          <div className="line"><span>Shipping · {quote.hand ? "Hand delivery" : ship.label}{quote.freeShip ? " · free" : ""}</span><b>{money(quote.error ? ship.price : quote.shipPrice)}</b></div>
+          {quote.error && <p className="err">{quote.error}</p>}
           {!quote.hand && ship.note && <p className="warn">{ship.note}</p>}
           <div className="line total"><span>Total</span><b>{money(total)}</b></div>
           <div className="row-btns">
             <button className="btn" onClick={() => setStep("ship")}>Back</button>
-            <button className="btn gold" onClick={() => setStep("shipTo")}>Continue</button>
+            <button className="btn gold" disabled={!!quote.error} onClick={() => setStep("shipTo")}>Continue</button>
           </div>
         </div>
       )}
