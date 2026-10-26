@@ -563,7 +563,6 @@ export function ShopFront({ library, stock, cartCount, onAdd, onBasket, onDownlo
       <footer className="stone-foot">
         <a href="#featured">Peptides</a>
         <a href="#shelf">The shelf</a>
-        <a href="https://discord.gg/fGspu7HD7" target="_blank" rel="noreferrer">Discord</a>
       </footer>
     </section>
   );

@@ -313,7 +313,20 @@ export default function App() {
       {flash && <PlacedModal order={flash} pay={pay} onClose={() => setFlash(null)} />}
 
       <footer className="foot">
-        <a className="ghost" href="https://discord.gg/fGspu7HD7" target="_blank" rel="noreferrer">Questions? Request? Join the Discord.</a>
+        <nav className="socials" aria-label="Socials">
+          <a href="https://www.instagram.com/the_deviants_shelf/" target="_blank" rel="noreferrer" aria-label="Instagram">
+            <img src="/art/social/instagram.png" alt="" />
+          </a>
+          <a href="https://discord.gg/fGspu7HD7" target="_blank" rel="noreferrer" aria-label="Discord">
+            <img src="/art/social/discord.png" alt="" />
+          </a>
+          <a href="https://www.facebook.com/share/1BZsHZyVJg/" target="_blank" rel="noreferrer" aria-label="Facebook">
+            <img src="/art/social/facebook.png" alt="" />
+          </a>
+          <a href="https://www.tiktok.com/@the_deviants_shelf" target="_blank" rel="noreferrer" aria-label="TikTok">
+            <img src="/art/social/tiktok.svg" alt="" />
+          </a>
+        </nav>
         <button className="ghost" onClick={() => { store.clearSession(); refresh(); }}>Sign out</button>
         <span>Research use only. Nothing here is a medicine.</span>
       </footer>

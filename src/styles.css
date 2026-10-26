@@ -388,6 +388,10 @@ a.ghost { text-decoration: none; }
 .receipt-btn { display: block; text-align: center; }
 .rcpt { max-width: 100%; margin-top: 8px; border: 1px solid var(--line); }
 .foot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 28px; color: var(--muted); font-size: 13px; }
+.socials { display: flex; justify-content: center; align-items: center; gap: 14px; width: 100%; }
+.socials a { display: block; width: 44px; height: 44px; border-radius: 10px; overflow: hidden; line-height: 0; }
+.socials img { width: 44px; height: 44px; object-fit: cover; display: block; }
+.socials a:hover { transform: translateY(-2px); filter: brightness(1.08); }
 .pass {
   width: min(440px, 100%);
   margin: 18px auto;
