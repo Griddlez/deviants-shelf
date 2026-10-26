@@ -904,7 +904,7 @@ export default async function handler(req, res) {
         shipping: {
           id: shipMeta.id,
           label: quote.hand ? "Hand delivery" : shipMeta.label,
-          detail: quote.hand ? "No shipping fee" : shipMeta.detail,
+          detail: quote.hand || quote.freeShip ? "No shipping fee" : shipMeta.detail,
           price: quote.shipPrice,
         },
         codes: quote.codes,

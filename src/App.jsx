@@ -708,7 +708,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced, usual }) {
         pin: session.pin,
         order: {
           items: cart,
-          shipping: { ...ship, price: quote.shipPrice, label: quote.hand ? "Hand delivery" : ship.label, detail: quote.hand ? "No shipping fee" : ship.detail },
+          shipping: { ...ship, price: quote.shipPrice, label: quote.hand ? "Hand delivery" : ship.label, detail: quote.hand || quote.freeShip ? "No shipping fee" : ship.detail },
           contact,
           codes: quote.codes,
           sub,
@@ -804,7 +804,7 @@ function PlaceOrder({ session, cart, setCart, onClose, onPlaced, usual }) {
             ))}
             {codeErr && <p className="err">{codeErr}</p>}
           </div>
-          <div className="line"><span>Shipping · {quote.hand ? "Hand delivery" : ship.label}</span><b>{money(quote.shipPrice)}</b></div>
+          <div className="line"><span>Shipping · {quote.hand ? "Hand delivery" : ship.label}{quote.freeShip ? " · free" : ""}</span><b>{money(quote.shipPrice)}</b></div>
           {!quote.hand && ship.note && <p className="warn">{ship.note}</p>}
           <div className="line total"><span>Total</span><b>{money(total)}</b></div>
           <div className="row-btns">
